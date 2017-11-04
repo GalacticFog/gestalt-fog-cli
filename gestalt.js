@@ -4,16 +4,13 @@ const os = require('os');
 const fs = require('fs');
 const CONFIG_DIR = os.homedir() + '/.fog-cli'  
 
-const state = getGestaltState();
-const config = getGestaltConfig();
-
 // Exports
 
 exports.persistState = persistState;
 
 exports.fetchOrgFqons = () => {
-    let res = meta_GET('/orgs?expand=true')
-    let fn = item => item.properties.fqon
+    let res = meta_GET('/orgs?expand=true');
+    let fn = item => item.properties.fqon;
     let list = res.map(fn).sort();
     return list;
 }
@@ -27,7 +24,7 @@ exports.fetchOrgs = () => {
 }
 
 exports.fetchWorkspaces = (fqonList) => {
-    if (!fqonList) fqonList = [state.org.fqon];
+    if (!fqonList) fqonList = [getGestaltState().org.fqon];
 
     let workspaces = fqonList.map(fqon => {
         let res = meta_GET(`/${fqon}/workspaces?expand=true`)
@@ -41,20 +38,14 @@ exports.fetchWorkspaces = (fqonList) => {
 }
 
 exports.fetchEnvironments = () => {
+    let state = getGestaltState();
     let res = meta_GET(`/${state.org.fqon}/workspaces/${state.workspace.id}/environments?expand=true`)
     return res;
 }
 
-exports.getOrgFqon = () => {
-    return String(state.org.fqon);
-}
-
-exports.getWorkspaceId = () => {
-    return String(state.workspace.id);
-}
-
-exports.getEnvironmentId = () => {
-    return String(state.environment.id);
+exports.getState = () => {
+    // returns a copy of the writen state    
+    return getGestaltState();
 }
 
 
@@ -63,13 +54,14 @@ exports.getEnvironmentId = () => {
 function meta_GET(url) {
     let token = getCachedAuthToken();
     let options = { headers: { Authorization: `Bearer ${token}` } };
-    let meta_url = config.gestalt_url + '/meta';
+    let meta_url = getGestaltConfig().gestalt_url + '/meta';
 
     let res = request('GET', meta_url + url, options);
     return JSON.parse(res.getBody());
 }
 
 function persistState(s) {
+    let state = getGestaltState();
     Object.assign(state, s); // merge in state
     let contents = JSON.stringify(state, null, 2) + "\n";
     fs.writeFileSync(`${CONFIG_DIR}/state.json`, contents);

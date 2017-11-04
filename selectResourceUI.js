@@ -1,0 +1,120 @@
+'use strict';
+
+//TODO: Move to /lib dir and rename to selectResourceUI
+exports.run = (options, callback) => {
+
+    const _ = require('lodash');
+    const inquirer = require('inquirer');
+    inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
+
+    const widths = {};
+
+    function formatLine(item) {
+        let fields = options.fields;
+        let sep = '  |  ';
+        let returnString = '';
+
+        // Calculate padding for all except last column
+        for (let i in fields) {
+            let f = fields[i];
+            if (i == fields.length - 1) {
+                returnString += String(item[f]);
+            } else {
+                let padding = ' '.repeat(widths[f] - String(item[f]).length);
+                returnString += String(item[f]) + padding + sep;            
+            }
+        }
+
+        return returnString;
+    }
+
+
+    // NOTE: Main can't seem to be wrapped in a main() function, otherwise 
+    // nodejs exits
+
+    // -- Main --
+    const state = {}
+    const resources = options.fetchFunction();
+
+    resources.map(item => {
+        // Polulate required values
+        [0, 1].map(i => {
+            item[options.fields[i]] = item[options.fields[i]] || "(null)";
+        });
+    })
+
+    resources.map(item => {
+        // find the max length of the field
+        options.fields.map(f => {
+            if (!widths[f]) widths[f] = 0;
+            widths[f] = Math.max(widths[f], String(item[f]).length)
+        });
+    })
+
+    // Transform to array that Inquirer expects
+    const choiceList = resources.map(item => {
+        // let name = formatLine(item[options.fields[0]], item[options.fields[1]], item[options.fields[2]])
+        let name = formatLine(item);
+        return {
+            name: name,
+            value: item[options.valueKey],
+            // short: item.name
+        };
+    })
+
+    // if list is empty, offer none
+    if (choiceList.length == 0) {
+        choiceList.push({
+            name: "-- None --",
+            value: {}
+        });
+    }
+
+    let prompt = null;
+
+    if (this.mode == 'autocomplete') {
+
+        // inquirer prompt object to select org.  type: autocomplete is handled by the
+        // inquirer autocomplete plugin.
+        prompt = {
+            type: 'autocomplete',
+            name: options.returnValue,
+            message: options.message,
+            source: searchChoices,
+            pageSize: 50, // doesn't seem to do anything
+        };
+
+        // Search the global 'orgs' object.  Used by the prompt to search the list of orgs
+        // returned by gestalt
+        function searchChoices(answers, input) {
+            input = input || '';
+            return new Promise(
+                function (resolve) {
+
+                    let result = choiceList.filter(choice => {
+                        try {
+                            return choice.name.toLowerCase().indexOf(input.toLowerCase()) > -1;
+                        } catch (e) {
+                            return true;
+                        }
+                    })
+                    resolve(result);
+                });
+        }
+    } else {
+        prompt = {
+            type: 'list',
+            name: options.returnValue,
+            message: options.message,
+            paginated: true,
+            pageSize: 50,
+            choices: choiceList
+        };
+    }
+
+    inquirer
+        .prompt([prompt])
+        .then(callback) // callback with response
+
+    // Nothing after this step, inquirer gets called asyncronously
+}
