@@ -38,8 +38,8 @@ exports.run = (options, callback) => {
 
     resources.map(item => {
         // Polulate required values
-        [0, 1].map(i => {
-            item[options.fields[i]] = item[options.fields[i]] || "(null)";
+        options.fields.map(f => {
+            item[f] = item[f] || "-- null --";
         });
     })
 
