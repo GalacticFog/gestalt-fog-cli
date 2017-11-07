@@ -23,15 +23,17 @@ exports.run = (options, resources) => {
         // Calculate padding for all except last column
         for (let i in fields) {
             let f = fields[i];
+            let s = eval(`item.${f}`);
+
             if (i == fields.length - 1) {
-                returnString += String(item[f]);
+                returnString += s;
             } else {
-                let padding = ' '.repeat(widths[f] - String(item[f]).length);
-                returnString += String(item[f]) + padding + sep;
+                let padding = ' '.repeat(widths[f] - s.length);    
+                returnString += s + padding + sep;            
             }
         }
 
-        return returnString;
+        return "  " + returnString; // indent some with appended spaces
     }
 
     function formatHeaders() {
@@ -47,7 +49,7 @@ exports.run = (options, resources) => {
             arr[i] = headers[i] + ' '.repeat(widths[f] - headers[i].length);
             arr[i] = chalk.underline(arr[i]);
         }
-        return arr.join(sep);
+        return "  " + arr.join(sep);
     }
 
 
@@ -58,7 +60,7 @@ exports.run = (options, resources) => {
     displayResources.map(item => {
         // Polulate required values
         options.fields.map(f => {
-            item[f] = item[f] || "-- null --";
+            item[f] = item[f] || "";
         });
     })
 
@@ -77,8 +79,11 @@ exports.run = (options, resources) => {
 
 
     // Display
+    console.log();
     console.log(formatHeaders());
+    console.log();
     displayResources.map(item => {
         console.log(formatLine(item));
+        console.log();
     });
 }

@@ -116,25 +116,53 @@ options.wsall = {
     }
 };
 
-
+// Main
 
 if (process.argv.length > 2) {
     let res = options[process.argv[2]];
+    
     selectResource.run(res, answers => {
         gestalt.persistState(answers);
     });
 } else {
 
-    selectResource.run(options.org,
-        answers => {
+    //// This approach doesn't work ...
+    // new Promise((resolve, reject) => {
+    //     // reject();
+    //     resolve();
+    // }).then(success => {
+    //     selectResource.run(options.org, answers => {
+    //         gestalt.persistState(answers);
+    //         // reject();
+    //         // resolve();
+    //     })
+    // }).then(success => {
+    //     selectResource.run(options.ws, answers => {
+    //         gestalt.persistState(answers);
+    //         //resolve();
+    //     })
+    // }).then(success => {
+    //     selectResource.run(options.env, answers => {
+    //         gestalt.persistState(answers);
+    //         //resolve();
+    //     })
+    // }).catch(err => {
+    //     console.error("Error: " + err);
+    // });
+
+
+    selectResource.run(options.org, answers => {
+        gestalt.persistState(answers);
+        console.log();
+        
+        selectResource.run(options.ws, answers => {
             gestalt.persistState(answers);
-
-            selectResource.run(options.ws, answers => {
+            console.log();
+            
+            selectResource.run(options.env, answers => {
                 gestalt.persistState(answers);
-
-                selectResource.run(options.env, answers => {
-                    gestalt.persistState(answers);
-                });
+                console.log();
             });
         });
+    });
 }

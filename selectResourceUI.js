@@ -11,21 +11,23 @@ exports.run = (options, callback) => {
 
     function formatLine(item) {
         let fields = options.fields;
-        let sep = '  |  ';
+        let sep = '     ';
         let returnString = '';
 
         // Calculate padding for all except last column
         for (let i in fields) {
             let f = fields[i];
+            let s = eval(`item.${f}`);
+            
             if (i == fields.length - 1) {
-                returnString += String(item[f]);
+                returnString += s;
             } else {
-                let padding = ' '.repeat(widths[f] - String(item[f]).length);
-                returnString += String(item[f]) + padding + sep;            
+                let padding = ' '.repeat(widths[f] - s.length);    
+                returnString += s + padding + sep;            
             }
         }
 
-        return returnString;
+        return "  " + returnString; // indent some with appended spaces
     }
 
 
@@ -53,7 +55,6 @@ exports.run = (options, callback) => {
 
     // Transform to array that Inquirer expects
     const choiceList = resources.map(item => {
-        // let name = formatLine(item[options.fields[0]], item[options.fields[1]], item[options.fields[2]])
         let name = formatLine(item);
         return {
             name: name,

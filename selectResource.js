@@ -41,9 +41,9 @@ function processSelection(answers) {
 }
 
 function formatLine(a, b, c) {
-    let padding1 = ' '.repeat(widths[0] - String(a).length);
-    let padding2 = ' '.repeat(widths[1] - String(b).length);
-    let sep = '    ';
+    const padding1 = ' '.repeat(widths[0] - String(a).length);
+    const padding2 = ' '.repeat(widths[1] - String(b).length);
+    const sep = '    ';
     return `${a}${padding1}${sep}${b}${padding2}${sep}${c}`
 }
 
@@ -61,7 +61,7 @@ resources.map(item => {
     item.description = item.description || "(null)";
 })
 
-let widths = [0, 0];
+const widths = [0, 0];
 resources.map(item => {
     // find the max length of the field
     widths[0] = Math.max(widths[0], String(item.description).length);
@@ -70,7 +70,7 @@ resources.map(item => {
 
 // Transform to array that Inquirer expects
 const choiceList = resources.map(item => {
-    let name = formatLine(item.description, item.name, item[options.columnKey])
+    const name = formatLine(item.description, item.name, item[options.columnKey])
     return {
         name: name,
         value: item[options.valueKey],
@@ -82,7 +82,7 @@ let prompt = null;
 
 if (process.argv.length > 3 && process.argv[3] === 'autocomplete') {
 
-    let message = formatLine('Description', 'Name', 'Org');
+    const message = formatLine('Description', 'Name', 'Org');
 
     // inquirer prompt object to select org.  type: autocomplete is handled by the
     // inquirer autocomplete plugin.
@@ -96,12 +96,12 @@ if (process.argv.length > 3 && process.argv[3] === 'autocomplete') {
 
     // Search the global 'orgs' object.  Used by the prompt to search the list of orgs
     // returned by gestalt
-    function searchChoices(answers, input) {
-        input = input || '';
+    function searchChoices(answers, input = '') {
+        //input = input || '';
         return new Promise(
             function (resolve) {
 
-                let result = choiceList.filter(choice => {
+                const result = choiceList.filter(choice => {
                     try {
                         return choice.name.toLowerCase().indexOf(input.toLowerCase()) > -1;
                     } catch (e) {

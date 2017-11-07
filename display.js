@@ -25,6 +25,14 @@ profiles.env = {
     sortField: 'description',
 }
 
+profiles.containers = {
+    message: "Select Environment",
+    headers: ['Description', 'Name', 'Path', 'Image', 'Owner'],
+    fields: ['description', 'name', 'path', 'properties.image', 'owner_name'],
+    sortField: 'description',
+}
+
+
 if (process.argv.length > 2) {
     let type = process.argv[2];
     let options;
@@ -66,6 +74,18 @@ if (process.argv.length > 2) {
             options = profiles.env;
             ws = gestalt.getState().workspace;
             resources = gestalt.fetchOrgs();
+            resources.map(r => {
+                r.owner_name = r.owner.name;
+                r.path = `/${fqon}/${ws.name}`;
+                r.name = `:${r.name}`;
+            });
+            break;
+
+        case 'containers':
+            options = profiles.containers;
+            ws = gestalt.getState().workspace;
+            env = gestalt.getState().environment;
+            resources = gestalt.fetchContainers();
             resources.map(r => {
                 r.owner_name = r.owner.name;
                 r.path = `/${fqon}/${ws.name}`;
