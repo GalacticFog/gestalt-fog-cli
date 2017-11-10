@@ -10,7 +10,9 @@ const options = {
     sortField: 'description',
 }
 
-const resources = gestalt.fetchWorkspaces(gestalt.fetchOrgFqons());
+const fqon = gestalt.getState().org.fqon;
+
+const resources = gestalt.fetchWorkspaces([fqon]);
 
 // console.log(JSON.stringify(resources, null, 2))
 

@@ -4,13 +4,13 @@ const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
 
 const options = {
-    message: "Workspaces",
-    headers: ['Workspace', 'Name', 'Org', 'Owner'],
-    fields: ['description', 'name', 'org.properties.fqon', 'owner.name'],
+    message: "Orgs",
+    headers: ['Org Name', 'FQON', 'Owner'],
+    fields: ['description', 'properties.fqon', 'owner.name'],
     sortField: 'description',
 }
 
-const resources = gestalt.fetchWorkspaces(gestalt.fetchOrgFqons());
+const resources = gestalt.fetchOrgs();
 
 // console.log(JSON.stringify(resources, null, 2))
 

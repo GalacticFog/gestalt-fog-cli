@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+const argv = require('yargs').argv
+const gestalt = require('./lib/gestalt')
+const displayResource = require('./lib/displayResourceUI');
+
+const options = {
+    message: "Containers",
+    headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner'],
+    fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name'],
+    sortField: 'description',
+}
+
+const resources = gestalt.fetchContainers();
+resources.map(item => {
+    item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
+})
+
+// console.log(JSON.stringify(resources, null, 2))
+
+displayResource.run(options, resources);
+  
