@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+const argv = require('yargs').argv
+const gestalt = require('./lib/gestalt')
+const displayResource = require('./lib/displayResourceUI');
+
+const profiles = {};
+
+profiles.org = {
+    message: "Orgs",
+    headers: ['Org Name', 'FQON', 'Owner'],
+    fields: ['description', 'properties.fqon', 'owner.name'],
+    sortField: 'description',
+}
+
+profiles.ws = {
+    message: "Workspaces",
+    headers: ['Workspace', 'Name', 'Org', 'Owner'],
+    fields: ['description', 'name', 'org.properties.fqon', 'owner.name'],
+    sortField: 'description',
+}
+
+profiles.env = {
+    message: "Environments",
+    headers: ['Environment', 'Name', 'Type', 'Org', 'Workspace', 'Owner'],
+    fields: ['description', 'name', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name'],
+    sortField: 'description',
+}
+
+profiles.containers = {
+    message: "Containers",
+    headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner'],
+    fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name'],
+    sortField: 'description',
+}
+
+
+if (argv.type) {
+    let type = argv.type;
+    let options;
+    let resources;
+    let fqon = gestalt.getState().org.fqon;
+
+    switch (type) {
+        case 'org':
+            options = profiles.org;
+            resources = gestalt.fetchOrgs();
+            break;
+
+        case 'ws':
+            options = profiles.ws;
+            resources = gestalt.fetchWorkspaces([fqon]);
+            break;
+
+        case 'allws':
+            options = profiles.ws;
+            resources = gestalt.fetchWorkspaces(gestalt.fetchOrgFqons());
+            break;
+
+        case 'env':
+            options = profiles.env;
+            ws = gestalt.getState().workspace;
+            resources = gestalt.fetchEnvironments();
+            break;
+
+        case 'containers':
+            options = profiles.containers;
+            ws = gestalt.getState().workspace;
+            env = gestalt.getState().environment;
+            resources = gestalt.fetchContainers();
+            resources.map(item => {
+                item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
+            })
+            break;
+    }
+
+    console.log(JSON.stringify(resources, null, 2))
+
+    displayResource.run(options, resources);
+}    
