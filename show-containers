@@ -10,12 +10,20 @@ const options = {
     sortField: 'description',
 }
 
-const resources = gestalt.fetchContainers();
-resources.map(item => {
-    item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
-})
+try {
+    const resources = gestalt.fetchContainers();
+    resources.map(item => {
+        item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
+    })
+    
+    // console.log(JSON.stringify(resources, null, 2))
+    
+    displayResource.run(options, resources);
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-context'");
+    console.log();
+}
 
-// console.log(JSON.stringify(resources, null, 2))
 
-displayResource.run(options, resources);
   

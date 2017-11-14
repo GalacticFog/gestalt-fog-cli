@@ -11,6 +11,12 @@ function showRaw(c) {
 
 // Main
 
-const container = gestalt.fetchContainer();
-
-showRaw(container);
+try {
+    const container = gestalt.fetchContainer();
+    
+    showRaw(container);
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-container'");
+    console.log();
+}

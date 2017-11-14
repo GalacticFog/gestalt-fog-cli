@@ -1,8 +1,15 @@
 #!/usr/bin/env node
-const selectResource = require('./lib/selectContainer');
+const selectContainer = require('./lib/selectContainer');
 
-selectResource.run((result) => {
-    console.log();    
-    console.log(`${result.container.name} selected.`);
+try {
+    selectContainer.run((result) => {
+        console.log();
+        console.log(`${result.container.name} selected.`);
+        console.log();
+    });
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-context'");
     console.log();
-});
+}
+

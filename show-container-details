@@ -5,33 +5,30 @@ const displayResource = require('./lib/displayResourceUI');
 
 function showContainer(c) {
     const options = {
-        message: "Containers",
+        message: "Container",
         headers: ['Description', 'Status', 'Name', 'Path', 'Image', 'Instances', 'Owner'],
         fields: ['description', 'properties.status', 'name', 'path', 'properties.image', 'properties.num_instances', 'owner.name'],
         sortField: 'description',
     }
 
-    console.log()
-    console.log("Container Details:")
+    // console.log()
+    // console.log("Container Details:")
     displayResource.run(options, [c]);
-    console.log();
 }
 
 function showInstances(c) {
 
     const options2 = {
-        message: "Containers",
+        message: "Instances",
         headers: ['Container Instances', 'Host', 'Addresses', 'Ports', 'Started'],
         fields: ['id', 'host', 'ipAddresses', 'ports', 'startedAt'],
         sortField: 'description',
     }
 
-    console.log()
-    console.log("Container Instances:")
+    // console.log()
+    // console.log("Container Instances:")
 
     displayResource.run(options2, c.properties.instances);
-
-    console.log()
 }
 
 function showCommands(c) {
@@ -56,9 +53,14 @@ function showCommands(c) {
 };
 
 // Main
+try {
+    const container = gestalt.fetchContainer();
 
-const container = gestalt.fetchContainer();
-
-showContainer(container);
-showInstances(container);
-showCommands(container);
+    showContainer(container);
+    showInstances(container);
+    showCommands(container);
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-container'");
+    console.log();
+}

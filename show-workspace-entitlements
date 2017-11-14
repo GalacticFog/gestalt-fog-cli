@@ -5,6 +5,15 @@ const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayEntitlements = require('./lib/displayEntitlements');
 
-const resources = gestalt.fetchWorkspaceEntitlements();
+try {
+    const resources = gestalt.fetchWorkspaceEntitlements();
+    
+    displayEntitlements.run(resources);
+    
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-context'");
+    console.log();
+}
 
-displayEntitlements.run(resources);
+

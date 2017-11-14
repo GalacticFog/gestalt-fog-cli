@@ -25,4 +25,12 @@ const options = {
     sortField: 'name',
 }
 
-displayResource.run(options, resources);
+try {
+    displayResource.run(options, resources);
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-context'");
+    console.log();
+}
+
+

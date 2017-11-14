@@ -22,7 +22,7 @@ const options = {
 }
 
 selectResource.run(options, answers => {
-    gestalt.setCurrentContainer(answers);
+    gestalt.setCurrentContainer(answers, true);
 });
 
 function fetchFunction() {

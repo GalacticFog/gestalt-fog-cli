@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 const selectOrg = require('./lib/selectOrg');
-selectOrg.run((result) => {
-    console.log();    
-    console.log(`${result.org.fqon} selected.`);
+
+try {
+    selectOrg.run((result) => {
+        console.log();    
+        console.log(`${result.org.fqon} selected.`);
+        console.log();
+    });    
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-context'");
     console.log();
-});
+}
+

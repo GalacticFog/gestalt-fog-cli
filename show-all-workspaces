@@ -10,8 +10,17 @@ const options = {
     sortField: 'description',
 }
 
-const resources = gestalt.fetchWorkspaces(gestalt.fetchOrgFqons());
+try {
+    const resources = gestalt.fetchWorkspaces(gestalt.fetchOrgFqons());
+    
+    // console.log(JSON.stringify(resources, null, 2))
+    
+    displayResource.run(options, resources);
+    
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-context'");
+    console.log();
+}
 
-// console.log(JSON.stringify(resources, null, 2))
 
-displayResource.run(options, resources);
