@@ -34,5 +34,5 @@ inquirer.prompt(questions).then(answers => {
 
     gestaltState.saveConfig(contents);
 
-    console.log(`Confguration written to ${CONFIG_FILE}`);
+    // console.log(`Confguration written to ${CONFIG_FILE}`);
 });
