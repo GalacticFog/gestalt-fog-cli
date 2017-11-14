@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+const argv = require('yargs').argv
+const gestalt = require('./lib/gestalt')
+const displayResource = require('./lib/displayResourceUI');
+
+function showContainer(c) {
+    const options = {
+        message: "Containers",
+        headers: ['Description', 'Status', 'Name', 'Path', 'Image', 'Instances', 'Owner'],
+        fields: ['description', 'properties.status', 'name', 'path', 'properties.image', 'properties.num_instances', 'owner.name'],
+        sortField: 'description',
+    }
+
+    console.log()
+    console.log("Container Details:")
+    displayResource.run(options, [c]);
+    console.log();
+}
+
+function showInstances(c) {
+
+    const options2 = {
+        message: "Containers",
+        headers: ['Container Instances', 'Host', 'Addresses', 'Ports', 'Started'],
+        fields: ['id', 'host', 'ipAddresses', 'ports', 'startedAt'],
+        sortField: 'description',
+    }
+
+    console.log()
+    console.log("Container Instances:")
+
+    displayResource.run(options2, c.properties.instances);
+
+    console.log()
+}
+
+function showCommands(c) {
+    const envId = gestalt.getCurrentEnvironment().id;
+
+    console.log("Commands:")
+    console.log()
+    console.log("  Logs:")
+    console.log()
+    c.properties.instances.map(instance => {
+        // console.log(instance)
+        console.log(`    fog logs ${envId} ${instance.id} --tail 20 --follow`);
+    })
+
+    console.log()
+    console.log("  Console Access:")
+    console.log()
+    c.properties.instances.map(instance => {
+        console.log(`    fog console ${envId} ${instance.id}`);
+    })
+    console.log()
+};
+
+// Main
+
+const container = gestalt.fetchContainer();
+
+showContainer(container);
+showInstances(container);
+showCommands(container);

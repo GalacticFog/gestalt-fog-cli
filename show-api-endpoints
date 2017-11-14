@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+const displayResource = require('./lib/displayApiEndpoints');
+const gestalt = require('./lib/gestalt');
+
+const resources = gestalt.fetchApis();
+console.log(JSON.stringify(resources, null, 2))
+const apis = resources.map(item => {
+    return item.id;
+})
+
+const wsName = gestalt.getCurrentWorkspace().name;
+const envName = gestalt.getCurrentEnvironment().name;
+
+const eps = gestalt.fetchApiEndpoints(apis);
+eps.map(ep => {
+    ep.properties.api_path = `/${ep.properties.parent.name}${ep.properties.resource}`
+    ep.properties.environment = envName;
+    ep.properties.workspace = wsName;
+});
+
+console.log(JSON.stringify(eps, null, 2))
+
+// console.log(eps);
+
+displayResource.run(eps);
+console.log();
