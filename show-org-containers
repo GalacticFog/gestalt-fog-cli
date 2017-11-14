@@ -1,0 +1,28 @@
+#!/usr/bin/env node
+const argv = require('yargs').argv
+const gestalt = require('./lib/gestalt')
+const displayResource = require('./lib/displayResourceUI');
+const chalk = require('chalk')
+
+let resources = [];
+
+gestalt.fetchOrgFqons().map(fqon => {
+
+    const res = gestalt.fetchOrgContainers(fqon);
+
+    res.map(item => {
+        item.fqon = fqon
+    })
+
+    resources = resources.concat(res);
+
+});
+
+
+const options = {
+    headers: ['Container', 'Link'],
+    fields: ['name', 'href'],
+    sortField: 'name',
+}
+
+displayResource.run(options, resources);
