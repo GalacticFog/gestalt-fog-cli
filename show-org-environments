@@ -9,8 +9,8 @@ const options = {
     fields: ['description', 'name', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name'],
     sortField: 'description',
 }
-const resources = gestalt.fetchEnvironments();
+const resources = gestalt.fetchOrgEnvironments();
 
-// console.log(JSON.stringify(resources, null, 2))
+console.log(JSON.stringify(resources, null, 2))
 
 displayResource.run(options, resources);

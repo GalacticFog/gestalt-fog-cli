@@ -53,7 +53,7 @@ function fetchFunction() {
         sortField: 'name',
     }
     
-    return resources;
+    // return resources;
 
-    // return sortBy(res, 'description');
+    return sortBy(resources, 'name');
 }

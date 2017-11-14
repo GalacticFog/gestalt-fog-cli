@@ -115,7 +115,7 @@ options.wsall = {
 };
 
 // Main
-console.log(argv);
+// console.log(argv);
 
 if (argv.type) {
     let res = options[argv.type];

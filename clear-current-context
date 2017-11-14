@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+
+const gestalt = require('./lib/gestalt');
+
+gestalt.clearState();
+
+console.log("Current context: ");
+console.log(gestalt.getState());

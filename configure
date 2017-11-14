@@ -1,0 +1,49 @@
+#!/usr/bin/env node
+'use strict';
+const inquirer = require('inquirer');
+const os = require('os');
+const fs = require('fs');
+const CONFIG_DIR = os.homedir() + '/.fog-cli'
+const CONFIG_FILE = `${CONFIG_DIR}/config.json`
+
+const config = getJsonFromFile(CONFIG_FILE);
+
+const questions = [
+    {
+        type: 'input',
+        name: 'gestalt_url',
+        message: "Gestalt URL",
+        default: () => {
+            return config.gestalt_url || '';
+        }
+    },
+    {
+        type: 'input',
+        name: 'username',
+        message: "Username",
+        default: () => {
+            return config.username || '';
+        }
+    },
+    {
+        type: 'password',
+        name: 'password',
+        message: "Password",
+    },
+];
+
+inquirer.prompt(questions).then(answers => {
+    const contents = JSON.stringify(answers, null, '  ');
+
+    fs.writeFileSync(CONFIG_FILE, contents);
+
+    console.log(`Confguration written to ${CONFIG_FILE}`);
+});
+
+function getJsonFromFile(file) {
+    if (fs.existsSync(file)) {
+        const contents = fs.readFileSync(file, 'utf8');
+        return JSON.parse(contents);
+    }
+    return {};
+}
