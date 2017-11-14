@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+'use strict';
+
+const argv = require('yargs').argv
+const gestalt = require('./lib/gestalt')
+const displayEntitlements = require('./lib/displayEntitlements');
+
+const resources = gestalt.fetchWorkspaceEntitlements();
+
+displayEntitlements.run(resources);
