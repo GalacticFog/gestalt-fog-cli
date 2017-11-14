@@ -25,27 +25,33 @@ authenticate
 
 ## Show Commands
 ```
+# Show All
+show-all-api-endpoints
+show-all-containers
+show-all-environments
+show-all-lambdas
+show-all-orgs
 show-all-workspaces
+
+# Show
+show-api-endpoints
 show-container-details
+show-container-raw-json
 show-containers
+show-current-context
 show-environment-entitlements
 show-environments
-show-org-containers
+show-lambdas
 show-org-entitlements
-show-org-environments
-show-orgs
 show-workspace-entitlements
 show-workspaces
 ```
 
 ## Select Commands
 ```
-select-context
-select-all-workspaces
 select-container
-select-container-from-all-orgs
+select-context
 select-environment
-select-environment-from-all-orgs
 select-org
 select-workspace
 ```
