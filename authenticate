@@ -3,3 +3,5 @@
 const gestalt = require('./lib/gestalt');
 
 gestalt.authenticate();
+
+console.log("Authenticated.");
