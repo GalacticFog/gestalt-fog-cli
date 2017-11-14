@@ -13,9 +13,11 @@ const options = {
 if (argv.uuid) {
     const res = gestalt.getContainer(argv.uuid);
     displayResource.run(options, [res]);
+    console.log();
     console.log(res);
 } else {
     const res = gestalt.fetchContainer();
     displayResource.run(options, [res]);
+    console.log();
     console.log(res);
 }

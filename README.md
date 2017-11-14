@@ -40,7 +40,7 @@ show-workspaces
 
 ## Select Commands
 ```
-select
+select-context
 select-all-workspaces
 select-container
 select-container-from-all-orgs

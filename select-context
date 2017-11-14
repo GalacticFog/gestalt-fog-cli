@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
+
 const selectResource = require('./lib/selectResourceUI');
 
 selectResource.mode = 'autocomplete';
@@ -121,45 +122,20 @@ if (argv.type) {
     let res = options[argv.type];
     
     selectResource.run(res, answers => {
-        gestalt.persistState(answers);
+        gestaltState.saveState(answers);
     });
 } else {
 
-    //// This approach doesn't work ...
-    // new Promise((resolve, reject) => {
-    //     // reject();
-    //     resolve();
-    // }).then(success => {
-    //     selectResource.run(options.org, answers => {
-    //         gestalt.persistState(answers);
-    //         // reject();
-    //         // resolve();
-    //     })
-    // }).then(success => {
-    //     selectResource.run(options.ws, answers => {
-    //         gestalt.persistState(answers);
-    //         //resolve();
-    //     })
-    // }).then(success => {
-    //     selectResource.run(options.env, answers => {
-    //         gestalt.persistState(answers);
-    //         //resolve();
-    //     })
-    // }).catch(err => {
-    //     console.error("Error: " + err);
-    // });
-
-
     selectResource.run(options.org, answers => {
-        gestalt.persistState(answers);
+        gestalt.setCurrentOrg(answers);
         console.log();
         
         selectResource.run(options.ws, answers => {
-            gestalt.persistState(answers);
+            gestalt.setCurrentWorkspace(answers);
             console.log();
             
             selectResource.run(options.env, answers => {
-                gestalt.persistState(answers);
+                gestalt.setCurrentEnvironment(answers);
                 console.log();
             });
         });

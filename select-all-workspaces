@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
+
 const selectResource = require('./lib/selectResourceUI');
 
 selectResource.mode = 'autocomplete';
@@ -40,5 +41,5 @@ const options = {
 };
 
 selectResource.run(options, answers => {
-    gestalt.persistState(answers);
+    gestalt.setCurrentWorkspace(answers);
 });

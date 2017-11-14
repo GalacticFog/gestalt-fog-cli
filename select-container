@@ -38,5 +38,5 @@ const options = {
 }
 
 selectResource.run(options, answers => {
-    gestalt.persistState(answers);
+    gestalt.setCurrentContainer(answers);
 });
