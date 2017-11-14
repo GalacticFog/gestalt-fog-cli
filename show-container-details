@@ -10,11 +10,12 @@ const options = {
     sortField: 'description',
 }
 
-
 if (argv.uuid) {
-    const uuid = process.argv[2];
-    const res = gestalt.getContainer(uuid);
-    console.log(res);
-
+    const res = gestalt.getContainer(argv.uuid);
     displayResource.run(options, [res]);
-}    
+    console.log(res);
+} else {
+    const res = gestalt.fetchContainer();
+    displayResource.run(options, [res]);
+    console.log(res);
+}
