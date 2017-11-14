@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+const argv = require('yargs').argv
+const gestalt = require('./lib/gestalt')
+
+function showRaw(c) {
+    console.log("Raw output:")
+    console.log()
+    console.log(c);
+    console.log()
+}
+
+// Main
+
+const container = gestalt.fetchContainer();
+
+showRaw(container);

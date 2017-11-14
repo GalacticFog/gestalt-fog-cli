@@ -1,3 +1,15 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
+
+
+var sync = require('child_process').spawnSync;
+
+// var ls = sync('kubectl', ['get', 'pods', '--all-namespaces'], { encoding : 'utf8' });
+
+var ls = sync('kubectl', ['logs', '-n', '57024190-5383-44c4-98d2-c9e257604d87', 'gateway-provider-2249161138-k8dfb'], { encoding : 'utf8' });
+   
+// uncomment the following if you want to see everything returned by the spawnSync command
+// console.log('ls: ' , ls);
+console.log('stdout here: \n' + ls.stdout);
+console.log('stderr here: \n' + ls.stderr);
