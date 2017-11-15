@@ -14,16 +14,20 @@ npm install
 Note: These utilities are packaged in a Docker image here: https://gitlab.com/galacticfog/gestalt-utility-image
 
 
-## Configuration
+## Initial Configuration
 ```
-configure
+$ ./configure 
+? Gestalt URL 
+? Username 
+? Password [hidden]
 
-...
+./authenticate
 
-authenticate
+./select-context
 ```
 
-## Show Commands
+## Display Gestalt Resources
+Commands to query for resources.
 ```
 # Show All
 show-all-api-endpoints
@@ -33,7 +37,7 @@ show-all-lambdas
 show-all-orgs
 show-all-workspaces
 
-# Show
+# Show resources in the current context
 show-api-endpoints
 show-container-details
 show-container-raw-json
@@ -47,17 +51,15 @@ show-workspace-entitlements
 show-workspaces
 ```
 
-## Select Commands
+## Select Context Commands
+Commands to change the current context to selected resources.
 ```
 select-container
 select-context
 select-environment
 select-org
 select-workspace
-```
-
-## Context Commands
-```
 clear-current-context
+select-context
 show-current-context
 ```
