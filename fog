@@ -1,8 +1,0 @@
-#!/usr/bin/env node
-const argv = require('yargs').argv
-
-const selectResource = require('./lib/selectResource');
-
-console.log(argv);
-
-selectResource.run(argv, null);
