@@ -4,6 +4,7 @@ const selectOrg = require('./lib/selectOrg');
 const selectWorkspace = require('./lib/selectWorkspace');
 const selectEnvironment = require('./lib/selectEnvironment');
 const selectContainer = require('./lib/selectContainer');
+const gestalt = require('./lib/gestalt');
 
 selectOrg.run((result) => {
 
@@ -11,17 +12,23 @@ selectOrg.run((result) => {
     console.log(`${result.org.fqon} selected.`);
     console.log();
 
+    gestalt.setCurrentOrg(result);
+
     selectWorkspace.run((result) => {
 
         console.log();
         console.log(`${result.workspace.name} selected.`);
         console.log();
 
+        gestalt.setCurrentWorkspace(result);
+        
         selectEnvironment.run((result) => {
 
             console.log();
             console.log(`${result.environment.name} selected.`);
             console.log();
+
+            gestalt.setCurrentEnvironment(result);            
         });
     });
 });

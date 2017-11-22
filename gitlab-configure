@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+'use strict';
+const inquirer = require('inquirer');
+const gestaltState = require('./lib/gestalt-state');
+
+const config = gestaltState.getConfig();
+
+const questions = [
+    {
+        type: 'input',
+        name: 'gestalt_url',
+        message: "Gestalt URL",
+        default: () => {
+            return config.gestalt_url || '';
+        }
+    },
+    {
+        type: 'input',
+        name: 'username',
+        message: "Username",
+        default: () => {
+            return config.username || '';
+        }
+    },
+    {
+        type: 'password',
+        name: 'password',
+        message: "Password",
+    },
+];
+
+inquirer.prompt(questions).then(answers => {
+    const contents = JSON.stringify(answers, null, '  ');
+
+    gestaltState.saveConfig(contents);
+
+    console.log(`Confguration saved.`);
+});

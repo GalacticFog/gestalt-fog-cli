@@ -2,35 +2,21 @@
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
-const chalk = require('chalk')
-
-let resources = [];
-
-gestalt.fetchOrgFqons().map(fqon => {
-
-    const res = gestalt.fetchOrgContainers(fqon);
-
-    res.map(item => {
-        item.fqon = fqon
-    })
-
-    resources = resources.concat(res);
-
-});
-
 
 const options = {
-    headers: ['Container', 'Link'],
-    fields: ['name', 'href'],
-    sortField: 'name',
+    message: "Environments",
+    headers: ['Environment', 'Name', 'Type', 'Org', 'Workspace', 'Owner'],
+    fields: ['description', 'name', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name'],
+    sortField: 'description',
 }
 
 try {
+    const resources = gestalt.fetchOrgEnvironments();
+        
     displayResource.run(options, resources);
+    
 } catch (err) {
     console.log(err.message);
     console.log("Try running 'select-context'");
     console.log();
 }
-
-

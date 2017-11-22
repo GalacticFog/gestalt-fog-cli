@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
+const selectContainer = require('./lib/selectContainer');
 
 function showRaw(c) {
     console.log()
@@ -10,13 +11,20 @@ function showRaw(c) {
 }
 
 // Main
-
 try {
-    const container = gestalt.fetchContainer();
-    
-    showRaw(container);
+
+    // 1) Select Container
+
+    selectContainer.run((result) => {
+
+        // 2) Show container details
+
+        const container = gestalt.fetchContainer(result.container.id);  //fetch from current context
+
+        showRaw(container);
+    });
 } catch (err) {
     console.log(err.message);
-    console.log("Try running 'select-container'");
+    console.log("Try running 'select-context'");
     console.log();
 }

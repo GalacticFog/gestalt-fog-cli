@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+const argv = require('yargs').argv
+const gestalt = require('./lib/gestalt')
+const displayResource = require('./lib/displayResourceUI');
+const chalk = require('chalk')
+
+let resources = [];
+
+const fqon = gestalt.getCurrentOrg().fqon;
+const res = gestalt.fetchOrgContainers();
+
+res.map(item => {
+    item.fqon = fqon
+})
+
+resources = resources.concat(res);
+
+const options = {
+    headers: ['Container', 'FQON'],
+    fields: ['name', 'fqon'],
+    sortField: 'name',
+}
+
+try {
+    displayResource.run(options, resources);
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'select-context'");
+    console.log();
+}

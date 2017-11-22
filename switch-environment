@@ -3,6 +3,8 @@ const selectEnvironment = require('./lib/selectEnvironment');
 
 try {
     selectEnvironment.run((result) => {
+        gestalt.setCurrentEnvironment(result);                    
+
         console.log();    
         console.log(`${result.environment.name} selected.`);
         console.log();

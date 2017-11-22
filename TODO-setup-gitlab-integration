@@ -1,3 +1,97 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
+const gitlabToken = 'u-4tzZew9v3WzUXfVMiw';
+const gitlabUrl = 'https://gitlab.com/api/v4/projects?visibility=private&simple=true';
+
+
+// function update_gitlab_environment(base_url, token, gitlab_env, payload) {
+//     var url = base_url + "/environments/" + gitlab_env.id;
+//     var pc = client.prepareConnect(url)
+//         .setMethod("PUT")
+//         .addHeader("PRIVATE-TOKEN", token);
+//     log("PUT " + url, LoggingLevels.DEBUG);
+//     if (payload) {
+//         pc = pc.setBody(JSON.stringify(payload)).addHeader("Content-Type", "application/json")
+//     }
+//     return _handleResponse(pc.execute().get());
+// }
+
+var exports = module.exports = {}
+exports.list = function (event, context, callback) {
+
+    // const request = require('request');
+    const rp = require('request-promise-native');
+    const errors = require('request-promise-native/errors');
+
+    const data = event ? JSON.parse(event) : {};
+
+    // const metaProtocol = getParameter( "meta_protocol", data );
+    // const metaHost = getParameter( "meta_host", data );
+    // const metaPort = getParameter( "meta_port", data );
+    // const metaFQON = getParameter( "meta_fqon", data );
+    // const metaEnvironment = getParameter( "meta_environment", data );
+
+    const projectname = 'esonchaiwanich/dummy-app-for-deploy-to-gestalt';
+
+    const options = {
+        uri: `https://gitlab.com/api/v4/projects/${encodeURIComponent(projectname)}/variables`,
+        headers: {
+            'PRIVATE-TOKEN': gitlabToken
+        },
+        qs: {
+            // simple: 'true',
+            // visibility: 'private'
+        },
+        method: "GET",
+        json: true
+    };
+
+    rp(options)
+        .then(function (parsedBody) {
+            console.log(parsedBody);
+        })
+        .catch(errors.StatusCodeError, function (reason) {
+            // The server responded with a status codes other than 2xx.
+            // Check reason.statusCode
+        })
+        .catch(errors.RequestError, function (reason) {
+            // The request failed due to technical reasons.
+            // reason.cause is the Error object Request would pass into a callback.
+        });
+
+
+    // var metaUrl = metaProtocol + "://" + metaHost + ":" + metaPort + "/" + metaFQON + "/environments/" + metaEnvironment + "/lambdas";
+
+    // rp(options).then(function (parsedBody) {
+
+    //     token = parsedBody.access_token;
+    //     console.log("token : " + token);
+
+    //     var rp2 = {
+    //         uri: metaUrl,
+    //         method: "GET",
+    //         headers: {
+    //             Authorization: "Bearer " + token
+    //         },
+    //         json: true
+    //     };
+
+    //     return rp(rp2);
+
+    // }).then(function (parsedResponse) {
+    //     console.log(parsedResponse);
+    //     const lambdas = JSON.stringify(parsedResponse);
+    //     callback(null, lambdas);
+    // });
+
+
+};
+
+function getParameter(paramName, data) {
+    console.log("getting parameter " + paramName);
+    if (data[paramName]) return data[paramName];
+    else return process.env[paramName];
+}
+
+exports.list();

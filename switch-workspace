@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 const selectWorkspace = require('./lib/selectWorkspace');
+const gestalt = require('./lib/gestalt');
 
 try {
     selectWorkspace.run((result) => {
+        gestalt.setCurrentWorkspace(result);
         console.log();    
         console.log(`${result.workspace.name} selected.`);
         console.log();

@@ -2,6 +2,8 @@
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
+const selectContainer = require('./lib/selectContainer');
+
 
 function showContainer(c) {
     const options = {
@@ -54,13 +56,21 @@ function showCommands(c) {
 
 // Main
 try {
-    const container = gestalt.fetchContainer();
 
-    showContainer(container);
-    showInstances(container);
-    showCommands(container);
+    // 1) Select Container
+
+    selectContainer.run((result) => {
+
+        // 2) Show container details
+
+        const container = gestalt.fetchContainer(result.container.id);  //fetch from current context
+
+        showContainer(container);
+        showInstances(container);
+        showCommands(container);
+    });
 } catch (err) {
     console.log(err.message);
-    console.log("Try running 'select-container'");
+    console.log("Try running 'select-context'");
     console.log();
 }

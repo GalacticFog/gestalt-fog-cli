@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 const selectOrg = require('./lib/selectOrg');
+const gestalt = require('./lib/gestalt');
 
 try {
     selectOrg.run((result) => {
+        gestalt.setCurrentOrg(result);        
         console.log();    
         console.log(`${result.org.fqon} selected.`);
         console.log();

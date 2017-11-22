@@ -21,45 +21,56 @@ $ ./configure
 ? Username 
 ? Password [hidden]
 
-./authenticate
+./login
 
-./select-context
+./switch-context
 ```
 
-## Display Gestalt Resources
+## List Gestalt Resources
 Commands to query for resources.
 ```
-# Show All
-show-all-api-endpoints
-show-all-containers
-show-all-environments
-show-all-lambdas
-show-all-orgs
-show-all-workspaces
+# List All
+list-all-api-endpoints
+list-all-containers
+list-all-environments
+list-all-lambdas
+list-all-orgs
+list-all-workspaces
 
-# Show resources in the current context
-show-api-endpoints
+# List in the current org
+list-org-api-endpoints
+list-org-containers
+list-org-environments
+list-org-lambdas
+list-workspaces
+
+# List in the current Environment
+list-api-endpoints
+list-containers
+list-environments
+list-lambdas
+
+# Show resource details in the current context
 show-container-details
 show-container-raw-json
-show-containers
-show-current-context
 show-environment-entitlements
-show-environments
-show-lambdas
 show-org-entitlements
 show-workspace-entitlements
-show-workspaces
 ```
 
 ## Select Context Commands
 Commands to change the current context to selected resources.
 ```
-select-container
-select-context
-select-environment
-select-org
-select-workspace
-clear-current-context
-select-context
-show-current-context
+clear-context
+switch-context
+switch-environment
+switch-org
+switch-workspace
+```
+
+## Other
+```
+configure*
+login
+logout
 ```

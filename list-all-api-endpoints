@@ -17,7 +17,7 @@ eps.map(ep => {
 const options = {
     message: "API Endpoints",
     headers: [
-        'Resource Patch',
+        'Resource Path',
         'Type',
         'Security',
         'FQON',
