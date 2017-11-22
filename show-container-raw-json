@@ -25,6 +25,6 @@ try {
     });
 } catch (err) {
     console.log(err.message);
-    console.log("Try running 'select-context'");
+    console.log("Try running 'switch-context'");
     console.log();
 }

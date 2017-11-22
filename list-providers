@@ -4,16 +4,20 @@ const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
 
 const options = {
-    message: "Workspaces",
-    headers: ['Workspace', 'Name', 'Org', 'Owner'],
-    fields: ['description', 'name', 'org.properties.fqon', 'owner.name'],
-    sortField: 'description',
+    message: "Providers",
+    headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', /*'Created'*/],
+    fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', /*'created.timestamp'*/],
+    sortField: 'name',
 }
 
 try {
     const fqon = gestalt.getState().org.fqon;
     
-    const resources = gestalt.fetchWorkspaces([fqon]);
+    const resources = gestalt.fetchOrgProviders([fqon]);
+
+    resources.map(item => {
+        item.resource_type = item.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
+    });
     
     // console.log(JSON.stringify(resources, null, 2))
     
