@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+const gestaltState = require('./lib/gestalt-state');
+
+gestaltState.clearAuthToken();
+
+gestaltState.clearState();
+
+console.log("Logged out.");
