@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.156.0",
     "chalk": "^2.3.0",
     "columnify": "^1.5.4",
     "fuzzy": "^0.1.3",
