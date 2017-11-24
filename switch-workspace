@@ -4,12 +4,16 @@ const gestalt = require('./lib/gestalt');
 
 try {
     selectWorkspace.run((result) => {
-        gestalt.setCurrentWorkspace(result);
-        console.log();    
-        console.log(`${result.workspace.name} selected.`);
-        console.log();
+        if (result) {
+            gestalt.setCurrentWorkspace(result);
+            console.log();
+            console.log(`${result.workspace.name} selected.`);
+            console.log();
+        } else {
+            console.log("No selection.");
+        }
     });
-    
+
 } catch (err) {
     console.log(err.message);
     console.log("Try running 'switch-context'");

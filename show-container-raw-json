@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
-const gestalt = require('./lib/gestalt')
 const selectContainer = require('./lib/selectContainer');
 
 function showRaw(c) {
     console.log()
     console.log(JSON.stringify(c, null, 2));
-    // console.log(c);
     console.log()
 }
 
@@ -19,7 +17,7 @@ try {
 
         // 2) Show container details
 
-        const container = gestalt.fetchContainer(result.container.id);  //fetch from current context
+        const container = result.container;
 
         showRaw(container);
     });

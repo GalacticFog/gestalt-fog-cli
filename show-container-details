@@ -8,8 +8,8 @@ const selectContainer = require('./lib/selectContainer');
 function showContainer(c) {
     const options = {
         message: "Container",
-        headers: ['Description', 'Status', 'Name', 'Path', 'Image', 'Instances', 'Owner'],
-        fields: ['description', 'properties.status', 'name', 'path', 'properties.image', 'properties.num_instances', 'owner.name'],
+        headers: ['Description', 'Status', 'Name', 'Path', 'Image', 'Instances', 'Owner', 'Provider'],
+        fields: ['description', 'properties.status', 'name', 'path', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
         sortField: 'description',
     }
 
@@ -63,7 +63,8 @@ try {
 
         // 2) Show container details
 
-        const container = gestalt.fetchContainer(result.container.id);  //fetch from current context
+        // const container = gestalt.fetchContainer(result.container);  //fetch from current context
+        const container = result.container;
 
         showContainer(container);
         showInstances(container);
