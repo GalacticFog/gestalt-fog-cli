@@ -22,11 +22,6 @@ const questions = [
             return config.username || '';
         }
     },
-    {
-        type: 'password',
-        name: 'password',
-        message: "Password",
-    },
 ];
 
 inquirer.prompt(questions).then(answers => {

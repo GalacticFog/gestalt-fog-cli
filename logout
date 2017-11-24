@@ -6,4 +6,6 @@ gestaltState.clearAuthToken();
 
 gestaltState.clearState();
 
+gestaltState.clearCachedFiles();
+
 console.log("Logged out.");

@@ -18,10 +18,10 @@ const key = argv._[0];
 
 const config = loadConfig(key);
 
-const elb = new AWS.ELB(config['aws-elb']);
+const elb = new AWS.ELB({ region: config.aws.region });
 
 var params = {
-    LoadBalancerNames: config.elbs
+    LoadBalancerNames: config.aws.elbs
 };
 
 console.log("Reading ELB info...");
@@ -155,7 +155,7 @@ function queryKubernetesServices(callback) {
 }
 
 function loadConfig(key) {
-    const f = gestaltState.getConfigDir() + `/ext/${key}-aws-config.json`;
+    const f = gestaltState.getConfigDir() + `/cluster-${key}.json`;
     if (fs.existsSync(f)) {
         const contents = fs.readFileSync(f, 'utf8');
         return JSON.parse(contents);
