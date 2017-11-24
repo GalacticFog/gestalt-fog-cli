@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 'use strict';
-const argv = require('yargs').argv
 const displayResource = require('./lib/displayResourceUI');
+const GestaltKubeClient = require('./lib/gestalt-kube-client');
+const gestaltState = require('./lib/gestalt-state');
+const argv = require('yargs').argv
 const chalk = require('chalk')
 const fs = require('fs');
 const AWS = require('aws-sdk');
 
 // Check for arguments
 if (argv._.length == 0) {
-    console.error(`Usage: `)
+    console.error(`Usage: ${argv['$0']} <cluster identifier>`);
     return
 }
 
-const config = getJsonFromFile(argv._[0]);
+const key = argv._[0];
+
+const config = loadConfig(key);
 
 const elb = new AWS.ELB(config['aws-elb']);
 
@@ -20,17 +24,14 @@ var params = {
     LoadBalancerNames: config.elbs
 };
 
-const kuberesponse = getJsonFromFile('./kuberesponse-prod.json');
-
 console.log("Reading ELB info...");
 elb.describeLoadBalancers(params, function (err, lbs) {
     if (err) {
         console.log(err, err.stack); // an error occurred
     } else {
-
         // Merge in Kubernetes service information
         console.log("Reading Cluster service info...");
-        displayKubeServices(kuberesponse, function (err, data) {
+        queryKubernetesServices(function (err, data) {
             if (err) {
                 console.log(err, err.stack); // an error occurred
             } else {
@@ -44,8 +45,10 @@ elb.describeLoadBalancers(params, function (err, lbs) {
 
                     // Attach kube
                     listeners.map(item => {
-                        item.port = data[item.InstancePort];
-                        data[item.InstancePort].accountedFor = true; // Mark accounted for to filter out later
+                        item.port = data[item.InstancePort] || {};
+                        if (data[item.InstancePort]) {
+                            data[item.InstancePort].accountedFor = true; // Mark accounted for to filter out later
+                        }
                     });
 
                     // Display
@@ -53,7 +56,6 @@ elb.describeLoadBalancers(params, function (err, lbs) {
                 });
 
                 displayNonMappedPorts(data);
-        
             }
         });
     };
@@ -82,7 +84,7 @@ function displayNonMappedPorts(data) {
     const options = {
         headers: ['LB Port', 'LB Protocol', 'Cluster Port', 'Cluster Protocol', 'Service Name', 'Port', 'Protocol', 'Name', 'Namespace'],
         fields: ['a', 'b', 'nodePort', 'c', 'serviceName', 'port', 'protocol', 'name', 'namespace'],
-        sortField: 'nodePort',
+        sortField: 'serviceName',
         emptyString: '-'
     }
 
@@ -110,37 +112,53 @@ function displayNonMappedPorts(data) {
     displayResource.run(options, resources);
 }
 
-function displayKubeServices(kuberesponse, callback) {
+function queryKubernetesServices(callback) {
 
-    // Transform and flatten
-    let resources = kuberesponse.items.map(item => {
-        const res2 = item.spec.ports.map(port => {
-            port.serviceName = item.metadata.name;
-            port.namespace = item.metadata.namespace;
-            return port;
+    const kube = new GestaltKubeClient({
+        cluster: key
+    });
+
+    const kuberesponse = kube.getServicesAllNamespaces(function (err, data) {
+        if (err) {
+            callback(err, null);
+        } else {
+            const resourcesByNodePort = process(data);
+
+            // success
+            callback(null, resourcesByNodePort);
+        }
+    });
+
+    // private transform function
+    function process(kuberesponse) {
+
+        // Transform and flatten
+        let resources = kuberesponse.items.map(item => {
+            const res2 = item.spec.ports.map(port => {
+                port.serviceName = item.metadata.name;
+                port.namespace = item.metadata.namespace;
+                return port;
+            });
+            return res2;
         });
-        return res2;
-    });
 
-    resources = [].concat.apply([], resources); // flatten array
+        resources = [].concat.apply([], resources); // flatten array
 
+        // Index by nodeport
+        const resourcesByNodePort = {};
 
-    // Index by nodeport
-    const resourcesByNodePort = {};
-
-    resources.map(res => {
-        resourcesByNodePort[res.nodePort] = res;
-    });
-
-    callback(null, resourcesByNodePort);
+        resources.map(res => {
+            resourcesByNodePort[res.nodePort] = res;
+        });
+        return resourcesByNodePort
+    }
 }
 
-
-function getJsonFromFile(file) {
-    const f = file;
+function loadConfig(key) {
+    const f = gestaltState.getConfigDir() + `/ext/${key}-aws-config.json`;
     if (fs.existsSync(f)) {
         const contents = fs.readFileSync(f, 'utf8');
         return JSON.parse(contents);
     }
-    return {};
+    throw new Error(`${f} not found`);
 }

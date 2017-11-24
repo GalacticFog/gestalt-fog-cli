@@ -4,8 +4,11 @@ const gestalt = require('./lib/gestalt');
 
 const resources = gestalt.fetchOrgApis(gestalt.fetchOrgFqons());
 const apis = resources.map(item => {
-    return item.id;
-})
+    return {
+        id: item.id,
+        fqon: item.org.properties.fqon
+    }
+});
 
 const eps = gestalt.fetchApiEndpoints(apis);
 eps.map(ep => {

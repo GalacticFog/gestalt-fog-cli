@@ -5,8 +5,11 @@ const gestalt = require('./lib/gestalt');
 const resources = gestalt.fetchApis();
 // console.log(JSON.stringify(resources, null, 2))
 const apis = resources.map(item => {
-    return item.id;
-})
+    return {
+        id: item.id,
+        fqon: item.org.properties.fqon
+    }
+});
 
 const wsName = gestalt.getCurrentWorkspace().name;
 const envName = gestalt.getCurrentEnvironment().name;

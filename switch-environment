@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const selectEnvironment = require('./lib/selectEnvironment');
+const gestalt = require('./lib/gestalt');
 
 try {
     selectEnvironment.run((result) => {
