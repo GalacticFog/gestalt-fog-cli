@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 'use strict';
+
 const displayResource = require('./lib/displayResourceUI');
-const GestaltKubeClient = require('./lib/gestalt-kube-client');
 const gestaltState = require('./lib/gestalt-state');
 const argv = require('yargs').argv
 const chalk = require('chalk')
-const fs = require('fs');
-const AWS = require('aws-sdk');
 
 // Check for arguments
 if (argv._.length == 0) {
@@ -39,15 +37,19 @@ function selectContainerPort(container, callback) {
 }
 
 
-function selectELB(callback) {
+function selectELB(key, callback) {
     const selectAmazonELB = require('./lib/selectAmazonELB');
 
-    selectAmazonELB.run((result) => {
-        console.log();
-        console.log(`${result.name} selected.`);
-        console.log();
+    console.log("Reading ELB information...")
+    selectAmazonELB.getElbs(key, (err, lbs) => {
 
-        callback(null, result);
+        selectAmazonELB.run(lbs, (result) => {
+            console.log();
+            console.log(`${result.name} selected.`);
+            console.log();
+    
+            callback(null, result);
+        });    
     });
 }
 
@@ -60,6 +62,8 @@ function execute(callback) {
 
 }
 
+const key = argv._[0];
+
 // Main
 
 // 1 - Select container to expose
@@ -68,182 +72,26 @@ selectContainer((err, container) => {
     // 2 - Select ports to expose
     selectContainerPort(container, (err, port) => {
 
-        console.log(port)
+        // 3 - Select ELB to expose to
+        selectELB(key, (err, elb) => {
 
-        // // 3 - Select ELB to expose to
-        // selectELB((err, elb) => {
+            // 4 - for each container node port, allow setting the port, protocol
+            getUserInput((err, input) => {
 
-        //     // 4 - for each container node port, allow setting the port, protocol
-        //     getUserInput((err, input) => {
+                const params = {
+                    elb: elb,
+                    container: container,
+                    port: port,
+                    // lbPort = input.lbPort
+                }
 
-        //         const params = {
-        //             elb: elb,
-        //             container: container,
-        //             port: port,
-        //             // lbPort = input.lbPort
-        //         }
+                // Perform the execution
+                execute(params, (err, result) => {
 
-        //         // Perform the execution
-        //         execute(params, (err, result) => {
+                    console.log(result);
 
-        //             console.log(result);
-
-        //         });
-        //     });
-        // });
+                });
+            });
+        });
     });
 });
-
-
-
-
-
-
-// const key = argv._[0];
-
-// const config = loadConfig(key);
-
-// const elb = new AWS.ELB({ region: config.aws.region });
-
-// var params = {
-//     LoadBalancerNames: config.aws.elbs
-// };
-
-// console.log("Reading ELB info...");
-// elb.describeLoadBalancers(params, function (err, lbs) {
-//     if (err) {
-//         console.log(err, err.stack); // an error occurred
-//     } else {
-//         // Merge in Kubernetes service information
-//         console.log("Reading Cluster service info...");
-//         queryKubernetesServices(function (err, data) {
-//             if (err) {
-//                 console.log(err, err.stack); // an error occurred
-//             } else {
-
-//                 // Iterate through LBs
-//                 lbs.LoadBalancerDescriptions.map(lbd => {
-
-//                     const listeners = lbd.ListenerDescriptions.map(item => {
-//                         return item.Listener;
-//                     });
-
-//                     // Attach kube
-//                     listeners.map(item => {
-//                         item.port = data[item.InstancePort] || {};
-//                         if (data[item.InstancePort]) {
-//                             data[item.InstancePort].accountedFor = true; // Mark accounted for to filter out later
-//                         }
-//                     });
-
-//                     // Display
-//                     displayOutput(lbd.LoadBalancerName, listeners);
-//                 });
-
-//                 displayNonMappedPorts(data);
-//             }
-//         });
-//     };
-// });
-
-
-function displayOutput(name, listeners) {
-    const options = {
-        headers: ['LB Port', 'LB Protocol', 'Cluster Port', 'Cluster Protocol', 'Service Name', 'Port', 'Protocol', 'Name', 'Namespace'],
-        fields: ['LoadBalancerPort', 'Protocol', 'InstancePort', 'InstanceProtocol', 'port.serviceName', 'port.port', 'port.protocol', 'port.name', 'port.namespace'],
-        sortField: 'LoadBalancerPort',
-        emptyString: '-'
-    }
-
-    const resources = listeners.filter(item => {
-        return item.port.namespace != 'gestalt-system' && item.port.namespace != 'kube-system';
-    });
-
-    // Output
-    console.log();
-    console.log(chalk.green.bold(`${name} ELB`));
-    displayResource.run(options, resources);
-}
-
-function displayNonMappedPorts(data) {
-    const options = {
-        headers: ['LB Port', 'LB Protocol', 'Cluster Port', 'Cluster Protocol', 'Service Name', 'Port', 'Protocol', 'Name', 'Namespace'],
-        fields: ['a', 'b', 'nodePort', 'c', 'serviceName', 'port', 'protocol', 'name', 'namespace'],
-        sortField: 'serviceName',
-        emptyString: '-'
-    }
-
-    let resources = Object.values(data);
-
-    // Exclude services that were accounted for on other ELBs
-    resources = resources.filter(item => {
-        return !item.accountedFor;
-    });
-
-    // Hide gestalt-* and kube-* namespaces
-    resources = resources.filter(item => {
-        return item.namespace.indexOf('gestalt-') != 0 && item.namespace.indexOf('kube-') != 0;
-    });
-
-    // Hide Gestalt related services
-    resources = resources.filter(item => {
-        return item.serviceName.indexOf("gestalt-") != 0 &&
-            item.serviceName.indexOf('default-') != 0;
-    });
-
-    // Output
-    console.log();
-    console.log(chalk.blue.bold(`Exposed Services not mapped on the above ELBs`));
-    displayResource.run(options, resources);
-}
-
-function queryKubernetesServices(callback) {
-
-    const kube = new GestaltKubeClient({
-        cluster: key
-    });
-
-    const kuberesponse = kube.getServicesAllNamespaces(function (err, data) {
-        if (err) {
-            callback(err, null);
-        } else {
-            const resourcesByNodePort = process(data);
-
-            // success
-            callback(null, resourcesByNodePort);
-        }
-    });
-
-    // private transform function
-    function process(kuberesponse) {
-
-        // Transform and flatten
-        let resources = kuberesponse.items.map(item => {
-            const res2 = item.spec.ports.map(port => {
-                port.serviceName = item.metadata.name;
-                port.namespace = item.metadata.namespace;
-                return port;
-            });
-            return res2;
-        });
-
-        resources = [].concat.apply([], resources); // flatten array
-
-        // Index by nodeport
-        const resourcesByNodePort = {};
-
-        resources.map(res => {
-            resourcesByNodePort[res.nodePort] = res;
-        });
-        return resourcesByNodePort
-    }
-}
-
-function loadConfig(key) {
-    const f = gestaltState.getConfigDir() + `/cluster-${key}.json`;
-    if (fs.existsSync(f)) {
-        const contents = fs.readFileSync(f, 'utf8');
-        return JSON.parse(contents);
-    }
-    throw new Error(`${f} not found`);
-}
