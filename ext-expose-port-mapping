@@ -2,9 +2,14 @@
 'use strict';
 
 const displayResource = require('./lib/displayResourceUI');
+const displayAmazon = require('./lib/displayAmazon');
 const gestaltState = require('./lib/gestalt-state');
 const argv = require('yargs').argv
-const chalk = require('chalk')
+const chalk = require('chalk')  
+
+const selectContainer = require('./lib/selectContainer');
+const selectContainerPort = require('./lib/selectContainerPort');
+const selectAmazonELB = require('./lib/selectAmazonELB');
 
 // Check for arguments
 if (argv._.length == 0) {
@@ -12,8 +17,68 @@ if (argv._.length == 0) {
     return
 }
 
-function selectContainer(callback) {
-    const selectContainer = require('./lib/selectContainer');
+const key = argv._[0];
+
+// Main
+
+// 1 - Select container to expose
+doSelectContainer((err, container) => {
+
+    // 2 - Select ports to expose
+    doSelectContainerPort(container, (err, result) => {
+
+        // 3 - Select ELB to expose to
+        selectELB(key, (err, elb) => {
+
+            // Show ELB Details
+            displayAmazon.displayDetails(elb);
+
+            // Collect user input
+            getUserInput((err, input) => {
+
+                const params = {
+                    elb: elb,
+                    container: container,
+                    nodePort: result.service_port,
+                    listenerPort: input.port
+                }
+
+                // Display summary to the user before executing
+                summarizeAndConfirm(params, () => {
+
+                    // Confirmed, perform the execution
+                    execute(params, (err, result) => {
+
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            selectAmazonELB.getClusterElb(key, elb.LoadBalancerName, (err, result) => {
+                                console.log("after get cluster elb")
+                                
+                                if (err) {
+                                    console.error(err);
+                                } else {
+
+                                    // Show the result
+
+                                    console.log();
+                                    console.log(chalk.bold.underline(`Services Exposed on '${key}' Cluster ELBs`))
+
+                                    // Show ELB Details
+                                    displayAmazon.displayDetails(elb);
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    });
+});
+
+// ----------------------------
+
+function doSelectContainer(callback) {
 
     selectContainer.run((result) => {
         console.log();
@@ -24,8 +89,7 @@ function selectContainer(callback) {
     });
 }
 
-function selectContainerPort(container, callback) {
-    const selectContainerPort = require('./lib/selectContainerPort');
+function doSelectContainerPort(container, callback) {
 
     selectContainerPort.run(container, (result) => {
         console.log();
@@ -36,62 +100,93 @@ function selectContainerPort(container, callback) {
     });
 }
 
-
 function selectELB(key, callback) {
-    const selectAmazonELB = require('./lib/selectAmazonELB');
 
     console.log("Reading ELB information...")
-    selectAmazonELB.getElbs(key, (err, lbs) => {
+    selectAmazonELB.getClusterElbs(key, (err, lbs) => {
 
         selectAmazonELB.run(lbs, (result) => {
             console.log();
-            console.log(`${result.name} selected.`);
+            console.log(`${result.LoadBalancerName} selected.`);
             console.log();
-    
+
             callback(null, result);
-        });    
+        });
     });
+}
+
+function displayElb(elbName) {
+
 }
 
 function getUserInput(callback) {
 
-}
+    const inquirer = require('inquirer');
 
+    const questions = [
+        {
+            message: "ELB Port to Expose",
+            type: 'input',
+            name: 'port',
+        },
+    ];
 
-function execute(callback) {
-
-}
-
-const key = argv._[0];
-
-// Main
-
-// 1 - Select container to expose
-selectContainer((err, container) => {
-
-    // 2 - Select ports to expose
-    selectContainerPort(container, (err, port) => {
-
-        // 3 - Select ELB to expose to
-        selectELB(key, (err, elb) => {
-
-            // 4 - for each container node port, allow setting the port, protocol
-            getUserInput((err, input) => {
-
-                const params = {
-                    elb: elb,
-                    container: container,
-                    port: port,
-                    // lbPort = input.lbPort
-                }
-
-                // Perform the execution
-                execute(params, (err, result) => {
-
-                    console.log(result);
-
-                });
-            });
-        });
+    inquirer.prompt(questions).then(answers => {
+        callback(null, answers);
     });
-});
+}
+
+
+function summarizeAndConfirm(params, callback) {
+
+    // console.log(JSON.stringify(params, null, 2));
+
+    console.log();
+    console.log(chalk.bold(`The following listener will be added to ELB ${chalk.green(params.elb.LoadBalancerName)}:`));
+
+    displayAction(params);
+
+    // Prompt to continue
+    const inquirer = require('inquirer');
+
+    const questions = [
+        {
+            message: "Proceed to add ELB listener?",
+            type: 'confirm',
+            name: 'confirm',
+        },
+    ];
+
+    inquirer.prompt(questions).then(answers => {
+        const contents = JSON.stringify(answers, null, '  ');
+
+        if (answers.confirm) {
+            callback();
+        } else {
+            console.log("Aborted.")
+        }
+    });
+}
+
+function displayAction(params) {
+    const displayResource = require('./lib/displayResourceUI');
+    const resources = [{
+        InstancePort: params.nodePort,
+        InstanceProtocol: 'TCP',
+        LoadBalancerPort: params.listenerPort,
+        Protocol: 'TCP',
+        LoadBalancerName: params.elb.LoadBalancerName
+    }];
+    const options = {
+        headers: ['LB Name', 'LB Port', 'LB Protocol', 'Cluster Port', 'Cluster Protocol'],
+        fields: ['LoadBalancerName', 'LoadBalancerPort', 'Protocol', 'InstancePort', 'InstanceProtocol'],
+        // sortField: 'LoadBalancerPort',
+        emptyString: '-'
+    }
+    displayResource.run(options, resources);
+}
+
+
+function execute(params, callback) {
+    callback(null, 'EXECUTE');
+}

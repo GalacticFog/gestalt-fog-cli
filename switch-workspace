@@ -7,7 +7,7 @@ try {
         if (result) {
             gestalt.setCurrentWorkspace(result);
             console.log();
-            console.log(`${result.workspace.name} selected.`);
+            console.log(`${result.name} selected.`);
             console.log();
         } else {
             console.log("No selection.");

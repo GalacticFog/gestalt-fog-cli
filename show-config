@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+
+const gestaltState = require('./lib/gestalt-state');
+console.log(JSON.stringify(gestaltState.getConfig(), null, 2));

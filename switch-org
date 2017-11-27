@@ -7,7 +7,7 @@ try {
         if (result) {
             gestalt.setCurrentOrg(result);
             console.log();
-            console.log(`${result.org.fqon} selected.`);
+            console.log(`${result.fqon} selected.`);
             console.log();
         } else {
             console.log("No selection.");

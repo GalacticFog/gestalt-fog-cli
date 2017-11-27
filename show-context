@@ -1,6 +1,3 @@
 #!/usr/bin/env node
-
 const gestalt = require('./lib/gestalt');
-
-console.log("Current context: ");
-console.log(gestalt.getState());
+console.log(JSON.stringify(gestalt.getState(), null, 2));

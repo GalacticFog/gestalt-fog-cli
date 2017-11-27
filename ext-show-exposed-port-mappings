@@ -6,7 +6,7 @@ const gestaltState = require('./lib/gestalt-state');
 const argv = require('yargs').argv
 const chalk = require('chalk')
 const fs = require('fs');
-const AWS = require('aws-sdk');
+const AmazonClient = require('./lib/amazon');
 
 // Check for arguments
 if (argv._.length == 0) {
@@ -16,16 +16,12 @@ if (argv._.length == 0) {
 
 const key = argv._[0];
 
-const config = loadConfig(key);
+const config = loadClusterConfig(key);
 
-const elb = new AWS.ELB({ region: config.aws.region });
-
-var params = {
-    LoadBalancerNames: config.aws.elbs
-};
+const aws = new AmazonClient(config.aws);
 
 console.log("Reading ELB info...");
-elb.describeLoadBalancers(params, function (err, lbs) {
+aws.describeLoadBalancers(function (err, lbs) {
     if (err) {
         console.log(err, err.stack); // an error occurred
     } else {
@@ -35,6 +31,9 @@ elb.describeLoadBalancers(params, function (err, lbs) {
             if (err) {
                 console.log(err, err.stack); // an error occurred
             } else {
+
+                console.log();
+                console.log(chalk.bold.underline(`Services Exposed on '${key}' Cluster ELBs`))
 
                 // Iterate through LBs
                 lbs.LoadBalancerDescriptions.map(lbd => {
@@ -76,7 +75,7 @@ function displayOutput(name, listeners) {
 
     // Output
     console.log();
-    console.log(chalk.green.bold(`${name} ELB`));
+    console.log(chalk.green.bold(`ELB: ${name}`));
     displayResource.run(options, resources);
 }
 
@@ -154,7 +153,7 @@ function queryKubernetesServices(callback) {
     }
 }
 
-function loadConfig(key) {
+function loadClusterConfig(key) {
     const f = gestaltState.getConfigDir() + `/cluster-${key}.json`;
     if (fs.existsSync(f)) {
         const contents = fs.readFileSync(f, 'utf8');

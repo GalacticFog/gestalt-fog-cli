@@ -6,8 +6,8 @@ const chalk = require('chalk')
 
 const options = {
     message: "Groups",
-    headers: ['Group', 'Description', 'Org', 'Owner', /*'Created'*/],
-    fields: ['name', 'description', 'org.properties.fqon', 'owner.name', /*'created.timestamp'*/],
+    headers: ['Group', 'Description', 'Org', 'Owner', 'UID', /*'Created'*/],
+    fields: ['name', 'description', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
     sortField: 'name',
 }
 

@@ -25,9 +25,11 @@ const questions = [
 ];
 
 inquirer.prompt(questions).then(answers => {
-    const contents = JSON.stringify(answers, null, '  ');
+    if (answers.gestalt_url.indexOf("://") == -1) {
+        answers.gestalt_url = 'https://' + answers.gestalt_url;
+    }
 
-    gestaltState.saveConfig(contents);
+    gestaltState.saveConfig(answers);
 
     console.log(`Confguration saved.`);
 });

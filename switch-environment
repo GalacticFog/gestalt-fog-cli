@@ -8,7 +8,7 @@ try {
             gestalt.setCurrentEnvironment(result);
 
             console.log();
-            console.log(`${result.environment.name} selected.`);
+            console.log(`${result.name} selected.`);
             console.log();
         } else {
             console.log("No selection.");
