@@ -24,5 +24,3 @@ try {
     console.log("Try running 'switch-context'");
     console.log();
 }
-
-

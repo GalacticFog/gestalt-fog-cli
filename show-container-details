@@ -34,23 +34,25 @@ function showInstances(c) {
 }
 
 function showCommands(c) {
-    const envId = gestalt.getCurrentEnvironment().id;
+    // const envId = gestalt.getCurrentEnvironment().id;
 
     console.log("Commands:")
     console.log()
     console.log("  Logs:")
     console.log()
-    c.properties.instances.map(instance => {
+    for (let i in c.properties.instances) {
         // console.log(instance)
-        console.log(`    fog logs ${envId} ${instance.id} --tail 20 --follow`);
-    })
+        // console.log(`    ./fog '${c.properties.provider.name}' logs ${envId} ${instance.id} --tail 20 --follow`);
+        console.log(`    ./container-logs ${c.org.properties.fqon} ${c.id}/${i} --tail 20 --follow`)
+    }
 
     console.log()
     console.log("  Console Access:")
     console.log()
-    c.properties.instances.map(instance => {
-        console.log(`    fog console ${envId} ${instance.id}`);
-    })
+    for (let i in c.properties.instances) {
+        // console.log(`    ./fog '${c.properties.provider.name}' console ${envId} ${instance.id} sh`);
+        console.log(`    ./container-console ${c.org.properties.fqon} ${c.id}/${i}`)
+    };
     console.log()
 };
 
@@ -59,12 +61,11 @@ try {
 
     // 1) Select Container
 
-    selectContainer.run((result) => {
+    selectContainer.run((container) => {
 
         // 2) Show container details
 
         // const container = gestalt.fetchContainer(result.container);  //fetch from current context
-        const container = result.container;
 
         showContainer(container);
         showInstances(container);

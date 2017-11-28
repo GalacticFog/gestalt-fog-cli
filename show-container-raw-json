@@ -13,11 +13,9 @@ try {
 
     // 1) Select Container
 
-    selectContainer.run((result) => {
+    selectContainer.run((container) => {
 
         // 2) Show container details
-
-        const container = result.container;
 
         showRaw(container);
     });

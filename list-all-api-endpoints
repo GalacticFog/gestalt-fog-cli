@@ -2,21 +2,6 @@
 const displayResource = require('./lib/displayResourceUI');
 const gestalt = require('./lib/gestalt');
 
-const resources = gestalt.fetchOrgApis(gestalt.fetchOrgFqons());
-const apis = resources.map(item => {
-    return {
-        id: item.id,
-        fqon: item.org.properties.fqon
-    }
-});
-
-const eps = gestalt.fetchApiEndpoints(apis);
-eps.map(ep => {
-    ep.properties.api_path = `/${ep.properties.parent.name}${ep.properties.resource}`
-    ep.properties.environment = '(empty)';
-    ep.properties.workspace = '(empty)';
-});
-
 const options = {
     message: "API Endpoints",
     headers: [
@@ -45,6 +30,27 @@ const options = {
 }
 
 try {
+    let resources = [];
+    gestalt.fetchOrgFqons().map(fqon => {
+        console.error(`Fetching from ${fqon}...`)
+        const res = gestalt.fetchOrgApis([fqon]);
+        resources = resources.concat(res);
+    });
+
+    const apis = resources.map(item => {
+        return {
+            id: item.id,
+            fqon: item.org.properties.fqon
+        }
+    });
+
+    const eps = gestalt.fetchApiEndpoints(apis);
+    eps.map(ep => {
+        ep.properties.api_path = `/${ep.properties.parent.name}${ep.properties.resource}`
+        ep.properties.environment = '(empty)';
+        ep.properties.workspace = '(empty)';
+    });
+
     displayResource.run(options, eps);
 } catch (err) {
     console.log(err.message);

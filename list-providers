@@ -5,8 +5,8 @@ const displayResource = require('./lib/displayResourceUI');
 
 const options = {
     message: "Providers",
-    headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', /*'Created'*/],
-    fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', /*'created.timestamp'*/],
+    headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'UID'/*'Created'*/],
+    fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
     sortField: 'name',
 }
 

@@ -3,6 +3,7 @@
 const inquirer = require('inquirer');
 const gestaltState = require('./lib/gestalt-state');
 const gestalt = require('./lib/gestalt');
+const chalk = require('chalk');
 
 const config = gestaltState.getConfig();
 
@@ -22,11 +23,13 @@ const questions = [
     },
 ];
 
+console.log(`Log in to ${chalk.bold(config.gestalt_url)}`);
+
 inquirer.prompt(questions).then(creds => {
 
     gestalt.authenticate(creds, (err, res) => {
         if (!err) {
-            console.log(`Authenticated. User ${res.username} logged in.`);    
+            console.log(`Authenticated. User ${res.username} logged in to ${config.gestalt_url}.`);    
         } else {
             console.error("Login failed: " + err);
             console.error();
