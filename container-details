@@ -4,7 +4,6 @@ const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
 const selectContainer = require('./lib/selectContainer');
 
-
 function showContainer(c) {
     const options = {
         message: "Container",

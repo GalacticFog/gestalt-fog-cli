@@ -5,9 +5,11 @@ const displayResource = require('./lib/displayResourceUI');
 
 const options = {
     message: "Workspaces",
-    headers: ['Workspace', 'Name', 'Org', 'Owner'],
-    fields: ['description', 'name', 'org.properties.fqon', 'owner.name'],
-    sortField: 'description',
+    headers: ['Org', 'Description', 'Name', 'Owner'],
+    fields: ['org.properties.fqon', 'description', 'name', 'owner.name'],
+    // headers: ['Workspace', 'Name', 'Path', 'Owner'],
+    // fields: ['description', 'name', 'path', 'owner.name'],
+    sortField: 'org.properties.fqon',
 }
 
 try {
@@ -17,6 +19,10 @@ try {
         const res = gestalt.fetchWorkspaces([fqon]);
         resources = resources.concat(res);
     });
+
+    resources.map(r => {
+        r.path = `[${r.org.properties.fqon}] ${r.name}`
+    })
 
     displayResource.run(options, resources);
 

@@ -4,24 +4,28 @@ const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
 const chalk = require('chalk')
 
-let resources = [];
-
-const fqon = gestalt.getCurrentOrg().fqon;
-const res = gestalt.fetchOrgContainers();
-
-res.map(item => {
-    item.fqon = fqon
-})
-
-resources = resources.concat(res);
+// console.log(resources)
 
 const options = {
+    message: 'Containers',
     headers: ['Container', 'FQON'],
     fields: ['name', 'fqon'],
     sortField: 'name',
 }
 
 try {
+    let resources = [];
+
+    gestalt.fetchOrgFqons().map(fqon => {
+        console.error(`Fetching from ${fqon}...`)
+        const res = gestalt.fetchOrgContainers(fqon);
+
+        res.map(item => {
+            item.fqon = fqon
+        })
+
+        resources = resources.concat(res);
+    });
     displayResource.run(options, resources);
 } catch (err) {
     console.log(err.message);

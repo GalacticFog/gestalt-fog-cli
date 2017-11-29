@@ -5,8 +5,8 @@ const displayResource = require('./lib/displayResourceUI');
 
 const options = {
     message: "Environments",
-    headers: ['Environment', 'Name', 'Type', 'Org', 'Workspace', 'Owner'],
-    fields: ['description', 'name', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name'],
+    headers: ['Description', 'Name', 'Org', 'Type', 'Workspace', 'Owner'],
+    fields: ['description', 'name', 'org.properties.fqon', 'properties.environment_type', 'properties.workspace.name', 'owner.name'],
     sortField: 'description',
 }
 
