@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+'use strict';
+const gestaltState = require('./lib/gestalt-state');
+const argv = require('yargs').argv
+const GestaltKubeClient = require('./lib/gestalt-kube-client');
+const gestalt = require('./lib/gestalt')
+const selectContainerInstance = require('./lib/selectContainerInstance');
+
+try {
+    // Use the container's provider to get the cluster name e.g. 'dev' or 'prod' so that the kubeconfig can be downloaded via ?cluster=dev
+    const providerConfig = gestaltState.loadConfigFile('providers.json');
+    const env = gestalt.getCurrentEnvironment();
+    const container = gestalt.fetchCurrentContainer(); // Get the focused container
+    const clusterName = providerConfig[container.properties.provider.id];
+    const kube = new GestaltKubeClient({ cluster: clusterName });
+
+    // Select the container instance
+
+    console.log(`Container ${container.name}:`);
+    console.log();
+
+    if (container.properties.instances.length > 1) {
+        // More than one container instance, choose
+        selectContainerInstance.run(container, (inst) => {
+            accessLogs(kube, env, inst, argv);
+        });
+    } else {
+        accessLogs(kube, env, container.properties.instances[0], argv);
+    }
+} catch (err) {
+    console.log(err);
+}
+
+function accessLogs(kube, env, inst, options) {
+    // View the log
+    console.log(`${inst.id} logs:`);
+    console.log();
+
+    kube.accessPodLogs(env.id, inst.id, { follow: options.follow, tail: options.tail });
+
+    console.log('Done.');
+}
