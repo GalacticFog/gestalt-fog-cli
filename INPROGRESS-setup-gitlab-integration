@@ -1,97 +1,120 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
-const gitlabToken = 'u-4tzZew9v3WzUXfVMiw';
-const gitlabUrl = 'https://gitlab.com/api/v4/projects?visibility=private&simple=true';
+const gestaltState = require('./lib/gestalt-state')
+const gitlab = require('./lib/gestalt-gitlab-client');
+const fs = require('fs');
+const selectGestaltContext = require('./lib/selectOrgWorkspaceEnvironment');
 
-
-// function update_gitlab_environment(base_url, token, gitlab_env, payload) {
-//     var url = base_url + "/environments/" + gitlab_env.id;
-//     var pc = client.prepareConnect(url)
-//         .setMethod("PUT")
-//         .addHeader("PRIVATE-TOKEN", token);
-//     log("PUT " + url, LoggingLevels.DEBUG);
-//     if (payload) {
-//         pc = pc.setBody(JSON.stringify(payload)).addHeader("Content-Type", "application/json")
-//     }
-//     return _handleResponse(pc.execute().get());
-// }
-
-var exports = module.exports = {}
-exports.list = function (event, context, callback) {
-
-    // const request = require('request');
-    const rp = require('request-promise-native');
-    const errors = require('request-promise-native/errors');
-
-    const data = event ? JSON.parse(event) : {};
-
-    // const metaProtocol = getParameter( "meta_protocol", data );
-    // const metaHost = getParameter( "meta_host", data );
-    // const metaPort = getParameter( "meta_port", data );
-    // const metaFQON = getParameter( "meta_fqon", data );
-    // const metaEnvironment = getParameter( "meta_environment", data );
-
-    const projectname = 'esonchaiwanich/dummy-app-for-deploy-to-gestalt';
-
-    const options = {
-        uri: `https://gitlab.com/api/v4/projects/${encodeURIComponent(projectname)}/variables`,
-        headers: {
-            'PRIVATE-TOKEN': gitlabToken
-        },
-        qs: {
-            // simple: 'true',
-            // visibility: 'private'
-        },
-        method: "GET",
-        json: true
-    };
-
-    rp(options)
-        .then(function (parsedBody) {
-            console.log(parsedBody);
-        })
-        .catch(errors.StatusCodeError, function (reason) {
-            // The server responded with a status codes other than 2xx.
-            // Check reason.statusCode
-        })
-        .catch(errors.RequestError, function (reason) {
-            // The request failed due to technical reasons.
-            // reason.cause is the Error object Request would pass into a callback.
-        });
-
-
-    // var metaUrl = metaProtocol + "://" + metaHost + ":" + metaPort + "/" + metaFQON + "/environments/" + metaEnvironment + "/lambdas";
-
-    // rp(options).then(function (parsedBody) {
-
-    //     token = parsedBody.access_token;
-    //     console.log("token : " + token);
-
-    //     var rp2 = {
-    //         uri: metaUrl,
-    //         method: "GET",
-    //         headers: {
-    //             Authorization: "Bearer " + token
-    //         },
-    //         json: true
-    //     };
-
-    //     return rp(rp2);
-
-    // }).then(function (parsedResponse) {
-    //     console.log(parsedResponse);
-    //     const lambdas = JSON.stringify(parsedResponse);
-    //     callback(null, lambdas);
-    // });
-
-
+const project = {
+    name: 'esonchaiwanich/dummy-app-for-deploy-to-gestalt'
 };
 
-function getParameter(paramName, data) {
-    console.log("getting parameter " + paramName);
-    if (data[paramName]) return data[paramName];
-    else return process.env[paramName];
+function doGetProjects(callback) {
+    gitlab.listPrivateProjects((err, result) => {
+        console.log(err);
+        console.log(result);
+
+        if (!err) {
+            selectGitlabProject(result, callback);
+        }
+    });
 }
 
-exports.list();
+function selectGitlabProject(result, callback) {
+    const selectResource = require('./lib/selectResourceUI');
+    const options = {
+        mode: 'autocomplete',
+        message: "Gitlab Projects",
+        fields: ['name_with_namespace', 'description_truncated'],
+        sortBy: 'name_with_namespace',
+        fetchFunction: () => {
+            return result;
+        }
+    }
+
+    result.map(r => {
+        const width = 100;
+        r.description_truncated = r.description;
+        if (String(r.description_truncated).length > width) {
+            r.description_truncated = `${String(r.description).substring(0, width)}...`;
+        }
+    });
+
+    selectResource.run(options, (selection) => {
+        callback(null, selection)
+    });
+}
+
+function doGetVarables() {
+    const variable = {
+        key: "TEST_3",
+        value: "The letter F"
+    }
+
+    console.log("Setting...");
+
+    // gitlab.getProjectVariables(project, (err, result) => {
+    //     console.log(project)
+    //     console.log(err);
+    //     console.log(result);
+    // });
+
+    gitlab.createOrUpdateProjectVariable(project, variable, (err, result) => {
+
+        // console.log(err);
+        console.log(result);
+
+        console.log("Fetching...");
+
+        gitlab.getProjectVariables(project, (err, result) => {
+
+            // console.log(err);
+            console.log(result);
+
+        });
+    });
+}
+
+function doSetupGitlabProject(project, environment, callback) {
+    // Set up Gitlab Project with the following:
+
+    // GF_TARGET_ENV_UUID
+    // GF_TARGET_ORG_NAME
+    // GITLAB_PROJECT_ID
+    // GITLAB_PROJECT_NAME
+
+    // Create and checkin .gitlab-ci.yaml
+}
+
+//
+// Main
+//
+
+// 1) Choose a Gitlab Project
+doGetProjects((err, project) => {
+
+    // 2) Choose a Gestalt Environment
+    selectGestaltContext.run(context => {
+
+        const env = context.environment;
+
+        console.log(context);
+
+
+        // 3) Summarize and confirm
+
+        doSummarize((go) => {
+            if (go) {
+                // 4) Execute
+
+                doSetupGitlabProject(project, context.environment, (result) => {
+
+                });
+            }
+        });
+    });
+});
+
+
+
