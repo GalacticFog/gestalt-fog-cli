@@ -71,6 +71,7 @@ function selectGitlabProject(result, callback) {
         message: "Gitlab Projects",
         fields: ['name_with_namespace', 'description_truncated'],
         sortBy: 'name_with_namespace',
+        pageSize: 20,
         fetchFunction: () => {
             return result;
         }
