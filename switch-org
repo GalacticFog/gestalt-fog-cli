@@ -15,7 +15,7 @@ try {
     });
 } catch (err) {
     console.log(err.message);
-    console.log("Try running 'switch-context'");
+    console.log("Try running 'switch'");
     console.log();
 }
 

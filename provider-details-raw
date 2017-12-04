@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
-const selectContainer = require('./lib/selectContainer');
+const selectProvider = require('./lib/selectProvider');
 
-function showRaw(c) {
+function showRaw(obj) {
     console.log()
-    console.log(JSON.stringify(c, null, 2));
+    console.log(JSON.stringify(obj, null, 2));
     console.log()
 }
 
@@ -13,11 +13,11 @@ try {
 
     // 1) Select Container
 
-    selectContainer.run((container) => {
+    selectProvider.run((provider) => {
 
-        // 2) Show container details
+        // 2) Show provider details
 
-        showRaw(container);
+        showRaw(provider);
     });
 } catch (err) {
     console.log(err.message);
