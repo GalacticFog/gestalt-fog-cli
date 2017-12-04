@@ -87,7 +87,7 @@ function selectGitlabProject(result, callback) {
     });
 
     selectResource.run(options, (selection) => {
-        callback(null, selection.value);
+        callback(null, selection);
     });
 }
 
