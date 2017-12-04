@@ -5,6 +5,8 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const selectResource = require('./lib/selectResourceUI');
 
+console.log("Step 1 - Select a Gitlab project to configure for deployment to Gestalt.")
+console.log();
 // Choose a Gitlab Project
 doGetProjects((err, project) => {
     if (err) {
@@ -13,7 +15,9 @@ doGetProjects((err, project) => {
     }
 
     console.log();
-
+    console.log("Step 2 - Select a Gestalt Environment to deploy to.")
+    console.log();
+    
     // Choose a Gestalt Org / Workspace / Environment
     selectGestaltContext.run(context => {
 
