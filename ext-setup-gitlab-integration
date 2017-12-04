@@ -15,7 +15,16 @@ doGetProjects((err, project) => {
     // Choose a Gestalt Org / Workspace / Environment
     selectGestaltContext.run(context => {
 
-        const env = context.environment;
+        // Add variables to context (note: using 'v1' and 'v2' since there are only two variables and this code
+        // doesn't handle a dynamic number of variables.
+        context.v1 = {
+            key: 'GF_ORG',
+            value: context.org.fqon
+        };
+        context.v2 = {
+            key: 'GF_ENV',
+            value: context.environment.id
+        };
 
         // Summarize and confirm
         doSummarizeAndConfirm(project, context, (confirmed) => {
@@ -146,29 +155,19 @@ function doSetupGitlabProject(project, context, callback) {
     if (!context.environment.id) throw Error('missing context.environment.id');
     if (!callback) throw Error('missing callback');
 
-    // Do the work
-    const v1 = {
-        key: 'GF_ORG',
-        value: context.org.fqon
-    };
-    const v2 = {
-        key: 'GF_ENV',
-        value: context.environment.id
-    };
-
-    console.log(`Setting ${v1.key} variable`);
+    console.log(`Setting ${context.v1.key} variable`);
 
     // Set org
-    gitlab.createOrUpdateProjectVariable(project, v1, (err, unused) => {
+    gitlab.createOrUpdateProjectVariable(project, context.v1, (err, unused) => {
         if (err) {
             callback(err, null);
             return;
         }
 
-        console.log(`Setting ${v2.key} varialble`);
+        console.log(`Setting ${context.v2.key} varialble`);
 
         // set env
-        gitlab.createOrUpdateProjectVariable(project, v2, (err, unused) => {
+        gitlab.createOrUpdateProjectVariable(project, context.v2, (err, unused) => {
             if (err) {
                 callback(err, null);
                 return;
@@ -190,8 +189,21 @@ function doSummarizeAndConfirm(project, context, callback) {
     if (!callback) throw Error('missing callback');
 
     console.log();
-    // console.log(chalk.bold(`The following will be added to ELB ${chalk.green(params.elb.LoadBalancerName)}:`));
-
+    console.log(`The following project will be set up for automatic deployment:`);
+    console.log();
+    console.log(`    ${chalk.bold(project.name_with_namespace)}`);
+    console.log();
+    console.log(`     - Add variable ${context.v1.key}`);
+    console.log(`     - Add variable ${context.v2.key}`);
+    console.log(`     - Check-in new '.gitlab-ci.yml' file`);
+    console.log();
+    console.log(`Builds will deploy to Gestalt Platform at:`);
+    console.log();
+    console.log('    Org:         ' + chalk.bold(`${context.org.description} (${context.org.fqon})`));
+    console.log('    Workspace:   ' + chalk.bold(`${context.workspace.description} (${context.workspace.name})`));
+    console.log('    Environment: ' + chalk.bold(`${context.environment.description} (${context.environment.name})`));
+    console.log();
+    
     // Prompt to continue
 
     const questions = [
