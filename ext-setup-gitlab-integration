@@ -1,0 +1,210 @@
+#!/usr/bin/env node
+const gitlab = require('./lib/gestalt-gitlab-client');
+const selectGestaltContext = require('./lib/selectOrgWorkspaceEnvironment');
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const selectResource = require('./lib/selectResourceUI');
+
+// Choose a Gitlab Project
+doGetProjects((err, project) => {
+    if (err) {
+        console.error(`ERROR: ${err.message}`);
+        return;
+    }
+
+    // Choose a Gestalt Org / Workspace / Environment
+    selectGestaltContext.run(context => {
+
+        const env = context.environment;
+
+        // Summarize and confirm
+        doSummarizeAndConfirm(project, context, (confirmed) => {
+            if (!confirmed) {
+                // Cancelled
+                console.log('Aborted.');
+                return;
+            }
+
+            // Execute
+            doSetupGitlabProject(project, context, (err, result) => {
+
+                if (err) {
+                    console.error(`ERROR: ${err.message}`);
+                    return;
+                }
+
+                // complete
+                console.log('Complete.');
+            });
+        });
+    });
+});
+
+// 
+// ------------------ Functions -------------------------
+///
+
+function doGetProjects(callback) {
+    if (!callback) throw Error('missing callback');
+    gitlab.listProjects((err, result) => {
+        if (err) {
+            callback(err, null);
+            return;
+        }
+        selectGitlabProject(result, callback);
+    });
+}
+
+function selectGitlabProject(result, callback) {
+    if (!result) throw Error('missing result');
+    if (!callback) throw Error('missing callback');
+
+    const options = {
+        mode: 'autocomplete',
+        message: "Gitlab Projects",
+        fields: ['name_with_namespace', 'description_truncated'],
+        sortBy: 'name_with_namespace',
+        fetchFunction: () => {
+            return result;
+        }
+    }
+
+    result.map(r => {
+        const width = 100;
+        r.description_truncated = r.description;
+        if (String(r.description_truncated).length > width) {
+            r.description_truncated = `${String(r.description).substring(0, width)}...`;
+        }
+    });
+
+    selectResource.run(options, (selection) => {
+        callback(null, selection.value);
+    });
+}
+
+function doCommitGitlabCiFile(project, callback) {
+    if (!project) throw Error('missing project');
+    if (!callback) throw Error('missing callback');
+    const fileContents = `
+image: docker:git
+
+services:
+    - docker:dind
+
+stages:
+    - build
+    - review
+
+build-and-publish:
+    stage: build
+    script:
+        - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+        - docker build --build-arg GIT_HASH=$CI_BUILD_REF -t $CI_REGISTRY_IMAGE:$CI_BUILD_REF -t $CI_REGISTRY_IMAGE:latest -f Dockerfile .
+        - docker push $CI_REGISTRY_IMAGE
+
+review:
+    stage: review
+    environment:
+        name: review-$CI_COMMIT_REF_SLUG
+        on_stop: stop_review
+    script:
+        - apk add --update --no-cache curl && rm -rf /var/cache/apk/*
+        - curl -u "$GF_API_KEY":"$GF_API_SECRET" "$GF_DEPLOY_URL?sha=$CI_COMMIT_SHA&ref=$CI_COMMIT_REF_SLUG&org=$GF_ORG&env=$GF_ENV&image=$CI_REGISTRY_IMAGE&name=$CI_PROJECT_NAME&pid=$CI_PROJECT_ID"
+    except:
+    - /^[Ww][Ii][Pp]-.*$/
+
+stop_review:
+    stage: review
+    script:
+        - apk add --update --no-cache curl && rm -rf /var/cache/apk/*
+        - curl -u "$GF_API_KEY":"$GF_API_SECRET" "$GF_DEPLOY_URL?entryPoint=stop&ref=$CI_COMMIT_REF_SLUG&org=$GF_ORG&env=$GF_ENV&name=$CI_PROJECT_NAME&pid=$CI_PROJECT_ID"
+    variables:
+    GIT_STRATEGY: none
+    environment:
+    name: review-$CI_COMMIT_REF_SLUG
+    action: stop
+    when: manual
+    except:
+    - master
+`;
+    const data = {
+        file_path: '.gitlab-ci.yml',
+        content: fileContents,
+        commit_message: ".gitlab-ci.yml configured for Gestalt Platform"
+    }
+    gitlab.commitFile(project, data, (err, result) => {
+        callback(err, result);
+    });
+}
+
+function doSetupGitlabProject(project, context, callback) {
+    if (!project) throw Error('missing project');
+    if (!context) throw Error('missing context');
+    if (!context.org) throw Error('missing context.org');
+    if (!context.org.fqon) throw Error('missing context.org.fqon');
+    if (!context.environment) throw Error('missing context.environment');
+    if (!context.environment.id) throw Error('missing context.environment.id');
+    if (!callback) throw Error('missing callback');
+
+    // Do the work
+    const v1 = {
+        key: 'GF_ORG',
+        value: context.org.fqon
+    };
+    const v2 = {
+        key: 'GF_ENV',
+        value: context.environment.id
+    };
+
+    console.log(`Setting ${v1.key} variable`);
+
+    // Set org
+    gitlab.createOrUpdateProjectVariable(project, v1, (err, unused) => {
+        if (err) {
+            callback(err, null);
+            return;
+        }
+
+        console.log(`Setting ${v2.key} varialble`);
+
+        // set env
+        gitlab.createOrUpdateProjectVariable(project, v2, (err, unused) => {
+            if (err) {
+                callback(err, null);
+                return;
+            }
+
+            console.log(`Committing .gitlab-ci.yml file`);
+
+            // commit gitlabci file
+            doCommitGitlabCiFile(project, (err, result) => {
+                callback(err, result);
+            });
+        });
+    });
+}
+
+function doSummarizeAndConfirm(project, context, callback) {
+    if (!project) throw Error('missing project');
+    if (!context) throw Error('missing context');
+    if (!callback) throw Error('missing callback');
+
+    console.log();
+    // console.log(chalk.bold(`The following will be added to ELB ${chalk.green(params.elb.LoadBalancerName)}:`));
+
+    // Prompt to continue
+
+    const questions = [
+        {
+            message: "Proceed?",
+            type: 'confirm',
+            name: 'confirm',
+            default: false // Don't proceed if no user input
+        },
+    ];
+
+    inquirer.prompt(questions).then(answers => {
+        const contents = JSON.stringify(answers, null, '  ');
+        callback(answers.confirm);
+    });
+}
