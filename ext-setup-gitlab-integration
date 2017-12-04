@@ -120,7 +120,7 @@ review:
         - apk add --update --no-cache curl && rm -rf /var/cache/apk/*
         - curl -u "$GF_API_KEY":"$GF_API_SECRET" "$GF_DEPLOY_URL?sha=$CI_COMMIT_SHA&ref=$CI_COMMIT_REF_SLUG&org=$GF_ORG&env=$GF_ENV&image=$CI_REGISTRY_IMAGE&name=$CI_PROJECT_NAME&pid=$CI_PROJECT_ID"
     except:
-    - /^[Ww][Ii][Pp]-.*$/
+        - /^[Ww][Ii][Pp]-.*$/
 
 stop_review:
     stage: review
@@ -128,13 +128,13 @@ stop_review:
         - apk add --update --no-cache curl && rm -rf /var/cache/apk/*
         - curl -u "$GF_API_KEY":"$GF_API_SECRET" "$GF_DEPLOY_URL?entryPoint=stop&ref=$CI_COMMIT_REF_SLUG&org=$GF_ORG&env=$GF_ENV&name=$CI_PROJECT_NAME&pid=$CI_PROJECT_ID"
     variables:
-    GIT_STRATEGY: none
+        GIT_STRATEGY: none
     environment:
-    name: review-$CI_COMMIT_REF_SLUG
-    action: stop
+        name: review-$CI_COMMIT_REF_SLUG
+        action: stop
     when: manual
     except:
-    - master
+        - master
 `;
     const data = {
         file_path: '.gitlab-ci.yml',
@@ -188,10 +188,11 @@ function doSummarizeAndConfirm(project, context, callback) {
     if (!context) throw Error('missing context');
     if (!callback) throw Error('missing callback');
 
+
     console.log();
     console.log(`The following project will be set up for automatic deployment:`);
     console.log();
-    console.log(`    ${chalk.bold(project.name_with_namespace)}`);
+    console.log(`    ${chalk.bold(project.name_with_namespace)} (${project.web_url})`);
     console.log();
     console.log(`     - Add variable ${context.v1.key}`);
     console.log(`     - Add variable ${context.v2.key}`);
