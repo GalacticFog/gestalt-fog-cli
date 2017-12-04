@@ -30,7 +30,7 @@ selectOrg.run((result) => {
 
         gestalt.setCurrentWorkspace(result);
 
-        selectEnvironment.run((result) => {
+        selectEnvironment.run({}, (result) => {
             if (!result) {
                 console.log("No selection, exiting.");
                 return;

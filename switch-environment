@@ -3,7 +3,7 @@ const selectEnvironment = require('./lib/selectEnvironment');
 const gestalt = require('./lib/gestalt');
 
 try {
-    selectEnvironment.run((result) => {
+    selectEnvironment.run({}, (result) => {
         if (result) {
             gestalt.setCurrentEnvironment(result);
 
@@ -20,4 +20,3 @@ try {
     console.log("Try running 'switch'");
     console.log();
 }
-

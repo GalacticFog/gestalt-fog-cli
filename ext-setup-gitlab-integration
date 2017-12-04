@@ -17,9 +17,9 @@ doGetProjects((err, project) => {
     console.log();
     console.log("Step 2 - Select a Gestalt Environment to deploy to.")
     console.log();
-    
+
     // Choose a Gestalt Org / Workspace / Environment
-    selectGestaltContext.run(context => {
+    doSelectGestaltEnvironment((err, context) => {
 
         // Summarize and confirm
         doSummarizeAndConfirm(project, context, (confirmed) => {
@@ -87,6 +87,23 @@ function selectGitlabProject(result, callback) {
 
     selectResource.run(options, (selection) => {
         callback(null, selection);
+    });
+}
+
+function doSelectGestaltEnvironment(callback) {
+
+    // Only show 'DEV' environments
+    const opts = {
+        environment: {
+            filter: function (r) {
+                return r.properties.environment_type == 'development';
+            }
+        }
+    }
+
+    // Choose a Gestalt Org / Workspace / Environment
+    selectGestaltContext.run(opts, (context) => {
+        callback(null, context);
     });
 }
 
