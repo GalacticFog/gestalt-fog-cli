@@ -1,0 +1,121 @@
+#!/usr/bin/env node
+const argv = require('yargs').argv
+const dockerComposeParser = require('./lib/gestalt-docker-compose-parser');
+const selectProvider = require('./lib/selectProvider');
+const selectEnvironment = require('./lib/selectEnvironment');
+const gestalt = require('./lib/gestalt');
+
+// Check for arguments
+if (argv._.length == 0) {
+    console.error(`Usage: ${argv['$0']} <docker compose file>`);
+    return
+}
+
+const file = argv._[0];
+
+const containers = dockerComposeParser.convertFromV3File(file);
+
+console.log(containers);
+
+
+// Now, containers need to have an environment and provider assigned
+
+selectEnvironment.run({}, (env) => {
+
+    const state = gestalt.getState();
+    state.environment = {
+        id: env.id
+    };
+
+    // console.log(env);
+
+    selectProvider.run(provider => {
+
+        // console.log(provider);
+
+        containers.map(item => {
+            item.properties.provider = {
+                id: provider.id,
+            };
+        });
+
+        displayContainers(containers);
+
+        doConfirm(confirmed => {
+            if (!confirmed) {
+                console.log('Aborted.');
+                return;
+            }
+
+            const createdContainers = containers.map(item => {
+                console.log(`Creating container ${item.name}`);
+                const container = gestalt.createContainer(item, state);
+                return container;
+            });
+
+            displayRunningContainers(createdContainers);
+            console.log('Done.');
+        });
+    });
+});
+
+function displayContainers(containers) {
+
+    const displayResource = require('./lib/displayResourceUI');
+
+    const options = {
+        message: "Containers",
+        headers: ['Container', 'Description', 'Image', 'CPU', 'Memory (MB)', 'Ports'],
+        fields: ['name', 'description', 'properties.image', 'properties.cpus', 'properties.memory', 'ports'],
+        sortField: 'description',
+    }
+
+    const res = containers.map(item => {
+        let r = Object.assign({}, item);
+        r.ports = JSON.stringify(r.properties.port_mappings);
+        return r;
+    });
+
+    displayResource.run(options, res);
+}
+
+function displayRunningContainers(containers) {
+
+    const displayResource = require('./lib/displayResourceUI');
+
+    const options = {
+        message: "Containers",
+        headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner'],
+        fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name'],
+        sortField: 'description',
+    }
+
+    containers.map(item => {
+        item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
+    })
+
+    displayResource.run(options, containers);
+}
+
+
+function doConfirm(callback) {
+    const inquirer = require('inquirer');
+    const questions = [
+        {
+            message: "Proceed?",
+            type: 'confirm',
+            name: 'confirm',
+            default: false // Don't proceed if no user input
+        },
+    ];
+
+    inquirer.prompt(questions).then(answers => {
+        callback(answers.confirm);
+    });
+}
+
+
+
+
+
+
