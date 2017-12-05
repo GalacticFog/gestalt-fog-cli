@@ -42,9 +42,10 @@ selectEnvironment.run({}, (env) => {
         console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
         console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
         console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
+        console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
         console.log();
 
-        doConfirm(state, confirmed => {
+        doConfirm(confirmed => {
             if (!confirmed) {
                 console.log('Aborted.');
                 return;
