@@ -60,7 +60,7 @@ try {
 
     // 1) Select Container
 
-    selectContainer.run((container) => {
+    selectContainer.run({}, (container) => {
 
         // 2) Show container details
 

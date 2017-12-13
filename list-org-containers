@@ -2,30 +2,50 @@
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
-const chalk = require('chalk')
-
-let resources = [];
-
-const fqon = gestalt.getCurrentOrg().fqon;
-const res = gestalt.fetchOrgContainers();
-
-res.map(item => {
-    item.fqon = fqon
-})
-
-resources = resources.concat(res);
-
-const options = {
-    message: 'Containers',
-    headers: ['Container', 'FQON'],
-    fields: ['name', 'fqon'],
-    sortField: 'name',
-}
 
 try {
-    displayResource.run(options, resources);
+    let allContainers = [];
+
+    const fqon = gestalt.getCurrentOrg().fqon;
+
+    const envs = gestalt.fetchOrgEnvironments([fqon]);
+    envs.map(env => {
+        console.log(`Fetching containers from ${fqon}/'${env.name}'`);
+        const state = {
+            org: {
+                fqon: fqon
+            },
+            environment: {
+                id: env.id
+            }
+        }
+        const containers = gestalt.fetchContainers(state);
+
+        containers.map(item => {
+            item.env = {name: env.name};
+            item.fqon = fqon;
+            item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
+        });
+
+        allContainers = allContainers.concat(containers);
+    });
+
+    displayContainers(allContainers);
+
 } catch (err) {
     console.log(err.message);
     console.log("Try running 'switch'");
     console.log();
 }
+
+function displayContainers(containers) {
+    const options = {
+        message: "Containers",
+        headers: ['Container', 'Description', 'Status', /*'Image',*/ 'Instances', 'Owner', 'FQON', 'ENV'],
+        fields: ['name', 'description', 'properties.status', /*'properties.image',*/ 'running_instances', 'owner.name', 'org.properties.fqon', 'env.name'],
+        sortField: 'org.properties.fqon',
+    }
+
+    displayResource.run(options, containers);
+}
+

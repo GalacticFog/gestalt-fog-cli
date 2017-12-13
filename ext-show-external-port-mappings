@@ -114,7 +114,8 @@ function displayNonMappedPorts(data) {
 function queryKubernetesServices(callback) {
 
     const kube = new GestaltKubeClient({
-        cluster: key
+        cluster: key,
+        omitTokenAuth: true
     });
 
     const kuberesponse = kube.getServicesAllNamespaces(function (err, data) {

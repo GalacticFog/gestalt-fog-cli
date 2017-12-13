@@ -11,6 +11,8 @@ const key = argv._[0];
 const displayResource = require('./lib/displayResourceUI');
 const displayAmazon = require('./lib/displayAmazon');
 const gestaltState = require('./lib/gestalt-state');
+const selectContainer = require('./lib/selectContainer');
+const selectContainerPort = require('./lib/selectContainerPort');
 const awsHelper = require('./lib/gestalt-aws-helper');
 const chalk = require('chalk')
 const inquirer = require('inquirer');
@@ -18,51 +20,71 @@ const inquirer = require('inquirer');
 // Main
 const aws = awsHelper.getAwsClient(key);
 
-// 3 - Select ELB to expose to
-selectELB((err, elb) => {
+// 1 - Select container to expose
+doSelectContainer((err, container) => {
     if (err) {
         console.error(chalk.red(`Error: ${err.message}`));
         return;
     }
 
-    // Show ELB Details
-    displayAmazon.displayDetails(elb);
+    // 2 - Select ports to expose
+    doSelectContainerPort(container, (result) => {
+        if (!result.service_port) {
+            console.error("No service port found on container, aborting.");
+            return;
+        }
 
-    // Collect user input
-    getUserInput(input => {
-        const externalPort = input.port;
+        // 3 - Select ELB to expose to
+        selectELB((err, elb) => {
+            if (err) {
+                console.error(chalk.red(`Error: ${err.message}`));
+                return;
+            }
 
-        getUserInput2(input => {
-            const internalPort = input.port;
+            // Show ELB Details
+            displayAmazon.displayDetails(elb);
 
-            const params = {
-                elb: elb,
-                listener: {
-                    InstancePort: internalPort,
-                    InstanceProtocol: 'TCP',
-                    LoadBalancerPort: externalPort,
-                    Protocol: 'TCP'
+            // Collect user input
+            getUserInput((err, input) => {
+                if (err) {
+                    console.error(chalk.red(`Error: ${err.message}`));
+                    return;
                 }
-            };
 
-            // Display summary to the user before executing
-            summarizeAndConfirm(params, () => {
-
-                // Confirmed, perform the execution
-                execute(params, (err, result) => {
-                    if (err) {
-                        console.error(chalk.red(`Error: ${err.message}`));
-                        return;
+                const params = {
+                    elb: elb,
+                    container: container,
+                    listener: {
+                        InstancePort: result.service_port,
+                        InstanceProtocol: 'TCP',
+                        LoadBalancerPort: input.port,
+                        Protocol: 'TCP'
                     }
+                };
 
-                    console.log(chalk.bold.green("Added listener."));
-                    showResults(key, elb);
+                // Display summary to the user before executing
+                summarizeAndConfirm(params, () => {
+
+                    // Confirmed, perform the execution
+                    execute(params, (err, result) => {
+                        if (err) {
+                            console.error(chalk.red(`Error: ${err.message}`));
+                            return;
+                        }
+
+                        console.log(chalk.bold.green("Added listener."));
+                        showResults(key, elb);
+
+                        // setTimeout(function () {
+                        //     console.log(chalk.bold.green("Added listener."));
+                        //     showResults(key, elb);
+                        // }, 1000);
+                    });
                 });
             });
         });
     });
 });
-
 
 // ----------------------------
 
@@ -81,6 +103,28 @@ function showResults(key, elb) {
 
         // Show ELB Details
         displayAmazon.displayDetails(result);
+    });
+}
+
+function doSelectContainer(callback) {
+
+    selectContainer.run({}, (result) => {
+        console.log();
+        console.log(`${result.name} selected.`);
+        console.log();
+
+        callback(null, result);
+    });
+}
+
+function doSelectContainerPort(container, callback) {
+
+    selectContainerPort.run(container, (result) => {
+        console.log();
+        console.log(`${result.name} selected.`);
+        console.log();
+
+        callback(result);
     });
 }
 
@@ -109,24 +153,10 @@ function getUserInput(callback) {
     ];
 
     inquirer.prompt(questions).then(answers => {
-        callback(answers);
+        callback(null, answers);
     });
 }
 
-
-function getUserInput2(callback) {
-    const questions = [
-        {
-            message: "Instance Port to Expose",
-            type: 'input',
-            name: 'port',
-        },
-    ];
-
-    inquirer.prompt(questions).then(answers => {
-        callback(answers);
-    });
-}
 
 function summarizeAndConfirm(params, callback) {
 

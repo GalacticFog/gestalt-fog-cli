@@ -1,0 +1,126 @@
+#!/usr/bin/env node
+'use strict';
+const argv = require('yargs').argv
+// Check for arguments
+if (argv._.length == 0) {
+    console.error(`Usage: ${argv['$0']} <cluster identifier>`);
+    return
+}
+const key = argv._[0];
+
+const displayResource = require('./lib/displayResourceUI');
+const displayAmazon = require('./lib/displayAmazon');
+const gestaltState = require('./lib/gestalt-state');
+const selectElbListeners = require('./lib/selectElbListeners');
+const awsHelper = require('./lib/gestalt-aws-helper');
+const chalk = require('chalk')
+const inquirer = require('inquirer');
+
+// Main
+const aws = awsHelper.getAwsClient(key);
+
+// Select ELB to expose to
+selectELB((err, elb) => {
+    if (err) {
+        console.error(chalk.red(`Error: ${err.message}`));
+        return;
+    }
+
+    // Collect user input
+    selectElbListeners.run({}, elb, (selectedListeners) => {
+
+        console.log(selectedListeners);
+
+        // Display summary to the user before executing
+        summarizeAndConfirm(elb, selectedListeners, () => {
+
+            // Confirmed, perform the execution
+            selectedListeners.map(listener => {
+                aws.deleteLoadBalancerListener(elb.LoadBalancerName, listener.LoadBalancerPort, (err, result) => {
+                    if (err) {
+                        console.error(chalk.red(`Error: ${err.message}`));
+                    } else {
+                        console.log(`Listener port ${listener.LoadBalancerPort} deleted.`);
+                    }
+                });
+            })
+
+            // Wait 1 second to show results, because the above happens async
+            setTimeout(function () {
+                showResults(key, elb);
+            }, 1000);
+
+            showResults(key, elb);
+        });
+    });
+});
+
+// ----------------------------
+
+function showResults(key, elb) {
+    // Show the result
+    aws.describeLoadBalancer(elb.LoadBalancerName, (err, result) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+
+        // Show the result
+
+        console.log();
+        console.log(chalk.bold.underline(`Services Exposed on '${key}' Cluster ELBs`))
+
+        // Show ELB Details
+        displayAmazon.displayDetails(result);
+    });
+}
+
+function selectELB(callback) {
+    console.log("Reading ELB information...")
+    aws.describeLoadBalancers((err, lbs) => {
+        awsHelper.selectElb(lbs, (result) => {
+            console.log();
+            console.log(`${result.LoadBalancerName} selected.`);
+            console.log();
+
+            callback(null, result);
+        });
+    });
+}
+
+function summarizeAndConfirm(elb, listeners, callback) {
+    console.log();
+    console.log(chalk.bold(`The following listeners will be deleted from ELB ${chalk.green(elb.LoadBalancerName)}:`));
+
+    displayListeners(listeners);
+
+    // Prompt to continue
+    const questions = [
+        {
+            message: `Proceed to remove ${listeners.length} listeners from ${chalk.green(elb.LoadBalancerName)} ELB?`,
+            type: 'confirm',
+            name: 'confirm',
+            default: false
+        },
+    ];
+
+    inquirer.prompt(questions).then(answers => {
+        const contents = JSON.stringify(answers, null, '  ');
+
+        if (answers.confirm) {
+            callback();
+        } else {
+            console.log("Aborted.")
+        }
+    });
+}
+
+function displayListeners(listeners) {
+    const options = {
+        headers: ['LB Port', 'LB Protocol', 'Cluster Port', 'Cluster Protocol'],
+        fields: ['LoadBalancerPort', 'Protocol', 'InstancePort', 'InstanceProtocol'],
+        sortField: 'LoadBalancerPort',
+        emptyString: '-'
+    }
+    displayResource.run(options, listeners);
+}

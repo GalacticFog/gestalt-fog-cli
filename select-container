@@ -3,7 +3,7 @@ const selectContainer = require('./lib/selectContainer');
 const gestalt = require('./lib/gestalt');
 
 try {
-    selectContainer.run((result) => {
+    selectContainer.run({}, (result) => {
         if (result) {
             gestalt.setCurrentContainer(result);
 
