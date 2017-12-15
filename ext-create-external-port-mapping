@@ -1,6 +1,16 @@
 #!/usr/bin/env node
 'use strict';
-const argv = require('yargs').argv
+const argv = require('yargs')
+    // .demandCommand(1)
+    // .usage('Usage: $0 <cluster name>            Interactive mode')
+    // .usage('Usage: $0 <cluster name> [options]')
+    // .example('$0 test --elb=fog-dev --ext 9900 --int 30000')
+    // .describe('elb', 'ELB name')
+    // .describe('ext', 'external TCP port')
+    // .describe('int', 'internal TCP port')
+    // .help('help')
+    .argv;
+
 // Check for arguments
 if (argv._.length == 0) {
     console.error(`Usage: ${argv['$0']} <cluster identifier>`);
@@ -14,6 +24,20 @@ const gestaltState = require('./lib/gestalt-state');
 const awsHelper = require('./lib/gestalt-aws-helper');
 const chalk = require('chalk')
 const inquirer = require('inquirer');
+
+// console.log(argv)
+
+// { _: [ 'test' ],
+// help: false,
+// version: false,
+// elb: 'my-elb',
+// eport: 9900,
+// iport: 30000,
+// '$0': 'ext-create-external-port-mapping' }
+
+// return
+
+
 
 // Main
 const aws = awsHelper.getAwsClient(key);
