@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-const selectEnvironment = require('./lib/selectEnvironment');
+const selectWorkspace = require('./lib/selectWorkspace');
 const gestalt = require('./lib/gestalt');
 
 try {
-    selectEnvironment.run({}, (result) => {
+    selectWorkspace.run((result) => {
         if (result) {
-            gestalt.setCurrentEnvironment(result);
-
+            gestalt.setCurrentWorkspace(result);
             console.log();
             console.log(`${result.name} selected.`);
             console.log();
@@ -17,6 +16,8 @@ try {
 
 } catch (err) {
     console.log(err.message);
-    console.log("Try running 'switch'");
+    console.log("Try running 'change-context'");
     console.log();
 }
+
+

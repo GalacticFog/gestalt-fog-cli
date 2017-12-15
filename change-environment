@@ -1,21 +1,22 @@
 #!/usr/bin/env node
-const selectOrg = require('./lib/selectOrg');
+const selectEnvironment = require('./lib/selectEnvironment');
 const gestalt = require('./lib/gestalt');
 
 try {
-    selectOrg.run((result) => {
+    selectEnvironment.run({}, (result) => {
         if (result) {
-            gestalt.setCurrentOrg(result);
+            gestalt.setCurrentEnvironment(result);
+
             console.log();
-            console.log(`${result.fqon} selected.`);
+            console.log(`${result.name} selected.`);
             console.log();
         } else {
             console.log("No selection.");
         }
     });
+
 } catch (err) {
     console.log(err.message);
-    console.log("Try running 'switch'");
+    console.log("Try running 'change-context'");
     console.log();
 }
-
