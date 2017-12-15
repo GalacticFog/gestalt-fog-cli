@@ -115,7 +115,6 @@ function queryKubernetesServices(callback) {
 
     const kube = new GestaltKubeClient({
         cluster: key,
-        omitTokenAuth: true
     });
 
     const kuberesponse = kube.getServicesAllNamespaces(function (err, data) {
