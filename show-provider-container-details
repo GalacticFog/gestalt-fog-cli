@@ -3,26 +3,18 @@ const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
 const selectContainer = require('./lib/selectContainer');
+const selectResource = require('./lib/selectResourceUI');
 
 // Main
 try {
-    // 1) Select Container
-
-    selectContainer.run({}, (container) => {
-
-        // 2) Show container details
-
-        // const container = gestalt.fetchContainer(result.container);  //fetch from current context
-
+    selectProviderContainers(container => {
         if (argv.raw) {
+            delete container.running_instances;
+            delete container.provider;
             console.log(JSON.stringify(container, null, 2));
         } else {
             showContainer(container);
             showInstances(container);
-            // showCommands(container);
-
-            console.log(`Use '--raw' to see raw JSON output`);
-            console.log();
         }
     });
 } catch (err) {
@@ -82,3 +74,56 @@ function showInstances(c) {
 //     console.log()
 // };
 
+
+function selectProviderContainers(callback) {
+
+    let options = {
+        mode: 'autocomplete',
+        message: "Select Container(s)",
+        fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
+        sortBy: 'name',
+        fetchFunction: () => {
+            return getProviderContainers();
+        }
+    }
+
+    selectResource.run(options, selection => {
+        if (callback) callback(selection);
+    });
+}
+
+function getProviderContainers() {
+    const fqon = gestalt.getState().org.fqon;
+
+    const providers = gestalt.fetchOrgProviders([fqon]);
+
+    const arr = [];
+
+    providers.map(provider => {
+
+        provider.short_resource_type = provider.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
+
+        // console.log(provider);
+        const containers = gestalt.fetchProviderContainers(provider);
+        if (containers.length > 0) {
+
+            console.log(`Containers for ${provider.name}`);
+
+            containers.map(c => {
+                let b = gestalt.fetchContainer(c);
+                b.running_instances = `${b.properties.tasks_running}/${b.properties.num_instances}`;
+                if (b.description) {
+                    if (b.description.length > 20) {
+                        b.description = b.description.substring(0, 20) + '...';
+                    }
+                }
+                b.provider = provider;
+                arr.push(b);
+
+                // console.log(JSON.stringify(b, null, 2));
+            });
+
+        }
+    });
+    return arr;
+}
