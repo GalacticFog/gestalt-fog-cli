@@ -32,28 +32,28 @@ function showInstances(c) {
     displayResource.run(options2, c.properties.instances);
 }
 
-function showCommands(c) {
-    // const envId = gestalt.getCurrentEnvironment().id;
+// function showCommands(c) {
+//     // const envId = gestalt.getCurrentEnvironment().id;
 
-    console.log("Commands:")
-    console.log()
-    console.log("  Logs:")
-    console.log()
-    for (let i in c.properties.instances) {
-        // console.log(instance)
-        // console.log(`    ./fog '${c.properties.provider.name}' logs ${envId} ${instance.id} --tail 20 --follow`);
-        console.log(`    ./container-logs ${c.org.properties.fqon} ${c.id}/${i} --tail 20 --follow`)
-    }
+//     console.log("Commands:")
+//     console.log()
+//     console.log("  Logs:")
+//     console.log()
+//     for (let i in c.properties.instances) {
+//         // console.log(instance)
+//         // console.log(`    ./fog '${c.properties.provider.name}' logs ${envId} ${instance.id} --tail 20 --follow`);
+//         console.log(`    ./container-logs ${c.org.properties.fqon} ${c.id}/${i} --tail 20 --follow`)
+//     }
 
-    console.log()
-    console.log("  Console Access:")
-    console.log()
-    for (let i in c.properties.instances) {
-        // console.log(`    ./fog '${c.properties.provider.name}' console ${envId} ${instance.id} sh`);
-        console.log(`    ./container-console ${c.org.properties.fqon} ${c.id}/${i}`)
-    };
-    console.log()
-};
+//     console.log()
+//     console.log("  Console Access:")
+//     console.log()
+//     for (let i in c.properties.instances) {
+//         // console.log(`    ./fog '${c.properties.provider.name}' console ${envId} ${instance.id} sh`);
+//         console.log(`    ./container-console ${c.org.properties.fqon} ${c.id}/${i}`)
+//     };
+//     console.log()
+// };
 
 // Main
 try {

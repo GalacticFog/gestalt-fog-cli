@@ -10,34 +10,55 @@ const selectContainer = require('./lib/selectContainer');
 try {
     // Use the container's provider to get the cluster name e.g. 'dev' or 'prod' so that the kubeconfig can be downloaded via ?cluster=dev
     const providerConfig = gestaltState.loadConfigFile('providers.json');
-    const env = gestalt.getCurrentEnvironment();
-    // const container = gestalt.fetchCurrentContainer(); // Get the focused container
+    if (argv.cluster || argv.env || argv.instance) {
+        if (!argv.env) throw Error('missing argv.env');
+        if (!argv.instance) throw Error('missing argv.instance');
+        if (!argv.cluster) throw Error('missing argv.cluster');
 
-    selectContainer.run({}, (container) => {
-        if (!container) {
-            console.log("No selection.");
-            return;
-        }
+        // command driven mode
 
-        const clusterName = providerConfig[container.properties.provider.id];
-        const kube = new GestaltKubeClient({ cluster: clusterName });
+        const kube = new GestaltKubeClient({ cluster: argv.cluster });
+        accessLogs(kube, { id: argv.env }, { id: argv.instance }, argv);
+    } else {
+        const env = gestalt.getCurrentEnvironment();
+        // const container = gestalt.fetchCurrentContainer(); // Get the focused container
 
-        // Select the container instance
+        selectContainer.run({}, (container) => {
+            if (!container) {
+                console.log("No selection.");
+                return;
+            }
 
-        console.log(`Container ${container.name}:`);
-        console.log();
+            const clusterName = providerConfig[container.properties.provider.id];
+            const kube = new GestaltKubeClient({ cluster: clusterName });
 
-        if (container.properties.instances.length > 1) {
-            // More than one container instance, choose
-            selectContainerInstance.run(container, (inst) => {
-                accessLogs(kube, env, inst, argv);
-            });
-        } else {
-            accessLogs(kube, env, container.properties.instances[0], argv);
-        }
-    });
+            // Select the container instance
+
+            console.log(`Container ${container.name}:`);
+            console.log();
+
+            if (container.properties.instances.length > 1) {
+                // More than one container instance, choose
+                selectContainerInstance.run(container, (inst) => {
+                    displayHint(clusterName, inst.id, env.id);
+                    accessLogs(kube, env, inst, argv);
+                });
+            } else {
+                displayHint(clusterName, container.properties.instances[0].id, env.id);
+                accessLogs(kube, env, container.properties.instances[0], argv);
+            }
+        });
+    }
 } catch (err) {
     console.log(err);
+}
+
+function displayHint(cluster, instance, env) {
+    console.log('To run this command directly, run a command based on the following:');
+    console.log();
+    console.log(`    ./container-logs --cluster ${cluster} --instance ${instance} --env ${env}`);
+    console.log(`    ./container-logs --cluster ${cluster} --instance ${instance} --env ${env} --follow --tail 100     # Follow log, view last 100 lines`);
+    console.log();
 }
 
 function accessLogs(kube, env, inst, options) {

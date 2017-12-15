@@ -16,8 +16,6 @@ try {
         item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
     })
     
-    // console.log(JSON.stringify(resources, null, 2))
-    
     displayResource.run(options, resources);
 } catch (err) {
     console.log(err.message);
