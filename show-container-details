@@ -68,7 +68,7 @@ try {
 
         showContainer(container);
         showInstances(container);
-        showCommands(container);
+        // showCommands(container);
     });
 } catch (err) {
     console.log(err.message);
