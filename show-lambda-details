@@ -42,7 +42,7 @@ function doShowLambda(lambda, argv) {
         console.log();
         console.log('Run the following to see this lambda directly:')
         console.log();
-        console.log(`    ./show-lambda-details --fqon ${lambda.org.properties.fqon} --id ${lambda.id}`);
+        console.log(`    ./${argv['$0']} --fqon ${lambda.org.properties.fqon} --id ${lambda.id}`);
         console.log();
     }
 }
@@ -90,4 +90,3 @@ function selectLambda(callback) {
         if (callback) callback(selection);
     });
 }
-
