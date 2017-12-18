@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const selectHierarchy = require('./lib/selectHierarchy');
 
+selectHierarchy.displayContext();
 selectHierarchy.chooseContext((result) => {
-    // Nothing
+    selectHierarchy.displayContext();
 });

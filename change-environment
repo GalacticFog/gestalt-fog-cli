@@ -2,11 +2,12 @@
 const selectHierarchy = require('./lib/selectHierarchy');
 
 try {
+    selectHierarchy.displayContext();    
     selectHierarchy.chooseEnvironment(result => {
-        // Nothing
+        selectHierarchy.displayContext();        
     });
 } catch (err) {
-    console.log(err);
+    console.log(err.message);
     console.log("Try running 'change-context'");
     console.log();
 }

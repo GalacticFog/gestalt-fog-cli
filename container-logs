@@ -6,6 +6,7 @@ const GestaltKubeClient = require('./lib/gestalt-kube-client');
 const gestalt = require('./lib/gestalt')
 const selectContainerInstance = require('./lib/selectContainerInstance');
 const selectContainer = require('./lib/selectContainer');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 try {
     // Use the container's provider to get the cluster name e.g. 'dev' or 'prod' so that the kubeconfig can be downloaded via ?cluster=dev
@@ -20,33 +21,35 @@ try {
         const kube = new GestaltKubeClient({ cluster: argv.cluster });
         accessLogs(kube, { id: argv.env }, { id: argv.instance }, argv);
     } else {
-        const env = gestalt.getCurrentEnvironment();
-        // const container = gestalt.fetchCurrentContainer(); // Get the focused container
+        selectHierarchy.resolveEnvironment(() => {
+            const env = gestalt.getCurrentEnvironment();
+            // const container = gestalt.fetchCurrentContainer(); // Get the focused container
 
-        selectContainerOrCurrent(container => {
-            if (!container) {
-                console.log("No selection.");
-                return;
-            }
+            selectContainerOrCurrent(container => {
+                if (!container) {
+                    console.log("No selection.");
+                    return;
+                }
 
-            const clusterName = providerConfig[container.properties.provider.id];
-            const kube = new GestaltKubeClient({ cluster: clusterName });
+                const clusterName = providerConfig[container.properties.provider.id];
+                const kube = new GestaltKubeClient({ cluster: clusterName });
 
-            // Select the container instance
+                // Select the container instance
 
-            console.log(`Container ${container.name}:`);
-            console.log();
+                console.log(`Container ${container.name}:`);
+                console.log();
 
-            if (container.properties.instances.length > 1) {
-                // More than one container instance, choose
-                selectContainerInstance.run(container, (inst) => {
-                    displayHint(clusterName, inst.id, env.id);
-                    accessLogs(kube, env, inst, argv);
-                });
-            } else {
-                displayHint(clusterName, container.properties.instances[0].id, env.id);
-                accessLogs(kube, env, container.properties.instances[0], argv);
-            }
+                if (container.properties.instances.length > 1) {
+                    // More than one container instance, choose
+                    selectContainerInstance.run(container, (inst) => {
+                        displayHint(clusterName, inst.id, env.id);
+                        accessLogs(kube, env, inst, argv);
+                    });
+                } else {
+                    displayHint(clusterName, container.properties.instances[0].id, env.id);
+                    accessLogs(kube, env, container.properties.instances[0], argv);
+                }
+            });
         });
     }
 } catch (err) {

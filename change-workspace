@@ -2,8 +2,9 @@
 const selectHierarchy = require('./lib/selectHierarchy');
 
 try {
+    selectHierarchy.displayContext();    
     selectHierarchy.chooseWorkspace((result) => {
-        // Nothing
+        selectHierarchy.displayContext();        
     });
 } catch (err) {
     console.log(err);
