@@ -4,6 +4,7 @@ const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
 const selectResource = require('./lib/selectResourceUI');
 const chalk = require('chalk');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 // Main
 try {
@@ -48,26 +49,28 @@ function doShowLambda(lambda, argv) {
 }
 
 function showLambda(lambda) {
-    const options = {
-        message: "Lambdas",
-        headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
-        fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
-        sortField: 'description',
-    }
-
-    displayResource.run(options, [lambda]);
-
-    // Display Code
-    if (lambda.properties) {
-        if (lambda.properties.code) {
-            const buf = Buffer.from(lambda.properties.code, 'base64');
-            displayCode(buf.toString('utf8'));
+    selectHierarchy.resolveEnvironment(() => {
+        const options = {
+            message: "Lambdas",
+            headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
+            fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
+            sortField: 'description',
         }
-    }
+
+        displayResource.run(options, [lambda]);
+
+        // Display Code
+        if (lambda.properties) {
+            if (lambda.properties.code) {
+                const buf = Buffer.from(lambda.properties.code, 'base64');
+                displayCode(buf.toString('utf8'));
+            }
+        }
+    });
 }
 
 function displayCode(code) {
-    console.log(chalk.bold('--- Start of Lambda Code ---'));    
+    console.log(chalk.bold('--- Start of Lambda Code ---'));
     console.log(chalk.green(code));
     console.log(chalk.bold('--- End of Lambda Code ---'));
     console.log();

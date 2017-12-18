@@ -2,49 +2,52 @@
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
+const selectHierarchy = require('./lib/selectHierarchy');
 
-try {
-    const fqon = gestalt.getState().org.fqon;
+selectHierarchy.resolveOrg(() => {
 
-    const providers = gestalt.fetchOrgProviders([fqon]);
+    try {
+        const fqon = gestalt.getState().org.fqon;
 
-    const arr = [];
+        const providers = gestalt.fetchOrgProviders([fqon]);
 
-    providers.map(provider => {
+        const arr = [];
 
-        provider.short_resource_type = provider.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
+        providers.map(provider => {
 
-        // console.log(provider);
-        const containers = gestalt.fetchProviderContainers(provider);
-        if (containers.length > 0) {
+            provider.short_resource_type = provider.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
 
-            console.log(`Containers for ${provider.name}`);
+            // console.log(provider);
+            const containers = gestalt.fetchProviderContainers(provider);
+            if (containers.length > 0) {
 
-            containers.map(c => {
-                let b = gestalt.fetchContainer(c);
-                b.running_instances = `${b.properties.tasks_running}/${b.properties.num_instances}`;
-                if (b.description) {
-                    if (b.description.length > 20) {
-                        b.description = b.description.substring(0, 20) + '...';
+                console.log(`Containers for ${provider.name}`);
+
+                containers.map(c => {
+                    let b = gestalt.fetchContainer(c);
+                    b.running_instances = `${b.properties.tasks_running}/${b.properties.num_instances}`;
+                    if (b.description) {
+                        if (b.description.length > 20) {
+                            b.description = b.description.substring(0, 20) + '...';
+                        }
                     }
-                }
-                b.provider = provider;
-                arr.push(b);
+                    b.provider = provider;
+                    arr.push(b);
 
-                // console.log(JSON.stringify(b, null, 2));
-            });
+                    // console.log(JSON.stringify(b, null, 2));
+                });
 
-        }
-    });
+            }
+        });
 
-    displayProviderContainers(arr);
+        displayProviderContainers(arr);
 
-} catch (err) {
-    console.log(err.message);
-    console.log("Try running 'change-context'");
-    console.log();
-}
-
+    } catch (err) {
+        console.log(err.message);
+        console.log("Try running 'change-context'");
+        console.log();
+    }
+});
 
 function displayProviderContainers(containers) {
     const options = {

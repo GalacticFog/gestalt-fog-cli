@@ -1,8 +1,19 @@
 #!/usr/bin/env node
+const selectHierarchy = require('./lib/selectHierarchy');
 const selectContainer = require('./lib/selectContainer');
 const gestalt = require('./lib/gestalt');
 
 try {
+    selectHierarchy.resolveEnvironment(() => {
+        chooseContainer();
+    });
+} catch (err) {
+    console.log(err.message);
+    console.log("Try running 'change-context'");
+    console.log();
+}
+
+function chooseContainer() {
     selectContainer.run({}, (result) => {
         if (result) {
             gestalt.setCurrentContainer(result);
@@ -14,8 +25,4 @@ try {
             console.log("No selection.");
         }
     });
-} catch (err) {
-    console.log(err.message);
-    console.log("Try running 'change-context'");
-    console.log();
 }

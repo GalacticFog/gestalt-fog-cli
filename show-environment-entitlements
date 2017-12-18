@@ -4,10 +4,13 @@
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayEntitlements = require('./lib/displayEntitlements');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 try {
-    const resources = gestalt.fetchEnvironmentEntitlements();
-    displayEntitlements.run(resources);
+    selectHierarchy.resolveEnvironment(() => {
+        const resources = gestalt.fetchEnvironmentEntitlements();
+        displayEntitlements.run(resources);
+    });
 } catch (err) {
     console.log(err.message);
     console.log("Try running 'change-context'");

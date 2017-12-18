@@ -15,7 +15,7 @@ try {
         if (!argv.env) throw Error('missing argv.env');
         if (!argv.instance) throw Error('missing argv.instance');
         if (!argv.cluster) throw Error('missing argv.cluster');
-        
+
         // command driven mode
 
         const kube = new GestaltKubeClient({ cluster: argv.cluster });
@@ -27,7 +27,7 @@ try {
         const env = gestalt.getCurrentEnvironment();
         // const container = gestalt.fetchCurrentContainer(); // Get the focused container
 
-        selectContainer.run({}, (container) => {
+        selectContainerOrCurrent(container => {
             if (!container) {
                 console.log("No selection.");
                 return;
@@ -40,17 +40,28 @@ try {
             if (container.properties.instances.length > 1) {
                 // More than one container instance, choose
                 selectContainerInstance.run(container, (inst) => {
-                    displayHint(clusterName, inst.id, env.id);                    
+                    displayHint(clusterName, inst.id, env.id);
                     accessConsole(kube, env, inst);
                 });
             } else {
-                displayHint(clusterName, container.properties.instances[0].id, env.id);                
+                displayHint(clusterName, container.properties.instances[0].id, env.id);
                 accessConsole(kube, env, container.properties.instances[0]);
             }
         });
     }
 } catch (err) {
     console.log(err);
+}
+
+function selectContainerOrCurrent(callback) {
+    const state = gestaltState.getState();
+    if (state.container && state.container.id) {
+        const container = gestalt.fetchCurrentContainer();
+        callback(container);
+    } else {
+        // No container in current context, prompt
+        selectContainer.run({}, callback);
+    }
 }
 
 function displayHint(cluster, instance, env) {

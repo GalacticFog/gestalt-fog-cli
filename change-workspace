@@ -1,23 +1,12 @@
 #!/usr/bin/env node
-const selectWorkspace = require('./lib/selectWorkspace');
-const gestalt = require('./lib/gestalt');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 try {
-    selectWorkspace.run((result) => {
-        if (result) {
-            gestalt.setCurrentWorkspace(result);
-            console.log();
-            console.log(`${result.name} selected.`);
-            console.log();
-        } else {
-            console.log("No selection.");
-        }
+    selectHierarchy.chooseWorkspace((result) => {
+        // Nothing
     });
-
 } catch (err) {
-    console.log(err.message);
+    console.log(err);
     console.log("Try running 'change-context'");
     console.log();
 }
-
-

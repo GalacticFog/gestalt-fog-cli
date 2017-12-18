@@ -2,28 +2,30 @@
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
+const selectHierarchy = require('./lib/selectHierarchy');
 
-const options = {
-    message: "Lambdas",
-    headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
-    fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
-    sortField: 'description',
-}
+selectHierarchy.resolveEnvironment(() => {
 
-try {
-    const resources = gestalt.fetchLambdas();
-    // console.log(JSON.stringify(resources, null, 2))
-    resources.map(item => {
-        //
-    })
+    const options = {
+        message: "Lambdas",
+        headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
+        fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
+        sortField: 'description',
+    }
 
-    // console.log(JSON.stringify(resources, null, 2))
+    try {
+        const resources = gestalt.fetchLambdas();
+        // console.log(JSON.stringify(resources, null, 2))
+        resources.map(item => {
+            //
+        })
 
-    displayResource.run(options, resources);
-} catch (err) {
-    console.log(err.message);
-    console.log("Try running 'change-context'");
-    console.log();
-}
+        // console.log(JSON.stringify(resources, null, 2))
 
-
+        displayResource.run(options, resources);
+    } catch (err) {
+        console.log(err.message);
+        console.log("Try running 'change-context'");
+        console.log();
+    }
+});

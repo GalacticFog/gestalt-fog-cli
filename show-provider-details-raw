@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const argv = require('yargs').argv
 const selectProvider = require('./lib/selectProvider');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 function showRaw(obj) {
     console.log()
@@ -10,14 +11,16 @@ function showRaw(obj) {
 
 // Main
 try {
+    selectHierarchy.resolveOrg(() => {
+        
+        // 1) Select Container
 
-    // 1) Select Container
+        selectProvider.run((provider) => {
 
-    selectProvider.run((provider) => {
+            // 2) Show provider details
 
-        // 2) Show provider details
-
-        showRaw(provider);
+            showRaw(provider);
+        });
     });
 } catch (err) {
     console.log(err.message);

@@ -2,50 +2,52 @@
 const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
+const selectHierarchy = require('./lib/selectHierarchy');
 
-try {
-    let allContainers = [];
+selectHierarchy.resolveOrg(() => {
+    try {
+        let allContainers = [];
 
-    const fqon = gestalt.getCurrentOrg().fqon;
+        const fqon = gestalt.getCurrentOrg().fqon;
 
-    const envs = gestalt.fetchOrgEnvironments([fqon]);
-    envs.map(env => {
-        console.log(`Fetching containers from ${fqon}/'${env.name}'`);
-        const state = {
-            org: {
-                fqon: fqon
-            },
-            environment: {
-                id: env.id
+        const envs = gestalt.fetchOrgEnvironments([fqon]);
+        envs.map(env => {
+            console.log(`Fetching containers from ${fqon}/'${env.name}'`);
+            const state = {
+                org: {
+                    fqon: fqon
+                },
+                environment: {
+                    id: env.id
+                }
             }
-        }
-        const containers = gestalt.fetchContainers(state);
+            const containers = gestalt.fetchContainers(state);
 
-        containers.map(item => {
-            item.env = {name: env.name};
-            item.fqon = fqon;
-            item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
+            containers.map(item => {
+                item.env = { name: env.name };
+                item.fqon = fqon;
+                item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
+            });
+
+            allContainers = allContainers.concat(containers);
         });
 
-        allContainers = allContainers.concat(containers);
-    });
+        displayContainers(allContainers);
 
-    displayContainers(allContainers);
-
-} catch (err) {
-    console.log(err.message);
-    console.log("Try running 'change-context'");
-    console.log();
-}
-
-function displayContainers(containers) {
-    const options = {
-        message: "Containers",
-        headers: ['Container', 'Description', 'Status', /*'Image',*/ 'Instances', 'Owner', 'FQON', 'ENV'],
-        fields: ['name', 'description', 'properties.status', /*'properties.image',*/ 'running_instances', 'owner.name', 'org.properties.fqon', 'env.name'],
-        sortField: 'org.properties.fqon',
+    } catch (err) {
+        console.log(err.message);
+        console.log("Try running 'change-context'");
+        console.log();
     }
 
-    displayResource.run(options, containers);
-}
+    function displayContainers(containers) {
+        const options = {
+            message: "Containers",
+            headers: ['Container', 'Description', 'Status', /*'Image',*/ 'Instances', 'Owner', 'FQON', 'ENV'],
+            fields: ['name', 'description', 'properties.status', /*'properties.image',*/ 'running_instances', 'owner.name', 'org.properties.fqon', 'env.name'],
+            sortField: 'org.properties.fqon',
+        }
 
+        displayResource.run(options, containers);
+    }
+});

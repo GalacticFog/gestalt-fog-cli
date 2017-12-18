@@ -3,6 +3,7 @@ const argv = require('yargs').argv
 const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
 const selectResource = require('./lib/selectResourceUI');
+const selectHierarchy = require('./lib/selectHierarchy');
 const inquirer = require('inquirer');
 
 // Main
@@ -75,19 +76,21 @@ function validate(num_instances) {
 
 function selectContainer(callback) {
 
-    let options = {
-        mode: 'autocomplete',
-        message: "Select Container(s)",
-        fields: ['name', 'properties.status', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
-        sortBy: 'name',
-        fetchFunction: () => {
-            const res = gestalt.fetchContainers();
-            return res;
+    selectHierarchy.resolveEnvironment(() => {
+        let options = {
+            mode: 'autocomplete',
+            message: "Select Container(s)",
+            fields: ['name', 'properties.status', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
+            sortBy: 'name',
+            fetchFunction: () => {
+                const res = gestalt.fetchContainers();
+                return res;
+            }
         }
-    }
 
-    selectResource.run(options, selection => {
-        if (callback) callback(selection);
+        selectResource.run(options, selection => {
+            if (callback) callback(selection);
+        });
     });
 }
 

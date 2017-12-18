@@ -4,6 +4,7 @@ const gestalt = require('./lib/gestalt')
 const displayResource = require('./lib/displayResourceUI');
 const selectContainer = require('./lib/selectContainer');
 const selectResource = require('./lib/selectResourceUI');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 // Main
 try {
@@ -76,23 +77,25 @@ function showInstances(c) {
 
 
 function selectProviderContainers(callback) {
-
-    let options = {
-        mode: 'autocomplete',
-        message: "Select Container(s)",
-        fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
-        sortBy: 'name',
-        fetchFunction: () => {
-            return getProviderContainers();
+    selectHierarchy.resolveOrg(() => {
+        let options = {
+            mode: 'autocomplete',
+            message: "Select Container(s)",
+            fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
+            sortBy: 'name',
+            fetchFunction: () => {
+                return getProviderContainers();
+            }
         }
-    }
 
-    selectResource.run(options, selection => {
-        if (callback) callback(selection);
+        selectResource.run(options, selection => {
+            if (callback) callback(selection);
+        });
     });
 }
 
 function getProviderContainers() {
+    
     const fqon = gestalt.getState().org.fqon;
 
     const providers = gestalt.fetchOrgProviders([fqon]);

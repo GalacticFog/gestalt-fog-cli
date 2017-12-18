@@ -1,21 +1,12 @@
 #!/usr/bin/env node
-const selectOrg = require('./lib/selectOrg');
-const gestalt = require('./lib/gestalt');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 try {
-    selectOrg.run((result) => {
-        if (result) {
-            gestalt.setCurrentOrg(result);
-            console.log();
-            console.log(`${result.fqon} selected.`);
-            console.log();
-        } else {
-            console.log("No selection.");
-        }
+    selectHierarchy.chooseOrg(() => {
+        // Nothing
     });
 } catch (err) {
     console.log(err.message);
     console.log("Try running 'change-context'");
     console.log();
 }
-

@@ -23,7 +23,7 @@ try {
         const env = gestalt.getCurrentEnvironment();
         // const container = gestalt.fetchCurrentContainer(); // Get the focused container
 
-        selectContainer.run({}, (container) => {
+        selectContainerOrCurrent(container => {
             if (!container) {
                 console.log("No selection.");
                 return;
@@ -51,6 +51,17 @@ try {
     }
 } catch (err) {
     console.log(err);
+}
+
+function selectContainerOrCurrent(callback) {
+    const state = gestaltState.getState();
+    if (state.container && state.container.id) {
+        const container = gestalt.fetchCurrentContainer();
+        callback(container);
+    } else {
+        // No container in current context, prompt
+        selectContainer.run({}, callback);
+    }
 }
 
 function displayHint(cluster, instance, env) {

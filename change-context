@@ -1,46 +1,6 @@
 #!/usr/bin/env node
+const selectHierarchy = require('./lib/selectHierarchy');
 
-const selectOrg = require('./lib/selectOrg');
-const selectWorkspace = require('./lib/selectWorkspace');
-const selectEnvironment = require('./lib/selectEnvironment');
-// const selectContainer = require('./lib/selectContainer');
-const gestalt = require('./lib/gestalt');
-
-selectOrg.run((result) => {
-    if (!result) {
-        console.log("No selection, exiting.");
-        return;
-    }
-
-    console.log();
-    console.log(`${result.fqon} selected.`);
-    console.log();
-
-    gestalt.setCurrentOrg(result);
-
-    selectWorkspace.run((result) => {
-        if (!result) {
-            console.log("No selection, exiting.");
-            return;
-        }
-
-        console.log();
-        console.log(`${result.name} selected.`);
-        console.log();
-
-        gestalt.setCurrentWorkspace(result);
-
-        selectEnvironment.run({}, (result) => {
-            if (!result) {
-                console.log("No selection, exiting.");
-                return;
-            }
-
-            console.log();
-            console.log(`${result.name} selected.`);
-            console.log();
-
-            gestalt.setCurrentEnvironment(result);
-        });
-    });
+selectHierarchy.chooseContext((result) => {
+    // Nothing
 });
