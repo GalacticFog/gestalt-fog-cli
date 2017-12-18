@@ -77,19 +77,20 @@ function displayCode(code) {
 }
 
 function selectLambda(callback) {
-
-    let options = {
-        mode: 'autocomplete',
-        message: "Select Lambda",
-        fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
-        sortBy: 'name',
-        fetchFunction: () => {
-            const res = gestalt.fetchLambdas();
-            return res;
+    selectHierarchy.resolveEnvironment(() => {
+        let options = {
+            mode: 'autocomplete',
+            message: "Select Lambda",
+            fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
+            sortBy: 'name',
+            fetchFunction: () => {
+                const res = gestalt.fetchLambdas();
+                return res;
+            }
         }
-    }
 
-    selectResource.run(options, selection => {
-        if (callback) callback(selection);
+        selectResource.run(options, selection => {
+            if (callback) callback(selection);
+        });
     });
 }

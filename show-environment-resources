@@ -1,8 +1,8 @@
 #!/bin/bash
 
-./containers
+./list-containers
 
-./lambdas
+./list-lambdas
 
-./api-endpoints
+./list-api-endpoints
 

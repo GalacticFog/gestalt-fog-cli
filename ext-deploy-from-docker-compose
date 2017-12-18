@@ -5,6 +5,7 @@ const selectProvider = require('./lib/selectProvider');
 const selectEnvironment = require('./lib/selectEnvironment');
 const gestalt = require('./lib/gestalt');
 const chalk = require('chalk');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 // Check for arguments
 if (argv._.length == 0) {
@@ -20,45 +21,47 @@ displayContainers(containers);
 
 // Now, containers need to have an environment and provider assigned
 
-selectEnvironment.run({}, (env) => {
-    console.log();
-    
-    gestalt.setCurrentEnvironment(env);
-    
-    selectProvider.run(provider => {
-        console.log();
-        
-        // Assign the provider to each container
-        containers.map(item => {
-            item.properties.provider = {
-                id: provider.id,
-            };
-        });
-
-        const state = gestalt.getState();
-
-        console.log("Containers will be created in the following location:");
-        console.log();
-        console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
-        console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
-        console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
-        console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
+selectHierarchy.resolveWorkspace(() => {
+    selectEnvironment.run({}, (env) => {
         console.log();
 
-        doConfirm(confirmed => {
-            if (!confirmed) {
-                console.log('Aborted.');
-                return;
-            }
+        gestalt.setCurrentEnvironment(env);
 
-            const createdContainers = containers.map(item => {
-                console.log(`Creating container ${item.name}`);
-                const container = gestalt.createContainer(item, state);
-                return container;
+        selectProvider.run(provider => {
+            console.log();
+
+            // Assign the provider to each container
+            containers.map(item => {
+                item.properties.provider = {
+                    id: provider.id,
+                };
             });
 
-            displayRunningContainers(createdContainers);
-            console.log('Done.');
+            const state = gestalt.getState();
+
+            console.log("Containers will be created in the following location:");
+            console.log();
+            console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
+            console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
+            console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
+            console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
+            console.log();
+
+            doConfirm(confirmed => {
+                if (!confirmed) {
+                    console.log('Aborted.');
+                    return;
+                }
+
+                const createdContainers = containers.map(item => {
+                    console.log(`Creating container ${item.name}`);
+                    const container = gestalt.createContainer(item, state);
+                    return container;
+                });
+
+                displayRunningContainers(createdContainers);
+                console.log('Done.');
+            });
         });
     });
 });

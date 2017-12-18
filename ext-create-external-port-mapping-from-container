@@ -16,6 +16,7 @@ const selectContainerPort = require('./lib/selectContainerPort');
 const awsHelper = require('./lib/gestalt-aws-helper');
 const chalk = require('chalk')
 const inquirer = require('inquirer');
+const selectHierarchy = require('./lib/selectHierarchy');
 
 // Main
 const aws = awsHelper.getAwsClient(key);
@@ -108,12 +109,15 @@ function showResults(key, elb) {
 
 function doSelectContainer(callback) {
 
-    selectContainer.run({}, (result) => {
-        console.log();
-        console.log(`${result.name} selected.`);
-        console.log();
+    selectHierarchy.resolveEnvironment(() => {
 
-        callback(null, result);
+        selectContainer.run({}, (result) => {
+            console.log();
+            console.log(`${result.name} selected.`);
+            console.log();
+
+            callback(null, result);
+        });
     });
 }
 

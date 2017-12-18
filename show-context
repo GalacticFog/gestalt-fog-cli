@@ -1,3 +1,9 @@
 #!/usr/bin/env node
 const gestalt = require('./lib/gestalt');
+const selectHierarchy = require('./lib/selectHierarchy');
+const chalk = require('chalk');
+
+selectHierarchy.displayContext();
+
+console.log(chalk.bold("Raw:"));
 console.log(JSON.stringify(gestalt.getState(), null, 2));
