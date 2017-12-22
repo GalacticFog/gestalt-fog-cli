@@ -120,19 +120,29 @@ function deleteVolume() {
     try {
         const name = argv.name;
         const cluster = argv.cluster;
+
+        if (!name) throw Error('missing name');
+        if (!cluster) throw Error('missing cluster');
+
+
         const url = getServiceUrl(cluster);
 
-        console.log();
-        promptToContinue(`Proceed to delete volume '${name}' on cluster '${cluster}'?`, confirmed => {
-            if (confirmed) {
-                console.log(`Deleting volume '${name}' on cluster '${cluster}'...`);
-                gestalt.httpDelete(`${url}/volumes/${name}`);
-                console.log('Done.');
-                // listVolumes();
-            } else {
-                console.log(`Aborted.`);
-            }
-        });
+        console.log(`Fetching volume information from cluster '${cluster}'...`);
+        const volume = gestalt.httpGet(`${url}/volumes/${name}`);
+        if (!argv.force && volume.status.phase == 'Bound') {
+            console.log(`Not deleting volume '${name}' because status is '${volume.status.phase}', use '--force' to override.`);
+        } else {
+            console.log();
+            promptToContinue(`Proceed to delete volume '${name}' on cluster '${cluster}'?`, confirmed => {
+                if (confirmed) {
+                    console.log(`Deleting volume '${name}' on cluster '${cluster}'...`);
+                    gestalt.httpDelete(`${url}/volumes/${name}`);
+                    console.log('Done.');
+                } else {
+                    console.log(`Aborted.`);
+                }
+            });
+        }
     } catch (err) {
         console.log(err.message);
         console.log();
