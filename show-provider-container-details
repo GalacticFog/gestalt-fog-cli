@@ -27,8 +27,8 @@ try {
 function showContainer(c) {
     const options = {
         message: "Container",
-        headers: ['Description', 'Status', 'Name', 'Path', 'Image', 'Instances', 'Owner', 'Provider'],
-        fields: ['description', 'properties.status', 'name', 'path', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
+        headers: ['Description', 'Status', 'Name', 'Path', 'Image', 'Instances', 'Owner', 'Provider', 'FQON', 'ID'],
+        fields: ['description', 'properties.status', 'name', 'path', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name', 'org.properties.fqon', 'id'],
         sortField: 'description',
     }
 

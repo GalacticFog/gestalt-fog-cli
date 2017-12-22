@@ -52,8 +52,8 @@ selectHierarchy.resolveOrg(() => {
 function displayProviderContainers(containers) {
     const options = {
         message: "Provider Containers",
-        headers: ['Provider', 'Type', 'Container', 'Description', 'Status', 'Image', '#', 'Owner', 'FQON', 'ENV'],
-        fields: ['provider.name', 'provider.short_resource_type', 'name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'org.properties.fqon', 'env.name'],
+        headers: ['Provider', 'Type', 'Container', 'Description', 'Status', 'Image', '#', 'Owner', 'FQON', 'ENV', 'ID'],
+        fields: ['provider.name', 'provider.short_resource_type', 'name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'org.properties.fqon', 'env.name', 'id'],
         sortField: 'org.properties.fqon',
     }
 

@@ -52,6 +52,8 @@ try {
     });
 
     displayResource.run(options, eps);
+
+    console.log(JSON.stringify(eps[0], null, 2));
 } catch (err) {
     console.log(err.message);
     console.log("Try running 'change-context'");

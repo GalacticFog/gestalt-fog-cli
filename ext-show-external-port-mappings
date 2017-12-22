@@ -96,14 +96,15 @@ function displayNonMappedPorts(data) {
 
     // Hide gestalt-* and kube-* namespaces
     resources = resources.filter(item => {
-        return item.namespace.indexOf('gestalt-') != 0 && item.namespace.indexOf('kube-') != 0;
+        // return item.namespace.indexOf('gestalt-') != 0 && item.namespace.indexOf('kube-') != 0;
+        return item.namespace.indexOf('kube-') != 0;
     });
 
-    // Hide Gestalt related services
-    resources = resources.filter(item => {
-        return item.serviceName.indexOf("gestalt-") != 0 &&
-            item.serviceName.indexOf('default-') != 0;
-    });
+    // // Hide Gestalt related services
+    // resources = resources.filter(item => {
+    //     return item.serviceName.indexOf("gestalt-") != 0 &&
+    //         item.serviceName.indexOf('default-') != 0;
+    // });
 
     // Output
     console.log();

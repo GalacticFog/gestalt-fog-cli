@@ -1,0 +1,217 @@
+#!/usr/bin/env node
+const argv = require('yargs').argv
+const gestalt = require('./lib/gestalt');
+const gestaltState = require('./lib/gestalt-state');
+const displayResource = require('./lib/displayResourceUI');
+const request = require('sync-request');
+const inquirer = require('inquirer');
+
+if (argv._.length < 2) {
+    console.log(`Usage:`);
+    console.log();
+    console.log(`  list volumes:     ${argv['$0']} <cluster> list`);
+    console.log(`  create volume:    ${argv['$0']} <cluster> create --name <volume>`);
+    console.log(`  delete volume:    ${argv['$0']} <cluster> delete --name <volume>`);
+    // console.log(`  list volume dirs - ${argv['$0']} --cluster <cluster> list-dirs`);    
+    console.log();
+    process.exit(1);
+}
+
+const cluster = argv._[0];
+const command = argv._[1];
+argv.cluster = cluster;
+
+switch (command) {
+    case 'list':
+        listVolumes();
+        break;
+    case 'list-dirs':
+        listVolumeDirs();
+        break;
+    case 'create':
+        createVolume();
+        break;
+    case 'delete':
+        deleteVolume();
+        break;
+    default:
+        console.log('Nothing');
+}
+
+
+function createVolume() {
+    if (!argv.cluster) {
+        console.error(`Usage: ${argv['$0']} --cluster <cluster identifier>`);
+        return;
+    }
+    if (!argv.name) {
+        console.error(`Missing --name <volume name>`);
+        return;
+    }
+
+    try {
+        const name = argv.name;
+        const cluster = argv.cluster;
+        const url = getServiceUrl(cluster);
+
+        console.log(`Creating volume '${name}' on cluster '${cluster}'...`);
+        const resources = gestalt.httpPut(`${url}/volumes/${name}`);
+        console.log('Done.');
+        listVolumes();
+    } catch (err) {
+        console.log(err.message);
+        console.log();
+    }
+}
+
+
+function deleteVolume() {
+    if (!argv.cluster) {
+        console.error(`Usage: ${argv['$0']} --cluster <cluster identifier>`);
+        return;
+    }
+    if (!argv.name) {
+        console.error(`Missing --name <volume name>`);
+        return;
+    }
+
+    try {
+        const name = argv.name;
+        const cluster = argv.cluster;
+        const url = getServiceUrl(cluster);
+
+        console.log();
+        promptToContinue(`Proceed to delete volume '${name}' on cluster '${cluster}'?`, confirmed => {
+            if (confirmed) {
+                console.log(`Deleting volume '${name}' on cluster '${cluster}'...`);
+                gestalt.httpDelete(`${url}/volumes/${name}`);
+                console.log('Done.');
+                listVolumes();
+            } else {
+                console.log(`Aborted.`);
+            }
+        });
+    } catch (err) {
+        console.log(err.message);
+        console.log();
+    }
+}
+
+function listVolumes() {
+    if (!argv.cluster) {
+        console.error(`Usage: ${argv['$0']} --cluster <cluster identifier>`);
+        return;
+    }
+
+    const options = {
+        message: `Cluster '${cluster}' Volumes:`,
+        // headers: ['Name', /*'Status'*/, /*'Capacity', 'Bound To',*/ "Path"],
+        // fields: ['name', /*'status.phase',*/ /*'spec.capacity.storage', 'spec.claimRef.name',*/ 'dir.path'],
+        headers: ['Name', 'Server', 'Status', 'Path'],
+        fields: ['name', 'spec.nfs.server', 'status.phase', 'spec.nfs.path'],
+        sortField: 'name',
+        emptyString: '-'
+    }
+
+    try {
+        const cluster = argv.cluster;
+        const url = getServiceUrl(cluster);
+        const server = getServer(cluster);
+
+        console.log(`Fetching volumes information from cluster '${cluster}'...`);
+        let resources = gestalt.httpGet(`${url}/volumes`);
+        if (!argv.all && server) {
+            resources = resources.filter(item => {
+                return item.spec.nfs.server == server;
+            });
+        }
+        displayResource.run(options, resources);
+        console.log(`Note: Volumes with status of 'Available' are not attached to a container.`);
+        console.log();
+
+    } catch (err) {
+        console.log(err.message);
+        console.log();
+    }
+}
+
+function listVolumeDirs() {
+    if (!argv.cluster) {
+        console.error(`Usage: ${argv['$0']} --cluster <cluster identifier>`);
+        return;
+    }
+
+    const options = {
+        message: `Cluster '${argv.cluster}' Volume Directories:`,
+        headers: ["Path"],
+        fields: ['path'],
+        sortField: 'path',
+        emptyString: '-'
+    }
+
+    try {
+        const cluster = argv.cluster;
+        const url = getServiceUrl(cluster);
+        console.log(`Fetching server filesystem information from cluster '${cluster}'...`);
+        const resources = gestalt.httpGet(`${url}/volume_dirs`);
+        displayResource.run(options, resources);
+    } catch (err) {
+        console.log(err.message);
+        console.log();
+    }
+}
+
+function getServiceUrl(cluster) {
+    return getOrFetchServiceConfig(cluster)['service_url'];
+}
+
+function getServer(cluster) {
+    return getOrFetchServiceConfig(cluster)['server'];
+}
+
+function getOrFetchServiceConfig(cluster) {
+    const file = `volumes-service-${cluster}.cached`;
+    try {
+        return gestaltState.loadConfigFile(file);
+    } catch (err) {
+        // Nothing
+    }
+
+    // Don't have it, attmept to download
+    console.log(`${file} not found, fetching...`);
+
+    const volumesConfig = gestaltState.loadConfigFile('volumes-config.json');
+    console.log(JSON.stringify(volumesConfig))
+    const url = volumesConfig['service_config_url'];
+    const res = request('GET', `${url}?cluster=${cluster}`);
+
+    const body = res.getBody();
+    if (body.length > 0) {
+        gestaltState.writeFile(file, JSON.stringify(JSON.parse(body), null, 2));
+
+        // Now write to file
+        return gestaltState.loadConfigFile(file);
+    }
+    throw Error(`Could not load config for cluster ${cluster}`);
+}
+
+function promptToContinue(message, callback) {
+    // Prompt to continue
+    const questions = [
+        {
+            message: message,
+            type: 'confirm',
+            name: 'confirm',
+            default: false
+        },
+    ];
+    inquirer.prompt(questions).then(answers => {
+        const contents = JSON.stringify(answers, null, '  ');
+
+        if (answers.confirm) {
+            callback(true);
+        } else {
+            callback(false);
+        }
+    });
+}
