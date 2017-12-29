@@ -27,6 +27,10 @@ console.log(`Log in to ${chalk.bold(config.gestalt_url)}`);
 
 inquirer.prompt(questions).then(creds => {
 
+    gestaltState.clearAuthToken();    
+    gestaltState.clearState();
+    gestaltState.clearCachedFiles();
+
     gestalt.authenticate(creds, (err, res) => {
         if (!err) {
             console.log(`Authenticated. User ${res.username} logged in to ${config.gestalt_url}.`);    

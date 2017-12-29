@@ -5,7 +5,8 @@ const gestaltState = require('./lib/gestalt-state');
 const displayResource = require('./lib/displayResourceUI');
 const request = require('sync-request');
 const inquirer = require('inquirer');
-const VOLUMES_CONFIG_FILE = 'volumes-config.json';
+const gestaltServicesConfig = require('./lib/gestalt-services-config');
+const SERVICE_CONFIG_KEY = 'kube_efs_volumes.v1';
 
 if (argv._.length < 1) {
     printUsage();
@@ -13,11 +14,6 @@ if (argv._.length < 1) {
 }
 
 const COMMAND = argv._[0];
-
-if (COMMAND == 'configure') {
-    configure();
-    return;
-}
 
 // Other commands require the cluster
 if (!argv.cluster) {
@@ -36,23 +32,11 @@ function printUsage() {
     console.log(`  list volumes:     ${argv['$0']} --cluster <cluster> list`);
     console.log(`  create volume:    ${argv['$0']} --cluster <cluster> create --name <volume>`);
     console.log(`  delete volume:    ${argv['$0']} --cluster <cluster> delete --name <volume>`);
-    console.log(`  configure:        ${argv['$0']} configure`);
     console.log();
 }
 
 function main() {
-
-    let configureNeeded = !gestaltState.fileExists(VOLUMES_CONFIG_FILE);
-
-    if (configureNeeded) {
-        console.log(`'${VOLUMES_CONFIG_FILE}' not found, please run '${argv['$0']} configure'`);
-        process.exit(1);
-    }
-
     switch (COMMAND) {
-        case 'configure':
-            configure();
-            break;
         case 'list':
             listVolumes();
             break;
@@ -70,36 +54,19 @@ function main() {
     }
 }
 
-function configure(callback) {
-
-    // Prompt to continue
-    const questions = [
-        {
-            message: "Enter the service URL:",
-            type: 'input',
-            name: 'service_config_url',
-        },
-    ];
-
-    let config = {};
-    if (gestaltState.fileExists(VOLUMES_CONFIG_FILE)) {
-        config = gestaltState.loadConfigFile(VOLUMES_CONFIG_FILE);
-        if (config.service_config_url) {
-            questions[0].default = config.service_config_url;
-        }
-    }
-
-    inquirer.prompt(questions).then(answers => {
-        const contents = JSON.stringify(answers, null, '  ');
-        gestaltState.writeFile(VOLUMES_CONFIG_FILE, contents);
-        console.log(`Configuration saved to ${VOLUMES_CONFIG_FILE}.`);
-
-        if (callback) callback();
-    });
-}
-
 
 function createVolume() {
+    if (!argv.name) {
+        console.log('missing --name');
+        printUsage();
+        return;
+    }
+    if (!argv.cluster) {
+        console.log('missing --cluster');
+        printUsage();
+        return;
+    }
+    
     try {
         const name = argv.name;
         const cluster = argv.cluster;
@@ -117,6 +84,16 @@ function createVolume() {
 
 
 function deleteVolume() {
+    if (!argv.name) {
+        console.log('missing --name');
+        printUsage();
+        return;
+    }
+    if (!argv.cluster) {
+        console.log('missing --cluster');
+        printUsage();
+        return;
+    }
     try {
         const name = argv.name;
         const cluster = argv.cluster;
@@ -150,6 +127,11 @@ function deleteVolume() {
 }
 
 function listVolumes() {
+    if (!argv.cluster) {
+        console.log('missing --cluster');
+        printUsage();
+        return;
+    }
     const options = {
         message: `Cluster '${CLUSTER}' Volumes:`,
         // headers: ['Name', /*'Status'*/, /*'Capacity', 'Bound To',*/ "Path"],
@@ -207,35 +189,11 @@ function listVolumeDirs() {
 }
 
 function getServiceUrl(cluster) {
-    return getOrFetchServiceConfig(cluster)['service_url'];
+    return gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY)[cluster]['service_url'];
 }
 
 function getServer(cluster) {
-    return getOrFetchServiceConfig(cluster)['server'];
-}
-
-function getOrFetchServiceConfig(cluster) {
-    const file = `volumes-service-${cluster}.cached`;
-    if (gestaltState.fileExists(file)) {
-        return gestaltState.loadConfigFile(file);
-    }
-
-    // Don't have it, attmept to download
-    console.log(`${file} not found, fetching...`);
-
-    const volumesConfig = gestaltState.loadConfigFile(VOLUMES_CONFIG_FILE);
-    console.log(JSON.stringify(volumesConfig))
-    const url = volumesConfig['service_config_url'];
-    const res = request('GET', `${url}?cluster=${cluster}`);
-
-    const body = res.getBody();
-    if (body.length > 0) {
-        gestaltState.writeFile(file, JSON.stringify(JSON.parse(body), null, 2));
-
-        // Now write to file
-        return gestaltState.loadConfigFile(file);
-    }
-    throw Error(`Could not load config for cluster ${cluster}`);
+    return gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY)[cluster]['server'];
 }
 
 function promptToContinue(message, callback) {
