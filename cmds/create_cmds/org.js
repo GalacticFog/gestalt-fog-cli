@@ -8,40 +8,33 @@ exports.handler = function (argv) {
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    try {
+    selectHierarchy.resolveOrg(() => {
 
-        selectHierarchy.resolveOrg(() => {
+        const parent = gestaltState.getState().org;
 
-            const parent = gestaltState.getState().org;
+        debug(`parent: ${JSON.stringify(parent, null, 2)}`);
 
-            debug(`parent: ${JSON.stringify(parent, null, 2)}`);
+        promptForInput(answers => {
 
-            promptForInput(answers => {
-
-                debug(`answers: ${answers}`);
-                if (answers.confirm) {
+            debug(`answers: ${answers}`);
+            if (answers.confirm) {
 
 
-                    const orgSpec = {
-                        name: answers.name,
-                        description: answers.description
-                    };
+                const orgSpec = {
+                    name: answers.name,
+                    description: answers.description
+                };
 
-                    const org = gestalt.createOrg(orgSpec, parent.fqon);
+                const org = gestalt.createOrg(orgSpec, parent.fqon);
 
-                    debug(`org: ${org}`);
+                debug(`org: ${org}`);
 
-                    console.log('Org created.');
-                } else {
-                    console.log('Aborted.');
-                }
-            });
+                console.log('Org created.');
+            } else {
+                console.log('Aborted.');
+            }
         });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
-    }
+    });
 
     function promptForInput(callback) {
         const questions = [

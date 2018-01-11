@@ -8,38 +8,31 @@ exports.handler = function (argv) {
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    try {
+    selectHierarchy.resolveWorkspace(() => {
 
-        selectHierarchy.resolveWorkspace(() => {
+        promptForInput(answers => {
 
-            promptForInput(answers => {
+            debug(`answers: ${answers}`);
+            if (answers.confirm) {
 
-                debug(`answers: ${answers}`);
-                if (answers.confirm) {
+                const envSpec = {
+                    name: answers.name,
+                    description: answers.description,
+                    properties: {
+                        environment_type: answers.environment_type
+                    }
+                };
 
-                    const envSpec = {
-                        name: answers.name,
-                        description: answers.description,
-                        properties: {
-                            environment_type: answers.environment_type
-                        }
-                    };
+                const environment = gestalt.createEnvironment(envSpec);
 
-                    const environment = gestalt.createEnvironment(envSpec);
+                debug(`environment: ${environment}`);
 
-                    debug(`environment: ${environment}`);
-
-                    console.log('Environment created.');
-                } else {
-                    console.log('Aborted.');
-                }
-            });
+                console.log('Environment created.');
+            } else {
+                console.log('Aborted.');
+            }
         });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
-    }
+    });
 
     function promptForInput(callback) {
         const questions = [

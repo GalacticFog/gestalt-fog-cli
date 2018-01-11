@@ -9,39 +9,32 @@ exports.handler = function (argv) {
     const selectHierarchy = require('../lib/selectHierarchy');
     const selectProvider = require('../lib/selectProvider');
 
-    try {
+    selectHierarchy.resolveWorkspace(() => {
 
-        selectHierarchy.resolveWorkspace(() => {
+        promptForInput(answers => {
 
-            promptForInput(answers => {
+            debug(`answers: ${JSON.stringify(answers, null, 2)}`);
 
-                debug(`answers: ${JSON.stringify(answers, null, 2)}`);
+            if (answers.confirm) {
 
-                if (answers.confirm) {
+                const containerSpec = Object.assign({}, answers);
+                delete containerSpec.confirm;
+                containerSpec.properties.container_type = 'DOCKER';
 
-                    const containerSpec = Object.assign({}, answers);
-                    delete containerSpec.confirm;
-                    containerSpec.properties.container_type = 'DOCKER';
-
-                    debug(`containerSpec: ${JSON.stringify(containerSpec, null, 2)}`);
+                debug(`containerSpec: ${JSON.stringify(containerSpec, null, 2)}`);
 
 
-                    // Create
-                    const container = gestalt.createContainer(containerSpec);
+                // Create
+                const container = gestalt.createContainer(containerSpec);
 
-                    debug(`container: ${JSON.stringify(container, null, 2)}`);
+                debug(`container: ${JSON.stringify(container, null, 2)}`);
 
-                    console.log('Container created.');
-                } else {
-                    console.log('Aborted.');
-                }
-            });
+                console.log('Container created.');
+            } else {
+                console.log('Aborted.');
+            }
         });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
-    }
+    });
 
     function promptForInput(callback) {
 
@@ -110,7 +103,7 @@ exports.handler = function (argv) {
         //     }
         // }
 
-        selectProvider.run(provider => {
+        selectProvider.run({ type: 'CaaS', message: 'Select Provider' }, provider => {
 
             const questions = [
                 {
@@ -147,7 +140,7 @@ exports.handler = function (argv) {
                     default: 0.1
                 },
                 {
-                    message: "Memory",
+                    message: "Memory (MB)",
                     type: 'input',
                     name: 'properties.memory',
                     default: 128

@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-exports.run = (callback) => {
+exports.run = (opts, callback) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
     const options = {
         mode: 'autocomplete',
-        message: "Select Provider",
+        message: opts.message || "Select Provider",
         fields: ['name', /*'description',*/ 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
         sortBy: 'name',
         fetchFunction: () => {
 
-            const res = gestalt.fetchProviders();
+            const res = gestalt.fetchProviders(null, opts.type);
 
             // enhance for display
             res.map(item => {

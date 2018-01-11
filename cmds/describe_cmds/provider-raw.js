@@ -17,7 +17,7 @@ exports.handler = function (argv) {
 
             // 1) Select Container
 
-            selectProvider.run((provider) => {
+            selectProvider.run({}, (provider) => {
 
                 // 2) Show provider details
 

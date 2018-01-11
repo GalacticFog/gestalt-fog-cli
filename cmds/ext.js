@@ -1,4 +1,4 @@
-exports.command = 'ext <resource>'
+exports.command = 'ext <command>'
 exports.desc = 'External commands'
 exports.builder = function (yargs) {
   return yargs.commandDir('ext_cmds')

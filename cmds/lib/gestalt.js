@@ -64,8 +64,8 @@ exports.fetchOrgLambdas = (fqonList) => {
 }
 
 // TODO: Unsure if this gets all providers
-exports.fetchProviders = (providedState) => {
-    return fetchFromEnvironment('providers', providedState);
+exports.fetchProviders = (providedState, type) => {
+    return fetchFromEnvironment('providers', providedState, type);
 }
 
 exports.fetchApis = (providedState) => {
@@ -84,14 +84,16 @@ exports.fetchPolicies = (providedState) => {
     return fetchFromEnvironment('policies', providedState);
 }
 
-function fetchFromEnvironment(type, providedState) {
+function fetchFromEnvironment(type, providedState, type2) {
     const state = providedState || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
     if (!state.environment) throw Error("No Environment in current context");
     if (!state.environment.id) throw Error("No Environment ID in current context");
     if (!type) throw Error("Type not specified");
-    return meta_GET(`/${state.org.fqon}/environments/${state.environment.id}/${type}?expand=true`)
+    let url = `/${state.org.fqon}/environments/${state.environment.id}/${type}?expand=true`;
+    if (type2) url += `&type=${type2}`
+    return meta_GET(url);
 }
 
 exports.fetchApiEndpoints = (apiList) => {
@@ -202,6 +204,20 @@ exports.createContainer = (container, providedState) => {
     if (!state.environment) throw Error("missing state.environment");
     if (!state.environment.id) throw Error("missing state.environment.id");
     const res = meta_POST(`/${state.org.fqon}/environments/${state.environment.id}/containers`, container);
+    return res;
+}
+
+exports.createLambda = (lambda, providedState) => {
+    if (!lambda) throw Error('missing lambda');
+    if (!lambda.name) throw Error('missing lambda.name');
+    // TODO: Other required parameters
+
+    const state = providedState || getGestaltState();
+    if (!state.org) throw Error("missing state.org");
+    if (!state.org.fqon) throw Error("missing state.org.fqon");
+    if (!state.environment) throw Error("missing state.environment");
+    if (!state.environment.id) throw Error("missing state.environment.id");
+    const res = meta_POST(`/${state.org.fqon}/environments/${state.environment.id}/lambdas`, lambda);
     return res;
 }
 

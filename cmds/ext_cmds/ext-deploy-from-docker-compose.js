@@ -31,7 +31,7 @@ exports.handler = function (argv) {
 
             gestalt.setCurrentEnvironment(env);
 
-            selectProvider.run(provider => {
+            selectProvider.run({}, provider => {
                 console.log();
 
                 // Assign the provider to each container
