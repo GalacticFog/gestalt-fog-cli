@@ -54,7 +54,8 @@ exports.displayContext = displayContext;
 
 function displayContext() {
     const state = gestalt.getState();
-    let s = `${chalk.bold('Current Context')}: ${chalk.green(gestalt.getHost())}`
+    let s = `${chalk.bold('Context:')} ${chalk.green(gestalt.getHost())}`
+    // let s = `${chalk.green(gestalt.getHost())}`
     if (state.org) {
         s += ` / ${chalk.green(state.org.fqon)}`;
         if (state.workspace) {
@@ -66,8 +67,9 @@ function displayContext() {
             s += ` / ${chalk.green(value)}`;
         }
     }
+    // s += ` ${chalk.bold(']')}`;
     console.log(s);
-    console.log();
+    // console.log();
 }
 
 function doResolveOrg() {

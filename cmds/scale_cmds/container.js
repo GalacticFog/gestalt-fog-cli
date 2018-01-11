@@ -1,11 +1,11 @@
-exports.command = 'scale-container'
+exports.command = 'container'
 exports.desc = 'Scale container'
 exports.builder = {}
 exports.handler = function (argv) {
-    const gestalt = require('./lib/gestalt')
-    const displayResource = require('./lib/displayResourceUI');
-    const selectResource = require('./lib/selectResourceUI');
-    const selectHierarchy = require('./lib/selectHierarchy');
+    const gestalt = require('../lib/gestalt')
+    const displayResource = require('../lib/displayResourceUI');
+    const selectResource = require('../lib/selectResourceUI');
+    const selectHierarchy = require('../lib/selectHierarchy');
     const inquirer = require('inquirer');
 
     // Main

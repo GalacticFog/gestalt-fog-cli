@@ -1,11 +1,11 @@
-exports.command = 'restart-containers'
+exports.command = 'containers'
 exports.desc = 'Restart containers'
 exports.builder = {}
 exports.handler = function (argv) {
-    const gestalt = require('./lib/gestalt')
-    const displayResource = require('./lib/displayResourceUI');
-    const selectContainer = require('./lib/selectContainer');
-    const selectHierarchy = require('./lib/selectHierarchy');
+    const gestalt = require('../lib/gestalt')
+    const displayResource = require('../lib/displayResourceUI');
+    const selectContainer = require('../lib/selectContainer');
+    const selectHierarchy = require('../lib/selectHierarchy');
 
     // Main
     try {

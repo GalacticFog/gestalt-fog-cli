@@ -260,6 +260,23 @@ exports.updateContainer = (container, providedState) => {
     return res;
 }
 
+exports.deleteContainer = (container, providedState) => {
+    if (!container) throw Error('missing container');
+    if (!container.id) throw Error('missing container.id');
+
+    const state = providedState || getGestaltState();
+    if (!state.org) throw Error("missing state.org");
+    if (!state.org.fqon) throw Error("missing state.org.fqon");
+    if (!container) throw Error("missing container");
+    if (!container.id) throw Error("missing container.id");
+
+    delete container.resource_type;
+    delete container.resource_state;
+
+    const res = meta_DELETE(`/${state.org.fqon}/containers/${container.id}`);
+    return res;
+}
+
 
 // Lambdas
 
@@ -517,7 +534,7 @@ function http_DELETE(url, body, opts) {
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
     options.json = body;
     const res = request('DELETE', url, options);
-    return JSON.parse(res.getBody());
+    // return res.getBody();
 }
 
 
@@ -536,6 +553,11 @@ function meta_POST(url, body, opts) {
 function meta_PUT(url, body, opts) {
     const meta_url = getGestaltConfig()['gestalt_url'] + '/meta';
     return http_PUT(`${meta_url}${url}`, body, opts);
+}
+
+function meta_DELETE(url, opts) {
+    const meta_url = getGestaltConfig()['gestalt_url'] + '/meta';
+    return http_DELETE(`${meta_url}${url}`, undefined, opts);
 }
 
 // Internal State functions 

@@ -1,14 +1,17 @@
-exports.command = 'clone-containers'
+exports.command = 'containers'
 exports.desc = 'Clone containers'
 exports.builder = {}
 exports.handler = function (argv) {
 
-    const selectProvider = require('./lib/selectProvider');
-    const selectEnvironment = require('./lib/selectEnvironment');
-    const selectContainer = require('./lib/selectContainer');
-    const gestalt = require('./lib/gestalt');
+    const selectProvider = require('../lib/selectProvider');
+    const selectEnvironment = require('../lib/selectEnvironment');
+    const selectContainer = require('../lib/selectContainer');
+    const gestalt = require('../lib/gestalt');
+    const selectHierarchy = require('../lib/selectHierarchy');
+    const displayResource = require('../lib/displayResourceUI');
     const chalk = require('chalk');
-    const selectHierarchy = require('./lib/selectHierarchy');
+    const inquirer = require('inquirer');
+
 
     selectHierarchy.resolveWorkspace(() => {
 
@@ -110,8 +113,6 @@ exports.handler = function (argv) {
 
     function displayRunningContainers(containers) {
 
-        const displayResource = require('./lib/displayResourceUI');
-
         const options = {
             message: "Containers",
             headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner'],
@@ -128,7 +129,6 @@ exports.handler = function (argv) {
 
 
     function doConfirm(callback) {
-        const inquirer = require('inquirer');
         const questions = [
             {
                 message: "Proceed?",
