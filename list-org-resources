@@ -1,8 +1,0 @@
-#!/bin/bash
-
-./org-containers
-
-./org-lambdas
-
-./org-api-endpoints
-
