@@ -1,5 +1,5 @@
 // Gestalt stuff
-const request = require('request-promise-native');
+const request = require('sync-request');
 const querystring = require('querystring');
 const gestaltState = require('./gestalt-state');
 
@@ -15,16 +15,10 @@ exports.getHost = () => {
 }
 
 exports.fetchOrgFqons = () => {
-    return meta_GET('/orgs?expand=true').then(res => {
-       return res.map(item => item.properties.fqon).sort();
-    });
+    const res = meta_GET('/orgs?expand=true');
+    const list = res.map(item => item.properties.fqon).sort();
+    return list;
 }
-
-// exports.fetchOrgFqons = () => {
-//     const res = meta_GET('/orgs?expand=true');
-//     const list = res.map(item => item.properties.fqon).sort();
-//     return list;
-// }
 
 exports.fetchOrgs = () => {
     return meta_GET('/orgs?expand=true');
@@ -69,20 +63,6 @@ exports.fetchOrgLambdas = (fqonList) => {
     return fetchFromOrgs("lambdas", fqonList);
 }
 
-function fetchFromOrgs(type, fqonList) {
-    if (!fqonList) fqonList = [getGestaltState().org.fqon];
-
-    let promises = fqonList.map(fqon => {
-        console.log(`Fetching from ${fqon}...`);
-        const res = meta_GET(`/${fqon}/${type}?expand=true`)
-        return res;
-    });
-
-    return Promise.all(promises).then(results => {
-        return [].concat.apply([], results);
-    });
-}
-
 // TODO: Unsure if this gets all providers
 exports.fetchProviders = (providedState, type) => {
     return fetchFromEnvironment('providers', providedState, type);
@@ -125,9 +105,9 @@ exports.fetchApiEndpoints = (apiList) => {
         return res;
     });
 
-    return Promise.all(eps).then(results => {
-        return [].concat.apply([], results);
-    });
+    eps = [].concat.apply([], eps); // flatten array
+
+    return eps;
 }
 
 exports.fetchOrgContainers = (fqon) => {
@@ -153,18 +133,18 @@ exports.fetchProviderContainers = (provider) => {
 // }
 
 
-// function fetchFromOrgs(type, fqonList) {
-//     if (!fqonList) fqonList = [getGestaltState().org.fqon];
+function fetchFromOrgs(type, fqonList) {
+    if (!fqonList) fqonList = [getGestaltState().org.fqon];
 
-//     let apis = fqonList.map(fqon => {
-//         const res = meta_GET(`/${fqon}/${type}?expand=true`)
-//         return res;
-//     });
+    let apis = fqonList.map(fqon => {
+        const res = meta_GET(`/${fqon}/${type}?expand=true`)
+        return res;
+    });
 
-//     apis = [].concat.apply([], apis); // flatten array
+    apis = [].concat.apply([], apis); // flatten array
 
-//     return apis;
-// }
+    return apis;
+}
 
 exports.fetchCurrentContainer = () => {
     return this.fetchContainer(getGestaltState().container);
@@ -209,7 +189,8 @@ exports.fetchContainer = (container) => {
         id = state.container.fqon
     }
 
-    return meta_GET(`/${fqon}/containers/${id}`)
+    const res = meta_GET(`/${fqon}/containers/${id}`)
+    return res;
 }
 
 exports.createContainer = (container, providedState) => {
@@ -222,7 +203,8 @@ exports.createContainer = (container, providedState) => {
     if (!state.org.fqon) throw Error("missing state.org.fqon");
     if (!state.environment) throw Error("missing state.environment");
     if (!state.environment.id) throw Error("missing state.environment.id");
-    return meta_POST(`/${state.org.fqon}/environments/${state.environment.id}/containers`, container);
+    const res = meta_POST(`/${state.org.fqon}/environments/${state.environment.id}/containers`, container);
+    return res;
 }
 
 exports.createLambda = (lambda, providedState) => {
@@ -242,6 +224,7 @@ exports.createLambda = (lambda, providedState) => {
 exports.createOrg = (org, parentFqon) => {
     if (!org) throw Error('missing org');
     if (!org.name) throw Error('missing org.name');
+    if (!org.description) throw Error('missing org.description');
 
     const state = parentFqon ? { org: { fqon: parentFqon } } : getGestaltState();
     if (!state.org) throw Error("missing state.org");
@@ -253,6 +236,7 @@ exports.createOrg = (org, parentFqon) => {
 exports.createWorkspace = (workspace, parentFqon) => {
     if (!workspace) throw Error('missing workspace');
     if (!workspace.name) throw Error('missing workspace.name');
+    if (!workspace.description) throw Error('missing workspace.description');
 
     const state = parentFqon ? { org: { fqon: parentFqon } } : getGestaltState();
     if (!state.org) throw Error("missing state.org");
@@ -266,6 +250,7 @@ exports.createEnvironment = (environment, providedState) => {
     if (!environment.name) throw Error('missing environment.name');
     if (!environment.properties) throw Error('missing environment.properties');
     if (!environment.properties.environment_type) throw Error('missing environment.properties.environment_type');
+    if (!environment.description) throw Error('missing environment.description');
 
     const state = providedState || getGestaltState();
     if (!state.org) throw Error("missing state.org");
@@ -500,10 +485,8 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         password: password
     });
 
-    const requestSync = require('sync-request')
 
-
-    const res = requestSync('POST', `${security_url}${url}`, {
+    const res = request('POST', `${security_url}${url}`, {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Content-Length': postData.length
@@ -539,43 +522,35 @@ exports.httpPut = http_PUT;
 exports.httpPost = http_POST;
 exports.httpDelete = http_DELETE;
 
-async function http_GET(url, opts) {
+function http_GET(url, opts) {
     const token = getCachedAuthToken();
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
-    options.method = 'GET';
-    options.uri = url;
-    const res = await request(options);
-    return JSON.parse(res);
+    const res = request('GET', url, options);
+    return JSON.parse(res.getBody());
 }
 
-async function http_POST(url, body, opts) {
+function http_POST(url, body, opts) {
     const token = getCachedAuthToken();
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
     options.json = body;
-    options.method = 'POST';
-    options.uri = url;
-    const res = await request(options);
-    return res;
+    const res = request('POST', url, options);
+    return JSON.parse(res.getBody());
 }
 
-async function http_PUT(url, body, opts) {
+function http_PUT(url, body, opts) {
     const token = getCachedAuthToken();
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
     options.json = body;
-    options.method = 'PUT';
-    options.uri = url;
-    const res = await request(options);
-    return res;
+    const res = request('PUT', url, options);
+    return JSON.parse(res.getBody());
 }
 
-async function http_DELETE(url, body, opts) {
+function http_DELETE(url, body, opts) {
     const token = getCachedAuthToken();
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
     options.json = body;
-    options.method = 'DELETE';
-    options.uri = url;
-    const res = await request(options);
-    return res;
+    const res = request('DELETE', url, options);
+    // return res.getBody();
 }
 
 

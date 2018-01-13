@@ -8,40 +8,35 @@ exports.handler = function (argv) {
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    try {
+    main();
 
-        selectHierarchy.resolveOrg(() => {
+    async function main() {
 
-            const parent = gestaltState.getState().org;
+        await selectHierarchy.resolveOrg();
 
-            debug(`parent: ${JSON.stringify(parent, null, 2)}`);
+        const parent = gestaltState.getState().org;
 
-            promptForInput(answers => {
+        debug(`parent: ${JSON.stringify(parent, null, 2)}`);
 
-                debug(`answers: ${answers}`);
+        promptForInput(answers => {
 
-                if (answers.confirm) {
+            debug(`answers: ${answers}`);
 
-                    const workspaceSpec = {
-                        name: answers.name,
-                        description: answers.description
-                    };
+            if (answers.confirm) {
 
-                    const workspace = gestalt.createWorkspace(workspaceSpec, parent.fqon);
+                const workspaceSpec = {
+                    name: answers.name,
+                    description: answers.description
+                };
 
+                gestalt.createWorkspace(workspaceSpec, parent.fqon).then(workspace => {
                     debug(`workspace: ${workspace}`);
-
-                    console.log('Workspace created.');
-                } else {
-                    console.log('Aborted.');
-                }
-            });
-
+                    console.log(`Workspace '${workspace.name}' created.`);
+                });
+            } else {
+                console.log('Aborted.');
+            }
         });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 
     function promptForInput(callback) {

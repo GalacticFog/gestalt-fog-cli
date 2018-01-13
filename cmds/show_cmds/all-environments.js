@@ -12,22 +12,11 @@ exports.handler = function (argv) {
         sortField: 'description',
     }
 
-    try {
-        let resources = [];
-        gestalt.fetchOrgFqons().map(fqon => {
+    main();
 
-            console.error(`Fetching from ${fqon}...`)
-
-            const res = gestalt.fetchOrgEnvironments([fqon]);
-
-            resources = resources.concat(res);
-
-        });
+    async function main() {
+        let fqons = await gestalt.fetchOrgFqons();
+        let resources = await gestalt.fetchOrgEnvironments(fqons);
         displayResource.run(options, resources);
-
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 }

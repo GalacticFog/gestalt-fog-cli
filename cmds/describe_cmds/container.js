@@ -7,32 +7,24 @@ exports.handler = function (argv) {
     const selectContainer = require('../lib/selectContainer');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    // Main
-    try {
+    main();
+
+    async function main() {
+
         // 1) Select Container
-        selectHierarchy.resolveEnvironment(() => {
-            selectContainer.run({}, (container) => {
+        await selectHierarchy.resolveEnvironment();
+        selectContainer.run({}, (container) => {
+            if (argv.raw) {
+                console.log(JSON.stringify(container, null, 2));
+            } else {
+                showContainer(container);
+                showInstances(container);
+                // showCommands(container);
 
-                // 2) Show container details
-
-                // const container = gestalt.fetchContainer(result.container);  //fetch from current context
-
-                if (argv.raw) {
-                    console.log(JSON.stringify(container, null, 2));
-                } else {
-                    showContainer(container);
-                    showInstances(container);
-                    // showCommands(container);
-
-                    console.log(`Use '--raw' to see raw JSON output`);
-                    console.log();
-                }
-            });
+                console.log(`Use '--raw' to see raw JSON output`);
+                console.log();
+            }
         });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 
     function showContainer(c) {

@@ -6,14 +6,11 @@ exports.handler = function (argv) {
     const selectContainer = require('../lib/selectContainer');
     const gestalt = require('../lib/gestalt');
 
-    try {
-        selectHierarchy.resolveEnvironment(() => {
-            chooseContainer();
-        });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
+    main();
+
+    async function main() {
+        await selectHierarchy.resolveEnvironment();
+        chooseContainer();
     }
 
     function chooseContainer() {

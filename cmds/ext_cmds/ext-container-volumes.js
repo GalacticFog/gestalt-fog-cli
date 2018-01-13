@@ -7,7 +7,6 @@ exports.handler = function (argv) {
     const gestaltState = require('../lib/gestalt-state');
     const displayResource = require('../lib/displayResourceUI');
     const gestaltServicesConfig = require('../lib/gestalt-services-config');
-    const request = require('sync-request');
     const inquirer = require('inquirer');
     const SERVICE_CONFIG_KEY = 'kube_efs_volumes.v1';
     const chalk = require('chalk');

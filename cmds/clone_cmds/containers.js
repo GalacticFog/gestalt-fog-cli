@@ -12,8 +12,11 @@ exports.handler = function (argv) {
     const chalk = require('chalk');
     const inquirer = require('inquirer');
 
+    main();
 
-    selectHierarchy.resolveWorkspace(() => {
+    async function main() {
+
+        await selectHierarchy.resolveWorkspace();
 
         console.log();
         console.log(chalk.bold('Clone containers from one environment to another'));
@@ -25,60 +28,63 @@ exports.handler = function (argv) {
 
             gestalt.setCurrentEnvironment(sourceEnv);
 
-            const containers = gestalt.fetchContainers();
+            gestalt.fetchContainers().then(containers => {
 
-            console.log("Select containers to clone (use arrows and spacebar to modify selection)");
-            console.log();
-
-            selectContainer.run({ mode: 'checkbox', defaultChecked: true }, (selectedContainers) => {
+                console.log("Select containers to clone (use arrows and spacebar to modify selection)");
                 console.log();
 
-                console.log("Select target environment to clone containers to")
-                console.log();
-
-                selectEnvironment.run({}, (targetEnv) => {
+                selectContainer.run({ mode: 'checkbox', defaultChecked: true }, (selectedContainers) => {
                     console.log();
 
-                    // Ensure different environments were used
-                    if (sourceEnv.id == targetEnv.id) {
-                        console.log("Aborting - can't use the same source and destination enviornment");
-                        return;
-                    }
-
-                    gestalt.setCurrentEnvironment(targetEnv);
-
-                    const state = gestalt.getState();
-
-                    console.log("Containers will be created in the following location:");
-                    console.log();
-                    console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
-                    console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
-                    console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
-                    // console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
+                    console.log("Select target environment to clone containers to")
                     console.log();
 
-                    displayRunningContainers(selectedContainers);
+                    selectEnvironment.run({}, (targetEnv) => {
+                        console.log();
 
-                    doConfirm(confirmed => {
-                        if (!confirmed) {
-                            console.log('Aborted.');
+                        // Ensure different environments were used
+                        if (sourceEnv.id == targetEnv.id) {
+                            console.log("Aborting - can't use the same source and destination enviornment");
                             return;
                         }
 
-                        const createdContainers = selectedContainers.map(item => {
-                            console.log(`Creating container ${item.name}`);
-                            const c = cloneContainerPayload(item);
-                            const container = gestalt.createContainer(c, state);
-                            return container;
-                        });
+                        gestalt.setCurrentEnvironment(targetEnv);
 
-                        displayRunningContainers(createdContainers);
-                        console.log('Done.');
+                        const state = gestalt.getState();
+
+                        console.log("Containers will be created in the following location:");
+                        console.log();
+                        console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
+                        console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
+                        console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
+                        // console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
+                        console.log();
+
+                        displayRunningContainers(selectedContainers);
+
+                        doConfirm(confirmed => {
+                            if (!confirmed) {
+                                console.log('Aborted.');
+                                return;
+                            }
+
+                            const createContainerPromises = selectedContainers.map(item => {
+                                const c = cloneContainerPayload(item);
+                                return gestalt.createContainer(c, state);
+                            });
+
+                            Promise.all(createContainerPromises).then(results => {
+
+                                const createdContainers = [].concat.apply([], results); // flatten array
+                                displayRunningContainers(createdContainers);
+                                console.log('Done.');
+                            });
+                        });
                     });
                 });
             });
         });
-    });
+    }
 
     function cloneContainerPayload(src) {
         let op = src.properties;
@@ -120,9 +126,9 @@ exports.handler = function (argv) {
             sortField: 'description',
         }
 
-        containers.map(item => {
+        for (let item of containers) {
             item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
-        })
+        }
 
         displayResource.run(options, containers);
     }

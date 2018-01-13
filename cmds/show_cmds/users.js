@@ -12,15 +12,10 @@ exports.handler = function (argv) {
         sortField: 'name',
     }
 
-    try {
-        const resources = gestalt.fetchUsers();
+    main();
 
-        // console.log(JSON.stringify(resources, null, 2))
-
+    async function main() {
+        const resources = await gestalt.fetchUsers();
         displayResource.run(options, resources);
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 }

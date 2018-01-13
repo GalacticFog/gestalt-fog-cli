@@ -9,7 +9,10 @@ exports.handler = function (argv) {
     const selectHierarchy = require('../lib/selectHierarchy');
     const selectProvider = require('../lib/selectProvider');
 
-    selectHierarchy.resolveWorkspace(() => {
+    main();
+
+    async function main() {
+        await selectHierarchy.resolveWorkspace();
 
         promptForInput(answers => {
 
@@ -25,16 +28,15 @@ exports.handler = function (argv) {
 
 
                 // Create
-                const container = gestalt.createContainer(containerSpec);
-
-                debug(`container: ${JSON.stringify(container, null, 2)}`);
-
-                console.log('Container created.');
+                gestalt.createContainer(containerSpec).then(container => {
+                    debug(`container: ${JSON.stringify(container, null, 2)}`);
+                    console.log(`Container '${container.name}' created.`);
+                });
             } else {
                 console.log('Aborted.');
             }
         });
-    });
+    }
 
     function promptForInput(callback) {
 
@@ -103,7 +105,7 @@ exports.handler = function (argv) {
         //     }
         // }
 
-        selectProvider.run({ type: 'CaaS', message: 'Select Provider' }, provider => {
+        selectProvider.run({ type: 'CaaS', message: 'Select Provider', mode: 'list' }, provider => {
 
             const questions = [
                 {

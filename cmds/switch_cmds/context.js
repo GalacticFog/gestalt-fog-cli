@@ -5,7 +5,7 @@ exports.handler = function (argv) {
     const selectHierarchy = require('../lib/selectHierarchy');
 
     selectHierarchy.displayContext();
-    selectHierarchy.chooseContext((result) => {
+    selectHierarchy.chooseContext(result => {
         selectHierarchy.displayContext();
     });
 }

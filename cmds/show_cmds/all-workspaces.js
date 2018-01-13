@@ -9,28 +9,14 @@ exports.handler = function (argv) {
         message: "Workspaces",
         headers: ['Org', 'Description', 'Name', 'Owner'],
         fields: ['org.properties.fqon', 'description', 'name', 'owner.name'],
-        // headers: ['Workspace', 'Name', 'Path', 'Owner'],
-        // fields: ['description', 'name', 'path', 'owner.name'],
         sortField: 'org.properties.fqon',
     }
 
-    try {
-        let resources = [];
-        gestalt.fetchOrgFqons().map(fqon => {
-            console.error(`Fetching from ${fqon}...`)
-            const res = gestalt.fetchWorkspaces([fqon]);
-            resources = resources.concat(res);
-        });
+    main();
 
-        resources.map(r => {
-            r.path = `[${r.org.properties.fqon}] ${r.name}`
-        })
-
+    async function main() {
+        let fqons = await gestalt.fetchOrgFqons();
+        let resources = await gestalt.fetchWorkspaces(fqons);
         displayResource.run(options, resources);
-
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 }

@@ -8,15 +8,16 @@ exports.handler = function (argv) {
     const chalk = require('chalk');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    // Main
-    try {
+    main();
+
+    async function main() {
         if (argv.fqon || argv.id) {
             // Command mode
 
             if (!argv.fqon) throw Error("missing argv.fqon");
             if (!argv.id) throw Error("missing argv.id");
 
-            const lambda = gestalt.fetchLambda({
+            const lambda = await gestalt.fetchLambda({
                 fqon: argv.fqon,
                 id: argv.id
             });
@@ -25,14 +26,10 @@ exports.handler = function (argv) {
         } else {
             // Interactive mode
 
-            selectLambda(lambda => {
+            await selectLambda(lambda => {
                 doShowLambda(lambda, argv);
             });
         }
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 
     function doShowLambda(lambda, argv) {
@@ -51,24 +48,22 @@ exports.handler = function (argv) {
     }
 
     function showLambda(lambda) {
-        selectHierarchy.resolveEnvironment(() => {
-            const options = {
-                message: "Lambdas",
-                headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
-                fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
-                sortField: 'description',
-            }
+        const options = {
+            message: "Lambdas",
+            headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
+            fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
+            sortField: 'description',
+        }
 
-            displayResource.run(options, [lambda]);
+        displayResource.run(options, [lambda]);
 
-            // Display Code
-            if (lambda.properties) {
-                if (lambda.properties.code) {
-                    const buf = Buffer.from(lambda.properties.code, 'base64');
-                    displayCode(buf.toString('utf8'));
-                }
+        // Display Code
+        if (lambda.properties) {
+            if (lambda.properties.code) {
+                const buf = Buffer.from(lambda.properties.code, 'base64');
+                displayCode(buf.toString('utf8'));
             }
-        });
+        }
     }
 
     function displayCode(code) {
@@ -78,22 +73,22 @@ exports.handler = function (argv) {
         console.log();
     }
 
-    function selectLambda(callback) {
-        selectHierarchy.resolveEnvironment(() => {
-            let options = {
-                mode: 'autocomplete',
-                message: "Select Lambda",
-                fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
-                sortBy: 'name',
-                fetchFunction: () => {
-                    const res = gestalt.fetchLambdas();
-                    return res;
-                }
-            }
+    async function selectLambda(callback) {
+        await selectHierarchy.resolveEnvironment();
+        const res = await gestalt.fetchLambdas();
 
-            selectResource.run(options, selection => {
-                if (callback) callback(selection);
-            });
+        let options = {
+            mode: 'autocomplete',
+            message: "Select Lambda",
+            fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
+            sortBy: 'name',
+            fetchFunction: () => {
+                return res;
+            }
+        }
+
+        selectResource.run(options, selection => {
+            if (callback) callback(selection);
         });
     }
 }

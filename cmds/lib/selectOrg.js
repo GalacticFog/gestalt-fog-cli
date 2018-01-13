@@ -3,23 +3,28 @@ exports.run = (callback) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
-    const options = {
-        mode: 'autocomplete',
-        message: "Select Org",
-        fields: ['description', 'properties.fqon', 'owner.name'],
-        sortBy: 'fqon',
-        fetchFunction: () => {
-            const res = gestalt.fetchOrgs();
+    go();
 
-            // enhance payload
-            res.map(r => {
-                r.fqon = r.properties.fqon
-            });
-            return res;
-        }
-    };
+    async function go() {
 
-    selectResource.run(options, selection => {
-        if (callback) callback(selection);
-    });
+        const res = await gestalt.fetchOrgs();
+
+        const options = {
+            mode: 'autocomplete',
+            message: "Select Org",
+            fields: ['description', 'properties.fqon', 'owner.name'],
+            sortBy: 'fqon',
+            fetchFunction: () => {
+                // enhance payload
+                for (let r of res) {
+                    r.fqon = r.properties.fqon
+                }
+                return res;
+            }
+        };
+
+        selectResource.run(options, selection => {
+            if (callback) callback(selection);
+        });
+    }
 }

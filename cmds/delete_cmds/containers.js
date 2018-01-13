@@ -10,9 +10,13 @@ exports.handler = function (argv) {
     const displayResource = require('../lib/displayResourceUI');
     const inquirer = require('inquirer');
 
-    selectHierarchy.resolveEnvironment(() => {
+    main();
 
-        const containers = gestalt.fetchContainers();
+    async function main() {
+
+        await selectHierarchy.resolveEnvironment();
+
+        const containers = await gestalt.fetchContainers();
 
         console.log("Select containers to delete (use arrows and spacebar to modify selection)");
         console.log();
@@ -28,14 +32,25 @@ exports.handler = function (argv) {
                     return;
                 }
 
-                selectedContainers.map(item => {
-                    console.log(`Deleting container ${item.name}`);
-                    gestalt.deleteContainer(item);
+                // TODO:
+                // const promises = selectedContainers.map(item => {
+                //     return new Promise((reject, resolve) => {
+                //         console.log(`Deleting container ${item.name}`);
+                //         resolve();
+                //     }).then(
+                //         gestalt.deleteContainer(item)
+                //     );
+                // });
+                const promises = selectedContainers.map(item => {
+                    return gestalt.deleteContainer(item)
                 });
-                console.log('Done.');
+
+                Promise.all(promises).then(results => {
+                    console.log('Done.');
+                });
             });
         });
-    });
+    }
 
     function displayRunningContainers(containers) {
 

@@ -6,15 +6,11 @@ exports.handler = function (argv) {
     const displayEntitlements = require('../lib/displayEntitlements');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    try {
-        selectHierarchy.resolveWorkspace(() => {
-            const resources = gestalt.fetchWorkspaceEntitlements();
+    main();
 
-            displayEntitlements.run(resources);
-        });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
+    async function main() {
+        await selectHierarchy.resolveWorkspace();
+        const resources = await gestalt.fetchWorkspaceEntitlements();
+        displayEntitlements.run(resources);
     }
 }

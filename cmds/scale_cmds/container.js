@@ -9,55 +9,53 @@ exports.handler = function (argv) {
     const inquirer = require('inquirer');
 
     // Main
-    try {
-        if (argv.fqon || argv.id || argv.instances) {
-            // Command mode
+    if (argv.fqon || argv.id || argv.instances) {
+        // Command mode
 
-            if (!argv.fqon) throw Error("missing argv.fqon");
-            if (!argv.id) throw Error("missing argv.id");
-            if (!argv.instances) throw Error("missing argv.instances");
+        if (!argv.fqon) throw Error("missing argv.fqon");
+        if (!argv.id) throw Error("missing argv.id");
+        if (!argv.instances) throw Error("missing argv.instances");
 
-            const num_instances = argv.instances;
+        const num_instances = argv.instances;
 
-            if (!validate(num_instances)) {
-                return;
-            }
+        if (!validate(num_instances)) {
+            return;
+        }
 
-            const container = gestalt.fetchContainer({ fqon: argv.fqon, id: argv.id });
+        gestalt.fetchContainer({ fqon: argv.fqon, id: argv.id }).then(container => {
             container.properties.num_instances = num_instances;
-            gestalt.updateContainer(container);
-        } else {
+            gestalt.updateContainer(container).then(result => {
+                console.log('done.');
+            });
+        });
+    } else {
 
-            selectContainer(container => {
-                getUserInput(num_instances => {
-                    // Validate input
-                    if (!validate(num_instances)) {
-                        return;
-                    }
+        selectContainer(container => {
+            getUserInput(num_instances => {
+                // Validate input
+                if (!validate(num_instances)) {
+                    return;
+                }
 
-                    // Confirmation step
-                    confirmIfNeeded(num_instances, (confirm) => {
-                        if (confirm) {
-                            // Scale up
-                            container.properties.num_instances = num_instances;
-                            gestalt.updateContainer(container);
+                // Confirmation step
+                confirmIfNeeded(num_instances, (confirm) => {
+                    if (confirm) {
+                        // Scale up
+                        container.properties.num_instances = num_instances;
+                        gestalt.updateContainer(container).then(c => {
                             console.log("Done.");
                             console.log();
                             console.log(`The following command may be run to scale the container directly:`);
                             console.log();
                             console.log(`    ./${argv['$0']} --fqon ${container.org.properties.fqon} --id ${container.id} --instances ${num_instances}`);
                             console.log();
-                        } else {
-                            console.log("Aborted");
-                        }
-                    });
+                        });
+                    } else {
+                        console.log("Aborted");
+                    }
                 });
             });
-        }
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
+        });
     }
 
     function validate(num_instances) {
@@ -78,24 +76,26 @@ exports.handler = function (argv) {
 
     function selectContainer(callback) {
 
-        selectHierarchy.resolveEnvironment(() => {
-            let options = {
-                mode: 'autocomplete',
-                message: "Select Container(s)",
-                fields: ['name', 'properties.status', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
-                sortBy: 'name',
-                fetchFunction: () => {
-                    const res = gestalt.fetchContainers();
-                    return res;
-                }
-            }
+        selectHierarchy.resolveEnvironment().then(() => {
 
-            selectResource.run(options, selection => {
-                if (callback) callback(selection);
+            gestalt.fetchContainers().then(res => {
+
+                let options = {
+                    mode: 'autocomplete',
+                    message: "Select Container(s)",
+                    fields: ['name', 'properties.status', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
+                    sortBy: 'name',
+                    fetchFunction: () => {
+                        return res;
+                    }
+                }
+
+                selectResource.run(options, selection => {
+                    if (callback) callback(selection);
+                });
             });
         });
     }
-
 
     function getUserInput(callback) {
         const questions = [

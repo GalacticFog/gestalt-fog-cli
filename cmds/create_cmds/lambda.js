@@ -35,7 +35,11 @@ exports.handler = function (argv) {
         console.log(`Creating package lambda from ${argv.url}`);
     }
 
-    selectHierarchy.resolveWorkspace(() => {
+    main();
+
+    async function main() {
+
+        await selectHierarchy.resolveWorkspace();
 
         promptForInput(answers => {
 
@@ -59,16 +63,15 @@ exports.handler = function (argv) {
                 debug(`lambdaSpec: ${JSON.stringify(lambdaSpec, null, 2)}`);
 
                 // Create
-                const lambda = gestalt.createLambda(lambdaSpec);
-
-                debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
-
-                console.log('Lambda created.');
+                gestalt.createLambda(lambdaSpec).then(lambda => {
+                    debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
+                    console.log(`Lambda '${lambda.name}' created.`);
+                });
             } else {
                 console.log('Aborted.');
             }
         });
-    });
+    }
 
     function promptForInput(callback) {
 

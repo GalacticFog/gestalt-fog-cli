@@ -5,37 +5,32 @@ exports.handler = function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
+    const options = {
+        message: "Providers",
+        headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'UID'/*'Created'*/],
+        fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
+        sortField: 'name',
+    }
 
-    selectHierarchy.resolveOrg(() => {
+    main();
 
-        const options = {
-            message: "Providers",
-            headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'UID'/*'Created'*/],
-            fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
-            sortField: 'name',
-        }
+    async function main() {
 
-        try {
-            const fqon = gestalt.getState().org.fqon;
+        await selectHierarchy.resolveOrg();
 
-            const resources = gestalt.fetchOrgProviders([fqon]);
+        const fqon = gestalt.getState().org.fqon;
 
-            resources.map(item => {
-                item.resource_type = item.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
-                if (item.description) {
-                    if (item.description.length > 20) {
-                        item.description = item.description.substring(0, 20) + '...';
-                    }
+        const resources = await gestalt.fetchOrgProviders([fqon]);
+
+        for (let item of resources) {
+            item.resource_type = item.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
+            if (item.description) {
+                if (item.description.length > 20) {
+                    item.description = item.description.substring(0, 20) + '...';
                 }
-            });
-
-            // console.log(JSON.stringify(resources, null, 2))
-
-            displayResource.run(options, resources);
-        } catch (err) {
-            console.log(err.message);
-            console.log("Try running 'change-context'");
-            console.log();
+            }
         }
-    });
+
+        displayResource.run(options, resources);
+    }
 }

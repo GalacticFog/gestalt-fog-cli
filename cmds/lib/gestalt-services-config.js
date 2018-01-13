@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 const gestalt = require('./gestalt');
 const gestaltState = require('./gestalt-state');
-const request = require('sync-request');
 const CONFIG_FILE = 'services-config.json';
 const LOCAL_SERVICES_FILE = 'service_configs.local';
 const CACHED_SERVICES_FILE = 'service_configs.cached';

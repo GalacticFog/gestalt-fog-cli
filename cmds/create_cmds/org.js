@@ -8,7 +8,11 @@ exports.handler = function (argv) {
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    selectHierarchy.resolveOrg(() => {
+    main();
+
+    async function main() {
+
+        await selectHierarchy.resolveOrg();
 
         const parent = gestaltState.getState().org;
 
@@ -25,16 +29,15 @@ exports.handler = function (argv) {
                     description: answers.description
                 };
 
-                const org = gestalt.createOrg(orgSpec, parent.fqon);
-
-                debug(`org: ${org}`);
-
-                console.log('Org created.');
+                gestalt.createOrg(orgSpec, parent.fqon).then(org => {
+                    debug(`org: ${org}`);
+                    console.log(`Org '${org.name}' created.`);
+                });
             } else {
                 console.log('Aborted.');
             }
         });
-    });
+    }
 
     function promptForInput(callback) {
         const questions = [

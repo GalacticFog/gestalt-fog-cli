@@ -5,52 +5,85 @@ exports.handler = function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
 
-    try {
-        let allContainers = [];
+    main2();
 
+    async function main() {
         process.stdout.write('Reading environments');
-        gestalt.fetchOrgFqons().map(fqon => {
-            const envs = gestalt.fetchOrgEnvironments([fqon]);
-            envs.map(env => {
-                // console.log(`Fetching containers from ${fqon}/${env.id} (${env.name})`);
-                process.stdout.write('.');
-                const state = {
-                    org: {
-                        fqon: fqon
-                    },
-                    environment: {
-                        id: env.id
-                    }
-                }
-                try {
-                    const containers = gestalt.fetchContainers(state);
 
-                    // Transform for display
-                    containers.map(item => {
-                        item.env = { name: env.name };
-                        item.fqon = fqon;
-                        item.running_instances = `${item.properties.tasks_running}/${item.properties.num_instances}`;
-                        if (item.description) {
-                            if (item.description.length > 20) {
-                                item.description = item.description.substring(0, 20) + '...';
-                            }
-                        }
-                    });
+        const fqons = await gestalt.fetchOrgFqons();
+        const envs = await gestalt.fetchOrgEnvironments(fqons);
 
-                    allContainers = allContainers.concat(containers);
-                } catch (err) {
-                    // console.error(`Error: ${err.message}`);
-                    // Suppress errors, some internal environments can't be fetched
+        const promises = envs.map(env => {
+            process.stdout.write('.');
+            const state = {
+                org: {
+                    fqon: env.org.properties.fqon
+                },
+                environment: {
+                    id: env.id
                 }
-            });
+            }
+            return gestalt.fetchContainers(state);
         });
 
-        displayContainers(allContainers);
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
+        let containers = await Promise.all(promises);
+        containers = [].concat.apply([], containers); // flatten array
+
+        // Transform for display
+        containers.map(item => {
+            // TODO
+            // item.env = { name: env.name };
+            // item.fqon = fqon;
+            item.running_instances = `${item.properties.tasks_running}/${item.properties.num_instances}`;
+            if (item.description) {
+                if (item.description.length > 20) {
+                    item.description = item.description.substring(0, 20) + '...';
+                }
+            }
+        });
+
+        displayContainers(containers);
     }
+
+    async function main2() {
+        process.stdout.write('Reading environments');
+
+        const fqons = await gestalt.fetchOrgFqons();
+        const envs = await gestalt.fetchOrgEnvironments(fqons);
+
+        let allContainers = [];
+
+        for (let env of envs) {
+            process.stdout.write('.');
+            const state = {
+                org: {
+                    fqon: env.org.properties.fqon
+                },
+                environment: {
+                    id: env.id
+                }
+            }
+            let containers = await gestalt.fetchContainers(state);
+            containers.map(item => {
+                // TODO
+                item.env = { name: env.name };
+                item.fqon = env.org.properties.fqon;
+                item.running_instances = `${item.properties.tasks_running}/${item.properties.num_instances}`;
+                if (item.description) {
+                    if (item.description.length > 20) {
+                        item.description = item.description.substring(0, 20) + '...';
+                    }
+                }
+            });
+            allContainers = allContainers.concat(containers);
+        }
+
+
+        // Transform for display
+
+        displayContainers(allContainers);
+    }
+
 
     function displayContainers(containers) {
         const options = {

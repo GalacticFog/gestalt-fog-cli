@@ -10,7 +10,6 @@ exports.handler = function (argv) {
     const displayAmazon = require('../lib/displayAmazon');
     const selectElbListeners = require('../lib/selectElbListeners');
     const gestaltServicesConfig = require('../lib/gestalt-services-config');
-    const request = require('sync-request');
     const chalk = require('chalk');
     const inquirer = require('inquirer');
     const SERVICE_CONFIG_KEY = 'elb_mappings.v1';

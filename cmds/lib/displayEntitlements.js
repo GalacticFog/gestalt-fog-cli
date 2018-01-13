@@ -9,7 +9,7 @@ exports.run = (resources) => {
     const identities = {};
 
     // Collect identities into a single ojbect tree
-    resources.map(item => {
+    for (let item of resources) {
         item.properties.identities.map(i => {
             identities[i.id] = {
                 name: i.name,
@@ -17,7 +17,7 @@ exports.run = (resources) => {
             };
             identities[i.id].actions = []; // initialize
         })
-    });
+    }
 
     // console.log(Object.values(identities));
 
@@ -34,11 +34,11 @@ exports.run = (resources) => {
 
     // console.log(JSON.stringify(entitlements, null, 2))
 
-    entitlements.map(item => {
+    for (let item of entitlements) {
         item.identities.map(i => {
             identities[i].actions.push(item.action);
         });
-    });
+    }
 
     let nouns = new Set();
     let verbs = new Set();
@@ -72,13 +72,11 @@ exports.run = (resources) => {
         // console.log(item.entitlements);
 
         const displayObject = [];
-        for (let n in nouns) {
-            let noun = nouns[n];
+        for (let noun of nouns) {
             var i = {
                 action: noun
             };
-            for (let v in verbs) {
-                let verb = verbs[v];
+            for (let verb of verbs) {
                 if (item.entitlements[noun] && item.entitlements[noun][verb]) {
                     i[verb] = '[X]';
                 } else {

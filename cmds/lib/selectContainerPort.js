@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 exports.run = (container, callback) => {
-    const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
     const options = {

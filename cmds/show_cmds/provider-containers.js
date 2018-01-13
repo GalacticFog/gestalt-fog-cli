@@ -6,50 +6,49 @@ exports.handler = function (argv) {
     const displayResource = require('../lib/displayResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    selectHierarchy.resolveOrg(() => {
+    main();
 
-        try {
-            const fqon = gestalt.getState().org.fqon;
+    async function main() {
 
-            const providers = gestalt.fetchOrgProviders([fqon]);
+        await selectHierarchy.resolveOrg();
 
-            const arr = [];
+        const fqon = gestalt.getState().org.fqon;
 
-            providers.map(provider => {
+        const providers = await gestalt.fetchOrgProviders([fqon]);
 
-                provider.short_resource_type = provider.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
+        let promises = providers.map(provider => {
+            provider.short_resource_type = provider.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
+            return gestalt.fetchProviderContainers(provider);
+        });
 
-                // console.log(provider);
-                const containers = gestalt.fetchProviderContainers(provider);
-                if (containers.length > 0) {
+        let containers = await Promise.all(promises);
+        containers = [].concat.apply([], containers); // flatten array
 
-                    console.log(`Containers for ${provider.name}`);
+        let p2 = containers.map(c => {
+            return gestalt.fetchContainer(c);
+        });
 
-                    containers.map(c => {
-                        let b = gestalt.fetchContainer(c);
-                        b.running_instances = `${b.properties.tasks_running}/${b.properties.num_instances}`;
-                        if (b.description) {
-                            if (b.description.length > 20) {
-                                b.description = b.description.substring(0, 20) + '...';
-                            }
-                        }
-                        b.provider = provider;
-                        arr.push(b);
-
-                        // console.log(JSON.stringify(b, null, 2));
-                    });
-
-                }
-            });
-
-            displayProviderContainers(arr);
-
-        } catch (err) {
-            console.log(err.message);
-            console.log("Try running 'change-context'");
-            console.log();
+        for (let c of containers) {
+            let b = await gestalt.fetchContainer(c);
         }
-    });
+
+        let containers2 = await Promise.all(promises);
+        containers2 = [].concat.apply([], containers2); // flatten array
+
+        const arr = [];
+        containers2.map(b => {
+            b.running_instances = `${b.properties.tasks_running}/${b.properties.num_instances}`;
+            if (b.description) {
+                if (b.description.length > 20) {
+                    b.description = b.description.substring(0, 20) + '...';
+                }
+            }
+            b.provider = provider;
+            arr.push(b);
+        });
+
+        displayProviderContainers(arr);
+    }
 
     function displayProviderContainers(containers) {
         const options = {

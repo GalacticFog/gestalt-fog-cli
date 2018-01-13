@@ -6,25 +6,21 @@ const selectEnvironment = require('./selectEnvironment');
 const selectContext = require('./selectOrgWorkspaceEnvironment');
 const chalk = require('chalk');
 
-exports.resolveOrg = (callback) => {
-    doResolveOrg()
-        .then(displayContext)
-        .then(callback);
+exports.resolveOrg = () => {
+    return doResolveOrg().then(displayContext);
 }
 
-exports.resolveWorkspace = (callback) => {
-    doResolveOrg()
+exports.resolveWorkspace = () => {
+    return doResolveOrg()
         .then(doResolveWorkspace)
         .then(displayContext)
-        .then(callback);
 }
 
-exports.resolveEnvironment = (callback) => {
-    doResolveOrg()
+exports.resolveEnvironment = () => {
+    return doResolveOrg()
         .then(doResolveWorkspace)
         .then(doResolveEnvironment)
         .then(displayContext)
-        .then(callback);
 }
 
 exports.chooseOrg = (callback) => {

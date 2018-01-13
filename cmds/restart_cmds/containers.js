@@ -7,31 +7,31 @@ exports.handler = function (argv) {
     const selectContainer = require('../lib/selectContainer');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    // Main
-    try {
-        selectHierarchy.resolveEnvironment(() => {
-            // 1) Select Container2
-            selectContainer.run({ mode: 'checkbox', defaultChecked: false }, (selectedContainers) => {
-                selectedContainers.map(container => {
-                    console.log(`Restarting container ${container.name}`);
+    main();
 
-                    // remember scale value
-                    let instances = container.properties.num_instances;
+    async function main() {
 
-                    // Scale down
-                    container.properties.num_instances = 0;
-                    gestalt.updateContainer(container);
+        await selectHierarchy.resolveEnvironment();
+        selectContainer.run({ mode: 'checkbox', defaultChecked: false }, (selectedContainers) => {
+            for (let container of selectedContainers) {
+                console.log(`Restarting container ${container.name}`);
+
+                // remember scale value
+                let instances = container.properties.num_instances;
+
+                // Scale down
+                container.properties.num_instances = 0;
+                console.log('Scaling down...');
+                gestalt.updateContainer(container).then(() => {
+                    console.log('Scaling back up...');
 
                     // Scale up
                     container.properties.num_instances = instances;
-                    gestalt.updateContainer(container);
+                    gestalt.updateContainer(container).then(() => {
+                        console.log('Done.')
+                    });
                 });
-                console.log("Done.");
-            });
+            }
         });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 }

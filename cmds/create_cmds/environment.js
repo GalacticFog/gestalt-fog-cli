@@ -8,7 +8,11 @@ exports.handler = function (argv) {
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    selectHierarchy.resolveWorkspace(() => {
+    main();
+
+    async function main() {
+
+        await selectHierarchy.resolveWorkspace();
 
         promptForInput(answers => {
 
@@ -23,16 +27,17 @@ exports.handler = function (argv) {
                     }
                 };
 
-                const environment = gestalt.createEnvironment(envSpec);
+                gestalt.createEnvironment(envSpec).then(environment => {
 
-                debug(`environment: ${environment}`);
+                    debug(`environment: ${environment}`);
 
-                console.log('Environment created.');
+                    console.log('Environment created.');
+                });
             } else {
                 console.log('Aborted.');
             }
         });
-    });
+    }
 
     function promptForInput(callback) {
         const questions = [

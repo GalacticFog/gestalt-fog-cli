@@ -2,14 +2,16 @@ exports.command = 'provider-container'
 exports.desc = 'Describe provider container'
 exports.builder = {}
 exports.handler = function (argv) {
-    const gestalt = require('./lib/gestalt')
+    const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectContainer = require('../lib/selectContainer');
     const selectResource = require('../lib/selectResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    // Main
-    try {
+    main();
+
+    async function main() {
+
         selectProviderContainers(container => {
             if (argv.raw) {
                 delete container.running_instances;
@@ -20,10 +22,6 @@ exports.handler = function (argv) {
                 showInstances(container);
             }
         });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 
     function showContainer(c) {
@@ -78,44 +76,44 @@ exports.handler = function (argv) {
     // };
 
 
-    function selectProviderContainers(callback) {
-        selectHierarchy.resolveOrg(() => {
-            let options = {
-                mode: 'autocomplete',
-                message: "Select Container(s)",
-                fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
-                sortBy: 'name',
-                fetchFunction: () => {
-                    return getProviderContainers();
-                }
+    async function selectProviderContainers(callback) {
+        await selectHierarchy.resolveOrg();
+        const providerContainers = await getProviderContainers();
+        let options = {
+            mode: 'autocomplete',
+            message: "Select Container(s)",
+            fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
+            sortBy: 'name',
+            fetchFunction: () => {
+                return providerContainers;
             }
+        }
 
-            selectResource.run(options, selection => {
-                if (callback) callback(selection);
-            });
+        selectResource.run(options, selection => {
+            if (callback) callback(selection);
         });
     }
 
-    function getProviderContainers() {
+    async function getProviderContainers() {
 
         const fqon = gestalt.getState().org.fqon;
 
-        const providers = gestalt.fetchOrgProviders([fqon]);
+        const providers = await gestalt.fetchOrgProviders([fqon]);
 
         const arr = [];
 
-        providers.map(provider => {
+        for (let provider of providers) {
 
             provider.short_resource_type = provider.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
 
             // console.log(provider);
-            const containers = gestalt.fetchProviderContainers(provider);
+            const containers = await gestalt.fetchProviderContainers(provider);
             if (containers.length > 0) {
 
                 console.log(`Containers for ${provider.name}`);
 
-                containers.map(c => {
-                    let b = gestalt.fetchContainer(c);
+                for (let c of containers) {
+                    let b = await gestalt.fetchContainer(c);
                     b.running_instances = `${b.properties.tasks_running}/${b.properties.num_instances}`;
                     if (b.description) {
                         if (b.description.length > 20) {
@@ -126,10 +124,9 @@ exports.handler = function (argv) {
                     arr.push(b);
 
                     // console.log(JSON.stringify(b, null, 2));
-                });
-
+                }
             }
-        });
+        }
         return arr;
     }
 }

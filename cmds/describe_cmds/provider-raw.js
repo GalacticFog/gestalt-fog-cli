@@ -5,28 +5,15 @@ exports.handler = function (argv) {
     const selectProvider = require('../lib/selectProvider');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    function showRaw(obj) {
-        console.log()
-        console.log(JSON.stringify(obj, null, 2));
-        console.log()
-    }
+    main();
 
-    // Main
-    try {
-        selectHierarchy.resolveOrg(() => {
+    async function main() {
+        await selectHierarchy.resolveOrg();
 
-            // 1) Select Container
-
-            selectProvider.run({}, (provider) => {
-
-                // 2) Show provider details
-
-                showRaw(provider);
-            });
+        selectProvider.run({}, provider => {
+            console.log()
+            console.log(JSON.stringify(provider, null, 2));
+            console.log()
         });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
 }

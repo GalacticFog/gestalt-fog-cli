@@ -13,27 +13,23 @@ exports.handler = function (argv) {
         })
     }
 
-    try {
-        let resources = gestalt.fetchGroups();
+    main();
+
+    async function main() {
+        let resources = await gestalt.fetchGroups();
 
         resources = sortBy(resources, 'name');
 
         console.log();
-        resources.map(group => {
-
+        for (let group of resources) {
             group.properties.users = sortBy(group.properties.users, 'name');
 
             console.log(chalk.underline(group.name));
             console.log();
-            group.properties.users.map(user => {
+            for (let user of group.properties.users) {
                 console.log("    " + user.name);
-            })
+            }
             console.log();
-        })
-
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
+        }
     }
 }

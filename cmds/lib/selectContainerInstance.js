@@ -1,7 +1,6 @@
 'use strict';
 
 exports.run = (container, callback) => {
-    const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
     const options = {
         mode: 'autocomplete',

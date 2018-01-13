@@ -32,14 +32,12 @@ exports.handler = function (argv) {
         sortField: 'description',
     }
 
-    try {
-        let resources = [];
-        gestalt.fetchOrgFqons().map(fqon => {
-            console.error(`Fetching from ${fqon}...`)
-            const res = gestalt.fetchOrgApis([fqon]);
-            resources = resources.concat(res);
-        });
+    main();
 
+    async function main() {
+
+        let fqons = await gestalt.fetchOrgFqons();
+        let resources = await gestalt.fetchOrgApis(fqons);
         const apis = resources.map(item => {
             return {
                 id: item.id,
@@ -47,21 +45,14 @@ exports.handler = function (argv) {
             }
         });
 
-        const eps = gestalt.fetchApiEndpoints(apis);
-        eps.map(ep => {
+        const eps = await gestalt.fetchApiEndpoints(apis);
+        for (let ep of eps) {
             ep.properties.api_path = `/${ep.properties.parent.name}${ep.properties.resource}`
-            ep.properties.environment = '(empty)';
-            ep.properties.workspace = '(empty)';
-        });
+        //     ep.properties.environment = '(empty)';
+        //     ep.properties.workspace = '(empty)';
+        }
 
         displayResource.run(options, eps);
-
-        console.log(JSON.stringify(eps[0], null, 2));
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
     }
-
-
 }
+
