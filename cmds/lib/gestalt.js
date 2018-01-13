@@ -16,7 +16,7 @@ exports.getHost = () => {
 
 exports.fetchOrgFqons = () => {
     return meta_GET('/orgs?expand=true').then(res => {
-       return res.map(item => item.properties.fqon).sort();
+        return res.map(item => item.properties.fqon).sort();
     });
 }
 
@@ -500,20 +500,18 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         password: password
     });
 
-    const requestSync = require('sync-request')
-
-
-    const res = requestSync('POST', `${security_url}${url}`, {
+    const res = request({
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Content-Length': postData.length
         },
 
-        body: postData
-    });
+        body: postData,
+        method: 'POST',
+        uri: `${security_url}${url}`
+    }).then(body => {
 
-    if (res.statusCode == 200) {
-        const auth = JSON.parse(String(res.getBody()));
+        const auth = body; // JSON.parse(String(res.getBody()));
 
         // Enhance payload with username
         auth.username = username;
@@ -523,12 +521,9 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         gestaltState.saveAuthToken(contents);
 
         callback(null, { username: username });
-
-    } else {
-        // Note: a call to res.getBody() throws an erorr on error status code.  use 'res.body' instead
-
-        callback(JSON.parse(res.body).error_description);
-    }
+    }).catch(res => {
+        callback(JSON.parse(res.response.body).error_description);
+    });
 }
 
 
