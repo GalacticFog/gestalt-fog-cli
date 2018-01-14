@@ -11,17 +11,15 @@ exports.handler = function (argv) {
     main();
 
     async function main() {
-
-        selectProviderContainers(container => {
-            if (argv.raw) {
-                delete container.running_instances;
-                delete container.provider;
-                console.log(JSON.stringify(container, null, 2));
-            } else {
-                showContainer(container);
-                showInstances(container);
-            }
-        });
+        const container = await selectProviderContainers();
+        if (argv.raw) {
+            delete container.running_instances;
+            delete container.provider;
+            console.log(JSON.stringify(container, null, 2));
+        } else {
+            showContainer(container);
+            showInstances(container);
+        }
     }
 
     function showContainer(c) {
@@ -76,7 +74,7 @@ exports.handler = function (argv) {
     // };
 
 
-    async function selectProviderContainers(callback) {
+    async function selectProviderContainers() {
         await selectHierarchy.resolveOrg();
         const providerContainers = await getProviderContainers();
         let options = {
@@ -84,14 +82,10 @@ exports.handler = function (argv) {
             message: "Select Container(s)",
             fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
             sortBy: 'name',
-            fetchFunction: () => {
-                return providerContainers;
-            }
+            resources: providerContainers
         }
 
-        selectResource.run(options, selection => {
-            if (callback) callback(selection);
-        });
+        return selectResource.run(options);
     }
 
     async function getProviderContainers() {

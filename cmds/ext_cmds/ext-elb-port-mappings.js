@@ -384,18 +384,16 @@ exports.handler = function (argv) {
             message: "Select ELB",
             fields: ['name', 'dnsname', 'listeners', 'zones', 'instances'],
             sortBy: 'name',
-            fetchFunction: () => {
-                return lbs.map(lbd => {
-                    return {
-                        name: lbd.LoadBalancerName,
-                        dnsname: lbd.DNSName,
-                        listeners: `${lbd.ListenerDescriptions.length} listeners`,
-                        zones: `${lbd.AvailabilityZones.join(',')}`,
-                        instances: `${lbd.Instances.length} instances`,
-                        value: Object.assign({}, lbd)
-                    }
-                });
-            }
+            resources: lbs.map(lbd => {
+                return {
+                    name: lbd.LoadBalancerName,
+                    dnsname: lbd.DNSName,
+                    listeners: `${lbd.ListenerDescriptions.length} listeners`,
+                    zones: `${lbd.AvailabilityZones.join(',')}`,
+                    instances: `${lbd.Instances.length} instances`,
+                    value: Object.assign({}, lbd)
+                }
+            })
         }
 
         selectResource.run(options, result => {
@@ -419,9 +417,7 @@ exports.handler = function (argv) {
                 message: "Select SSL Certificate",
                 fields: ['DomainName', 'CertificateArn'],
                 sortBy: 'DomainName',
-                fetchFunction: () => {
-                    return certs;
-                }
+                resources: certs
             }
 
             selectResource.run(options, result => {
@@ -459,10 +455,7 @@ exports.handler = function (argv) {
                 message: message,
                 fields: ['name'],
                 sortBy: 'name',
-                fetchFunction: () => {
-                    // Extract the listeners
-                    return opts.map(o => { return { name: o } });
-                }
+                resources: opts.map(o => { name: o })
             }
 
             selectResource.run(options, selection => {

@@ -9,12 +9,9 @@ exports.run = (opts, elb, callback) => {
         message: `Select ELB Listener(s) for '${elb.LoadBalancerName}'`,
         fields: ['LoadBalancerPort', 'Protocol', 'InstancePort', 'InstanceProtocol'],
         sortBy: 'LoadBalancerPort',
-        fetchFunction: () => {
-            // Extract the listeners
-            return elb.ListenerDescriptions.map(item => {
-                return item.Listener;
-            });
-        }
+        resources: elb.ListenerDescriptions.map(item => {
+            return item.Listener;
+        })
     }
 
     // merge in user specified options

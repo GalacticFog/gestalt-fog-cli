@@ -19,7 +19,9 @@ exports.handler = function (argv) {
 
         console.log(argv)
 
-        kube.runCommand(argv);
+        kube.runCommand(argv).then(() => {
+            console.log('Done.');
+        });
 
     } catch (err) {
         console.log(err);

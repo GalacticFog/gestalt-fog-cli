@@ -15,14 +15,10 @@ exports.run = (opts, callback) => {
             message: opts.message || "Select Provider",
             fields: ['name', /*'description',*/ 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
             sortBy: 'name',
-            fetchFunction: () => {
-
-                // enhance for display
-                res.map(item => {
-                    item.resource_type = item.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
-                })
-                return res;
-            }
+            resources: res.map(item => {
+                item.resource_type = item.resource_type.replace(/Gestalt::Configuration::Provider::/, '');
+                return item;
+            })
         }
 
         selectResource.run(options, selection => {

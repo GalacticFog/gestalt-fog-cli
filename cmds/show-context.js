@@ -8,6 +8,5 @@ exports.handler = function (argv) {
 
     selectHierarchy.displayContext();
 
-    console.log(chalk.bold("Raw:"));
     console.log(JSON.stringify(gestalt.getState(), null, 2));
 }

@@ -76,9 +76,7 @@ exports.handler = function (argv) {
             fields: ['name_with_namespace', 'description_truncated'],
             sortBy: 'name_with_namespace',
             pageSize: 20,
-            fetchFunction: () => {
-                return result;
-            }
+            resources: result
         }
 
         result.map(r => {

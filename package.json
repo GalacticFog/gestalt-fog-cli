@@ -1,8 +1,8 @@
 {
-  "name": "fog-cli",
+  "name": "fog",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "fog",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,8 +16,11 @@
     "inquirer-autocomplete-prompt": "^0.11.1",
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
-    "sync-request": "^4.1.0",
     "yamljs": "^0.3.0",
-    "yargs": "^10.0.3"
-  }
+    "yargs": "^10.1.1"
+  },
+  "pkg": {
+    "scripts": "cmds/**/*.js"
+  },
+  "bin": "fog"
 }

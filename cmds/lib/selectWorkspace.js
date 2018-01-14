@@ -14,16 +14,12 @@ exports.run = (callback) => {
             message: "Select Workspace",
             fields: ['description', 'name', 'fqon', 'owner.name'],
             sortBy: 'description',
-            fetchFunction: () => {
-
-                // enhance payloads for display
-                res.map(r => {
-                    // r.fqon = r.org.properties.fqon;
-                    // r.name = `${r.name}`;
-                });
-                return res;
-            }
-        };
+            resources: res.map(r => {
+                // r.fqon = r.org.properties.fqon;
+                // r.name = `${r.name}`;
+                return r;
+            })
+        }
 
         selectResource.run(options, selection => {
             if (callback) callback(selection);

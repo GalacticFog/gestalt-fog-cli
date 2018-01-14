@@ -2,10 +2,10 @@
 
 exports.run = (options, callback) => {
     if (!options) throw Error("missing options");
-    if (!options.fetchFunction) throw Error("missing options.fetchFunction");
+    if (!options.resources) throw Error("missing options.resources");
     if (!options.fields) throw Error("missing options.fields");
     if (!options.mode) throw Error("missing options.mode");
-    if (!callback) throw Error("missing callback");
+    // if (!callback) throw Error("missing callback");
 
     const inquirer = require('inquirer');
     inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
@@ -18,7 +18,7 @@ exports.run = (options, callback) => {
     // -- Main --
 
     const state = {}
-    let resources = options.fetchFunction();
+    let resources = options.resources;
 
     // if (resources.length == 0) {
     //     console.log("No resources.")
@@ -123,11 +123,16 @@ exports.run = (options, callback) => {
         };
     }
 
-    inquirer
-        .prompt([prompt])
-        .then((result) => {
-            callback(result.value) // callback with response
-        });
+    if (callback) {
+        inquirer
+            .prompt([prompt])
+            .then((result) => {
+                callback(result.value) // callback with response
+            });
+    } else {
+        return inquirer.prompt([prompt]).then(result => result.value);
+    }
+
 
     // Nothing after this step, inquirer gets called asyncronously
 

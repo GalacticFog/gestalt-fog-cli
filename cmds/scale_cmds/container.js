@@ -8,54 +8,53 @@ exports.handler = function (argv) {
     const selectHierarchy = require('../lib/selectHierarchy');
     const inquirer = require('inquirer');
 
-    // Main
-    if (argv.fqon || argv.id || argv.instances) {
-        // Command mode
+    main();
 
-        if (!argv.fqon) throw Error("missing argv.fqon");
-        if (!argv.id) throw Error("missing argv.id");
-        if (!argv.instances) throw Error("missing argv.instances");
+    async function main() {
 
-        const num_instances = argv.instances;
+        // Main
+        if (argv.fqon || argv.id || argv.instances) {
+            // Command mode
 
-        if (!validate(num_instances)) {
-            return;
-        }
+            if (!argv.fqon) throw Error("missing argv.fqon");
+            if (!argv.id) throw Error("missing argv.id");
+            if (!argv.instances) throw Error("missing argv.instances");
 
-        gestalt.fetchContainer({ fqon: argv.fqon, id: argv.id }).then(container => {
+            const num_instances = argv.instances;
+
+            if (!validate(num_instances)) {
+                return;
+            }
+
+            const container = await gestalt.fetchContainer({ fqon: argv.fqon, id: argv.id });
             container.properties.num_instances = num_instances;
-            gestalt.updateContainer(container).then(result => {
-                console.log('done.');
-            });
-        });
-    } else {
+            await gestalt.updateContainer(container);
+            console.log('done.');
 
-        selectContainer(container => {
-            getUserInput(num_instances => {
-                // Validate input
-                if (!validate(num_instances)) {
-                    return;
-                }
+        } else {
 
-                // Confirmation step
-                confirmIfNeeded(num_instances, (confirm) => {
-                    if (confirm) {
-                        // Scale up
-                        container.properties.num_instances = num_instances;
-                        gestalt.updateContainer(container).then(c => {
-                            console.log("Done.");
-                            console.log();
-                            console.log(`The following command may be run to scale the container directly:`);
-                            console.log();
-                            console.log(`    ./${argv['$0']} --fqon ${container.org.properties.fqon} --id ${container.id} --instances ${num_instances}`);
-                            console.log();
-                        });
-                    } else {
-                        console.log("Aborted");
-                    }
-                });
-            });
-        });
+            const container = await selectContainer();
+            const num_instances = await getUserInput();
+            // Validate input
+            if (!validate(num_instances)) {
+                return;
+            }
+
+            // Confirmation step
+            if (await confirmIfNeeded(num_instances)) {
+                // Scale up
+                container.properties.num_instances = num_instances;
+                const c = await gestalt.updateContainer(container);
+                console.log("Done.");
+                console.log();
+                console.log(`The following command may be run to scale the container directly:`);
+                console.log();
+                console.log(`    ./${argv['$0']} --fqon ${container.org.properties.fqon} --id ${container.id} --instances ${num_instances}`);
+                console.log();
+            } else {
+                console.log("Aborted");
+            }
+        }
     }
 
     function validate(num_instances) {
@@ -74,30 +73,24 @@ exports.handler = function (argv) {
         return true;
     }
 
-    function selectContainer(callback) {
+    async function selectContainer() {
 
-        selectHierarchy.resolveEnvironment().then(() => {
+        await selectHierarchy.resolveEnvironment();
 
-            gestalt.fetchContainers().then(res => {
+        const res = await gestalt.fetchContainers();
 
-                let options = {
-                    mode: 'autocomplete',
-                    message: "Select Container(s)",
-                    fields: ['name', 'properties.status', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
-                    sortBy: 'name',
-                    fetchFunction: () => {
-                        return res;
-                    }
-                }
+        let options = {
+            mode: 'autocomplete',
+            message: "Select Container(s)",
+            fields: ['name', 'properties.status', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
+            sortBy: 'name',
+            resources: res
+        }
 
-                selectResource.run(options, selection => {
-                    if (callback) callback(selection);
-                });
-            });
-        });
+        return selectResource.run(options);
     }
 
-    function getUserInput(callback) {
+    function getUserInput() {
         const questions = [
             {
                 message: "Number of instances",
@@ -106,12 +99,10 @@ exports.handler = function (argv) {
             },
         ];
 
-        inquirer.prompt(questions).then(answers => {
-            callback(answers.num_instances);
-        });
+        return inquirer.prompt(questions).then(answers => answers.num_instances);
     }
 
-    function confirmIfNeeded(num_instances, callback) {
+    function confirmIfNeeded(num_instances) {
         if (num_instances > 10) {
             const questions = [
                 {
@@ -122,12 +113,10 @@ exports.handler = function (argv) {
                 },
             ];
 
-            inquirer.prompt(questions).then(answers => {
-                callback(answers.confirm);
-            });
+            return inquirer.prompt(questions).then(answers => answers.confirm);
         } else {
             // No need for confirmation
-            callback(true);
+            return new Promise(resolve => resolve(true));
         }
     }
 }

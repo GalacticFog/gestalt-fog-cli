@@ -79,8 +79,8 @@ exports.handler = function (argv) {
         console.log(`${inst.id} logs:`);
         console.log();
 
-        kube.accessPodLogs(env.id, inst.id, { follow: options.follow, tail: options.tail });
-
-        console.log('Done.');
+        kube.accessPodLogs(env.id, inst.id, { follow: options.follow, tail: options.tail }).then(() => {
+            console.log('Done.');
+        });
     }
 }

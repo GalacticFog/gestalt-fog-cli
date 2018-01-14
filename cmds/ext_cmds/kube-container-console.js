@@ -74,9 +74,9 @@ exports.handler = function (argv) {
         console.log(`Starting console session to '${inst.id}', press CTRL-D to exit.`);
         console.log();
 
-        kube.accessPodConsole(env.id, inst.id, { shell: 'sh' });
-
-        console.log();
-        console.log('Console session ended.');
+        kube.accessPodConsole(env.id, inst.id, { shell: 'sh' }).then(() => {
+            console.log();
+            console.log('Console session ended.');
+        });
     }
 }

@@ -14,17 +14,17 @@ exports.run = (callback) => {
             message: "Select Org",
             fields: ['description', 'properties.fqon', 'owner.name'],
             sortBy: 'fqon',
-            fetchFunction: () => {
-                // enhance payload
-                for (let r of res) {
-                    r.fqon = r.properties.fqon
-                }
-                return res;
-            }
+            resources: res.map(r => {
+                r.fqon = r.properties.fqon;
+                return r;
+            })
         };
-
-        selectResource.run(options, selection => {
-            if (callback) callback(selection);
-        });
+        if (callback) {
+            selectResource.run(options, selection => {
+                if (callback) callback(selection);
+            });
+        } else {
+            return selectResource.run(options);
+        }
     }
 }

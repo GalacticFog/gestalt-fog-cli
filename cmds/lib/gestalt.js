@@ -511,7 +511,7 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         uri: `${security_url}${url}`
     }).then(body => {
 
-        const auth = body; // JSON.parse(String(res.getBody()));
+        const auth = JSON.parse(body); // JSON.parse(String(res.getBody()));
 
         // Enhance payload with username
         auth.username = username;

@@ -25,10 +25,8 @@ exports.handler = function (argv) {
             doShowLambda(lambda, argv);
         } else {
             // Interactive mode
-
-            await selectLambda(lambda => {
-                doShowLambda(lambda, argv);
-            });
+            const lambda = await selectLambda();
+            doShowLambda(lambda, argv);
         }
     }
 
@@ -73,7 +71,7 @@ exports.handler = function (argv) {
         console.log();
     }
 
-    async function selectLambda(callback) {
+    async function selectLambda() {
         await selectHierarchy.resolveEnvironment();
         const res = await gestalt.fetchLambdas();
 
@@ -82,13 +80,9 @@ exports.handler = function (argv) {
             message: "Select Lambda",
             fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
             sortBy: 'name',
-            fetchFunction: () => {
-                return res;
-            }
+            resources: res
         }
 
-        selectResource.run(options, selection => {
-            if (callback) callback(selection);
-        });
+        return selectResource.run(options);
     }
 }

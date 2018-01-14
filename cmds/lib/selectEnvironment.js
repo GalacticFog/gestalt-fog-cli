@@ -12,28 +12,26 @@ exports.run = (selectOpts, callback) => {
 
         let res = await gestalt.fetchEnvironments();
 
+        // Filter
+        if (selectOpts) {
+            if (selectOpts.filter) {
+                res = res.filter(selectOpts.filter);
+            }
+        }
+
+        // enhance payload
+        for (let r of res) {
+            r.owner_name = r.owner.name;
+            r.path = `${fqon}/${ws.name}`;
+            r.name = `${r.name}`;
+        }
+
         const options = {
             mode: 'autocomplete',
             message: "Select Environment",
             fields: ['description', 'name', 'path', 'owner_name'],
             sortBy: 'description',
-            fetchFunction: () => {
-
-                // Filter
-                if (selectOpts) {
-                    if (selectOpts.filter) {
-                        res = res.filter(selectOpts.filter);
-                    }
-                }
-
-                // enhance payload
-                for (let r of res) {
-                    r.owner_name = r.owner.name;
-                    r.path = `${fqon}/${ws.name}`;
-                    r.name = `${r.name}`;
-                }
-                return res;
-            }
+            resources: res
         }
 
         selectResource.run(options, selection => {

@@ -8,10 +8,7 @@ exports.run = (container, callback) => {
         message: "Select Container Port",
         fields: ['name', 'service_port', 'expose_endpoint', 'container_port', 'protocol'],
         sortBy: 'name',
-        fetchFunction: () => {
-            const res = container.properties.port_mappings || [];            
-            return res;
-        }
+        resources: container.properties.port_mappings || []
     }
 
     selectResource.run(options, answers => {

@@ -15,9 +15,7 @@ exports.run = (opts, callback) => {
             message: "Select Container(s)",
             fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
             sortBy: 'name',
-            fetchFunction: () => {
-                return res;
-            }
+            resources: res
         }
 
         // merge in user specified options
