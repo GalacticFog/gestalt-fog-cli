@@ -1,42 +1,38 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'container'
 exports.desc = 'Create container'
 exports.builder = {}
-exports.handler = function (argv) {
-
+exports.handler = cmd.handler(async function (argv) {
     const inquirer = require('inquirer');
     const gestalt = require('../lib/gestalt')
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
     const selectProvider = require('../lib/selectProvider');
 
-    main();
+    await selectHierarchy.resolveWorkspace();
 
-    async function main() {
-        await selectHierarchy.resolveWorkspace();
+    promptForInput(answers => {
 
-        promptForInput(answers => {
+        debug(`answers: ${JSON.stringify(answers, null, 2)}`);
 
-            debug(`answers: ${JSON.stringify(answers, null, 2)}`);
+        if (answers.confirm) {
 
-            if (answers.confirm) {
+            const containerSpec = Object.assign({}, answers);
+            delete containerSpec.confirm;
+            containerSpec.properties.container_type = 'DOCKER';
 
-                const containerSpec = Object.assign({}, answers);
-                delete containerSpec.confirm;
-                containerSpec.properties.container_type = 'DOCKER';
-
-                debug(`containerSpec: ${JSON.stringify(containerSpec, null, 2)}`);
+            debug(`containerSpec: ${JSON.stringify(containerSpec, null, 2)}`);
 
 
-                // Create
-                gestalt.createContainer(containerSpec).then(container => {
-                    debug(`container: ${JSON.stringify(container, null, 2)}`);
-                    console.log(`Container '${container.name}' created.`);
-                });
-            } else {
-                console.log('Aborted.');
-            }
-        });
-    }
+            // Create
+            gestalt.createContainer(containerSpec).then(container => {
+                debug(`container: ${JSON.stringify(container, null, 2)}`);
+                console.log(`Container '${container.name}' created.`);
+            });
+        } else {
+            console.log('Aborted.');
+        }
+    });
 
     function promptForInput(callback) {
 
@@ -181,5 +177,4 @@ exports.handler = function (argv) {
             }
         }
     }
-}
-
+});

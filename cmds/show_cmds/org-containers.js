@@ -1,45 +1,41 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'org-containers'
 exports.desc = 'List org containers'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    main();
+    await selectHierarchy.resolveOrg();
 
-    async function main() {
-        await selectHierarchy.resolveOrg();
+    const fqon = gestalt.getCurrentOrg().fqon;
 
-        const fqon = gestalt.getCurrentOrg().fqon;
-
-        const envs = await gestalt.fetchOrgEnvironments([fqon]);
-        const promises = envs.map(env => {
-            console.log(`Fetching containers from ${fqon}/'${env.name}'`);
-            const state = {
-                org: {
-                    fqon: fqon
-                },
-                environment: {
-                    id: env.id
-                }
+    const envs = await gestalt.fetchOrgEnvironments([fqon]);
+    const promises = envs.map(env => {
+        console.log(`Fetching containers from ${fqon}/'${env.name}'`);
+        const state = {
+            org: {
+                fqon: fqon
+            },
+            environment: {
+                id: env.id
             }
-            return gestalt.fetchContainers(state);
-        });
+        }
+        return gestalt.fetchContainers(state);
+    });
 
-        const arr = await Promise.all(promises);
-        const containers = [].concat.apply([], arr);
+    const arr = await Promise.all(promises);
+    const containers = [].concat.apply([], arr);
 
-        containers.map(item => {
-            // TODO: How to pass environment
-            // item.env = { name: env.name };
-            item.fqon = fqon;
-            item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
-        });
+    containers.map(item => {
+        // TODO: How to pass environment
+        // item.env = { name: env.name };
+        item.fqon = fqon;
+        item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
+    });
 
-        displayContainers(containers);
-    }
-
+    displayContainers(containers);
 
     function displayContainers(containers) {
         const options = {
@@ -51,4 +47,4 @@ exports.handler = function (argv) {
 
         displayResource.run(options, containers);
     }
-}
+});

@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'users'
 exports.desc = 'List users'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
 
@@ -12,10 +13,6 @@ exports.handler = function (argv) {
         sortField: 'name',
     }
 
-    main();
-
-    async function main() {
-        const resources = await gestalt.fetchUsers();
-        displayResource.run(options, resources);
-    }
-}
+    const resources = await gestalt.fetchUsers();
+    displayResource.run(options, resources);
+});

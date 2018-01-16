@@ -1,43 +1,38 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'org'
 exports.desc = 'Create org'
 exports.builder = {}
-exports.handler = function (argv) {
-
+exports.handler = cmd.handler(async function (argv) {
     const inquirer = require('inquirer');
     const gestalt = require('../lib/gestalt')
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    main();
+    await selectHierarchy.resolveOrg();
 
-    async function main() {
+    const parent = gestaltState.getState().org;
 
-        await selectHierarchy.resolveOrg();
+    debug(`parent: ${JSON.stringify(parent, null, 2)}`);
 
-        const parent = gestaltState.getState().org;
+    promptForInput(answers => {
 
-        debug(`parent: ${JSON.stringify(parent, null, 2)}`);
-
-        promptForInput(answers => {
-
-            debug(`answers: ${answers}`);
-            if (answers.confirm) {
+        debug(`answers: ${answers}`);
+        if (answers.confirm) {
 
 
-                const orgSpec = {
-                    name: answers.name,
-                    description: answers.description
-                };
+            const orgSpec = {
+                name: answers.name,
+                description: answers.description
+            };
 
-                gestalt.createOrg(orgSpec, parent.fqon).then(org => {
-                    debug(`org: ${org}`);
-                    console.log(`Org '${org.name}' created.`);
-                });
-            } else {
-                console.log('Aborted.');
-            }
-        });
-    }
+            gestalt.createOrg(orgSpec, parent.fqon).then(org => {
+                debug(`org: ${org}`);
+                console.log(`Org '${org.name}' created.`);
+            });
+        } else {
+            console.log('Aborted.');
+        }
+    });
 
     function promptForInput(callback) {
         const questions = [
@@ -74,5 +69,4 @@ exports.handler = function (argv) {
             }
         }
     }
-}
-
+});

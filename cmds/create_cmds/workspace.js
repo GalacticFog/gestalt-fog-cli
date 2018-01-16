@@ -1,43 +1,39 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'workspace'
 exports.desc = 'Create workspace'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
 
     const inquirer = require('inquirer');
     const gestalt = require('../lib/gestalt')
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    main();
+    await selectHierarchy.resolveOrg();
 
-    async function main() {
+    const parent = gestaltState.getState().org;
 
-        await selectHierarchy.resolveOrg();
+    debug(`parent: ${JSON.stringify(parent, null, 2)}`);
 
-        const parent = gestaltState.getState().org;
+    promptForInput(answers => {
 
-        debug(`parent: ${JSON.stringify(parent, null, 2)}`);
+        debug(`answers: ${answers}`);
 
-        promptForInput(answers => {
+        if (answers.confirm) {
 
-            debug(`answers: ${answers}`);
+            const workspaceSpec = {
+                name: answers.name,
+                description: answers.description
+            };
 
-            if (answers.confirm) {
-
-                const workspaceSpec = {
-                    name: answers.name,
-                    description: answers.description
-                };
-
-                gestalt.createWorkspace(workspaceSpec, parent.fqon).then(workspace => {
-                    debug(`workspace: ${workspace}`);
-                    console.log(`Workspace '${workspace.name}' created.`);
-                });
-            } else {
-                console.log('Aborted.');
-            }
-        });
-    }
+            gestalt.createWorkspace(workspaceSpec, parent.fqon).then(workspace => {
+                debug(`workspace: ${workspace}`);
+                console.log(`Workspace '${workspace.name}' created.`);
+            });
+        } else {
+            console.log('Aborted.');
+        }
+    });
 
     function promptForInput(callback) {
         const questions = [
@@ -74,5 +70,4 @@ exports.handler = function (argv) {
             }
         }
     }
-}
-
+});

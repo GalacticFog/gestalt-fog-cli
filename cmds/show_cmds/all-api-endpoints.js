@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'all-api-endpoints'
 exports.desc = 'List all API endpoints'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const displayResource = require('../lib/displayResourceUI');
     const gestalt = require('../lib/gestalt');
 
@@ -32,27 +33,21 @@ exports.handler = function (argv) {
         sortField: 'description',
     }
 
-    main();
+    let fqons = await gestalt.fetchOrgFqons();
+    let resources = await gestalt.fetchOrgApis(fqons);
+    const apis = resources.map(item => {
+        return {
+            id: item.id,
+            fqon: item.org.properties.fqon
+        }
+    });
 
-    async function main() {
-
-        let fqons = await gestalt.fetchOrgFqons();
-        let resources = await gestalt.fetchOrgApis(fqons);
-        const apis = resources.map(item => {
-            return {
-                id: item.id,
-                fqon: item.org.properties.fqon
-            }
-        });
-
-        const eps = await gestalt.fetchApiEndpoints(apis);
-        for (let ep of eps) {
-            ep.properties.api_path = `/${ep.properties.parent.name}${ep.properties.resource}`
+    const eps = await gestalt.fetchApiEndpoints(apis);
+    for (let ep of eps) {
+        ep.properties.api_path = `/${ep.properties.parent.name}${ep.properties.resource}`
         //     ep.properties.environment = '(empty)';
         //     ep.properties.workspace = '(empty)';
-        }
-
-        displayResource.run(options, eps);
     }
-}
 
+    displayResource.run(options, eps);
+});

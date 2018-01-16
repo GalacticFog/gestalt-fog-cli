@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'environments'
 exports.desc = 'List enviornments'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
@@ -12,11 +13,7 @@ exports.handler = function (argv) {
         sortField: 'description',
     }
 
-    main();
-
-    async function main() {
-        await selectHierarchy.resolveWorkspace();
-        const resources = await gestalt.fetchEnvironments();
-        displayResource.run(options, resources);
-    }
-}
+    await selectHierarchy.resolveWorkspace();
+    const resources = await gestalt.fetchEnvironments();
+    displayResource.run(options, resources);
+});

@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'all-workspaces'
 exports.desc = 'List all workspaces'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
 
@@ -12,11 +13,7 @@ exports.handler = function (argv) {
         sortField: 'org.properties.fqon',
     }
 
-    main();
-
-    async function main() {
-        let fqons = await gestalt.fetchOrgFqons();
-        let resources = await gestalt.fetchWorkspaces(fqons);
-        displayResource.run(options, resources);
-    }
-}
+    let fqons = await gestalt.fetchOrgFqons();
+    let resources = await gestalt.fetchWorkspaces(fqons);
+    displayResource.run(options, resources);
+});

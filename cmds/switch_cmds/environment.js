@@ -1,17 +1,12 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'environment'
 exports.desc = 'Change environment'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    try {
+    selectHierarchy.displayContext();
+    selectHierarchy.chooseEnvironment(result => {
         selectHierarchy.displayContext();
-        selectHierarchy.chooseEnvironment(result => {
-            selectHierarchy.displayContext();
-        });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
-    }
-}
+    });
+});

@@ -1,31 +1,27 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'container'
 exports.desc = 'Describe container'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectContainer = require('../lib/selectContainer');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    main();
+    // 1) Select Container
+    await selectHierarchy.resolveEnvironment();
+    selectContainer.run({}, (container) => {
+        if (argv.raw) {
+            console.log(JSON.stringify(container, null, 2));
+        } else {
+            showContainer(container);
+            showInstances(container);
+            // showCommands(container);
 
-    async function main() {
-
-        // 1) Select Container
-        await selectHierarchy.resolveEnvironment();
-        selectContainer.run({}, (container) => {
-            if (argv.raw) {
-                console.log(JSON.stringify(container, null, 2));
-            } else {
-                showContainer(container);
-                showInstances(container);
-                // showCommands(container);
-
-                console.log(`Use '--raw' to see raw JSON output`);
-                console.log();
-            }
-        });
-    }
+            console.log(`Use '--raw' to see raw JSON output`);
+            console.log();
+        }
+    });
 
     function showContainer(c) {
         const options = {
@@ -78,4 +74,4 @@ exports.handler = function (argv) {
     //     console.log()
     // };
 
-}
+});

@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'containers'
 exports.desc = 'Clone containers'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
 
     const selectProvider = require('../lib/selectProvider');
     const selectEnvironment = require('../lib/selectEnvironment');
@@ -12,79 +13,74 @@ exports.handler = function (argv) {
     const chalk = require('chalk');
     const inquirer = require('inquirer');
 
-    main();
+    await selectHierarchy.resolveWorkspace();
 
-    async function main() {
+    console.log();
+    console.log(chalk.bold('Clone containers from one environment to another'));
+    console.log();
+    console.log("Select source environment");
+    console.log();
+    selectEnvironment.run({}, (sourceEnv) => {
+        console.log();
 
-        await selectHierarchy.resolveWorkspace();
+        gestalt.setCurrentEnvironment(sourceEnv);
 
-        console.log();
-        console.log(chalk.bold('Clone containers from one environment to another'));
-        console.log();
-        console.log("Select source environment");
-        console.log();
-        selectEnvironment.run({}, (sourceEnv) => {
+        gestalt.fetchContainers().then(containers => {
+
+            console.log("Select containers to clone (use arrows and spacebar to modify selection)");
             console.log();
 
-            gestalt.setCurrentEnvironment(sourceEnv);
-
-            gestalt.fetchContainers().then(containers => {
-
-                console.log("Select containers to clone (use arrows and spacebar to modify selection)");
+            selectContainer.run({ mode: 'checkbox', defaultChecked: true }, (selectedContainers) => {
                 console.log();
 
-                selectContainer.run({ mode: 'checkbox', defaultChecked: true }, (selectedContainers) => {
+                console.log("Select target environment to clone containers to")
+                console.log();
+
+                selectEnvironment.run({}, (targetEnv) => {
                     console.log();
 
-                    console.log("Select target environment to clone containers to")
+                    // Ensure different environments were used
+                    if (sourceEnv.id == targetEnv.id) {
+                        console.log("Aborting - can't use the same source and destination enviornment");
+                        return;
+                    }
+
+                    gestalt.setCurrentEnvironment(targetEnv);
+
+                    const state = gestalt.getState();
+
+                    console.log("Containers will be created in the following location:");
+                    console.log();
+                    console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
+                    console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
+                    console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
+                    // console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
                     console.log();
 
-                    selectEnvironment.run({}, (targetEnv) => {
-                        console.log();
+                    displayRunningContainers(selectedContainers);
 
-                        // Ensure different environments were used
-                        if (sourceEnv.id == targetEnv.id) {
-                            console.log("Aborting - can't use the same source and destination enviornment");
+                    doConfirm(confirmed => {
+                        if (!confirmed) {
+                            console.log('Aborted.');
                             return;
                         }
 
-                        gestalt.setCurrentEnvironment(targetEnv);
+                        const createContainerPromises = selectedContainers.map(item => {
+                            const c = cloneContainerPayload(item);
+                            return gestalt.createContainer(c, state);
+                        });
 
-                        const state = gestalt.getState();
+                        Promise.all(createContainerPromises).then(results => {
 
-                        console.log("Containers will be created in the following location:");
-                        console.log();
-                        console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
-                        console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
-                        console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
-                        // console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
-                        console.log();
-
-                        displayRunningContainers(selectedContainers);
-
-                        doConfirm(confirmed => {
-                            if (!confirmed) {
-                                console.log('Aborted.');
-                                return;
-                            }
-
-                            const createContainerPromises = selectedContainers.map(item => {
-                                const c = cloneContainerPayload(item);
-                                return gestalt.createContainer(c, state);
-                            });
-
-                            Promise.all(createContainerPromises).then(results => {
-
-                                const createdContainers = [].concat.apply([], results); // flatten array
-                                displayRunningContainers(createdContainers);
-                                console.log('Done.');
-                            });
+                            const createdContainers = [].concat.apply([], results); // flatten array
+                            displayRunningContainers(createdContainers);
+                            console.log('Done.');
                         });
                     });
                 });
             });
         });
-    }
+    });
 
     function cloneContainerPayload(src) {
         let op = src.properties;
@@ -148,4 +144,4 @@ exports.handler = function (argv) {
             callback(answers.confirm);
         });
     }
-}
+});

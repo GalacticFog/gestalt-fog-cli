@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'groups'
 exports.desc = 'List groups'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const chalk = require('chalk')
@@ -13,10 +14,6 @@ exports.handler = function (argv) {
         sortField: 'name',
     }
 
-    main();
-
-    async function main() {
-        const resources = await gestalt.fetchGroups();
-        displayResource.run(options, resources);
-    }
-}
+    const resources = await gestalt.fetchGroups();
+    displayResource.run(options, resources);
+});

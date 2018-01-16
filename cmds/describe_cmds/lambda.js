@@ -1,33 +1,30 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'lambda'
 exports.desc = 'Describe lambda'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectResource = require('../lib/selectResourceUI');
     const chalk = require('chalk');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    main();
+    if (argv.fqon || argv.id) {
+        // Command mode
 
-    async function main() {
-        if (argv.fqon || argv.id) {
-            // Command mode
+        if (!argv.fqon) throw Error("missing argv.fqon");
+        if (!argv.id) throw Error("missing argv.id");
 
-            if (!argv.fqon) throw Error("missing argv.fqon");
-            if (!argv.id) throw Error("missing argv.id");
+        const lambda = await gestalt.fetchLambda({
+            fqon: argv.fqon,
+            id: argv.id
+        });
 
-            const lambda = await gestalt.fetchLambda({
-                fqon: argv.fqon,
-                id: argv.id
-            });
-
-            doShowLambda(lambda, argv);
-        } else {
-            // Interactive mode
-            const lambda = await selectLambda();
-            doShowLambda(lambda, argv);
-        }
+        doShowLambda(lambda, argv);
+    } else {
+        // Interactive mode
+        const lambda = await selectLambda();
+        doShowLambda(lambda, argv);
     }
 
     function doShowLambda(lambda, argv) {
@@ -85,4 +82,4 @@ exports.handler = function (argv) {
 
         return selectResource.run(options);
     }
-}
+});

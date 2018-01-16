@@ -1,11 +1,11 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'lambda'
 exports.desc = 'Create lambda'
 exports.builder = {
     source: {},
     url: {}
 }
-exports.handler = function (argv) {
-
+exports.handler = cmd.handler(async function (argv) {
     const inquirer = require('inquirer');
     const gestalt = require('../lib/gestalt')
     const gestaltState = require('../lib/gestalt-state');
@@ -35,43 +35,38 @@ exports.handler = function (argv) {
         console.log(`Creating package lambda from ${argv.url}`);
     }
 
-    main();
+    await selectHierarchy.resolveWorkspace();
 
-    async function main() {
+    promptForInput(answers => {
 
-        await selectHierarchy.resolveWorkspace();
+        debug(`answers: ${JSON.stringify(answers, null, 2)}`);
 
-        promptForInput(answers => {
+        if (answers.confirm) {
 
-            debug(`answers: ${JSON.stringify(answers, null, 2)}`);
+            const lambdaSpec = Object.assign({}, answers);
+            delete lambdaSpec.confirm;
 
-            if (answers.confirm) {
-
-                const lambdaSpec = Object.assign({}, answers);
-                delete lambdaSpec.confirm;
-
-                if (code) {
-                    lambdaSpec.properties.code = code;
-                    lambdaSpec.properties.code_type = 'code';
-                } else {
-                    lambdaSpec.properties.code_type = 'package';
-                    if (argv.url) {
-                        lambdaSpec.properties.package_url = argv.url;
-                    }
-                }
-
-                debug(`lambdaSpec: ${JSON.stringify(lambdaSpec, null, 2)}`);
-
-                // Create
-                gestalt.createLambda(lambdaSpec).then(lambda => {
-                    debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
-                    console.log(`Lambda '${lambda.name}' created.`);
-                });
+            if (code) {
+                lambdaSpec.properties.code = code;
+                lambdaSpec.properties.code_type = 'code';
             } else {
-                console.log('Aborted.');
+                lambdaSpec.properties.code_type = 'package';
+                if (argv.url) {
+                    lambdaSpec.properties.package_url = argv.url;
+                }
             }
-        });
-    }
+
+            debug(`lambdaSpec: ${JSON.stringify(lambdaSpec, null, 2)}`);
+
+            // Create
+            gestalt.createLambda(lambdaSpec).then(lambda => {
+                debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
+                console.log(`Lambda '${lambda.name}' created.`);
+            });
+        } else {
+            console.log('Aborted.');
+        }
+    });
 
     function promptForInput(callback) {
 
@@ -214,5 +209,4 @@ exports.handler = function (argv) {
             }
         }
     }
-}
-
+});

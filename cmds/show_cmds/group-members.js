@@ -1,7 +1,8 @@
-exports.command = 'group-members'
-exports.desc = 'List group members'
-exports.builder = {}
-exports.handler = function (argv) {
+const cmd = require('../lib/cmd-base');
+exports.command = 'group-members';
+exports.desc = 'List group members';
+exports.builder = {};
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const chalk = require('chalk')
 
@@ -13,23 +14,19 @@ exports.handler = function (argv) {
         })
     }
 
-    main();
+    let resources = await gestalt.fetchGroups();
 
-    async function main() {
-        let resources = await gestalt.fetchGroups();
+    resources = sortBy(resources, 'name');
 
-        resources = sortBy(resources, 'name');
+    console.log();
+    for (let group of resources) {
+        group.properties.users = sortBy(group.properties.users, 'name');
 
+        console.log(chalk.underline(group.name));
         console.log();
-        for (let group of resources) {
-            group.properties.users = sortBy(group.properties.users, 'name');
-
-            console.log(chalk.underline(group.name));
-            console.log();
-            for (let user of group.properties.users) {
-                console.log("    " + user.name);
-            }
-            console.log();
+        for (let user of group.properties.users) {
+            console.log("    " + user.name);
         }
+        console.log();
     }
-}
+});

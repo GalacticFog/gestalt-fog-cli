@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'providers'
 exports.desc = 'List providers'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
@@ -12,25 +13,20 @@ exports.handler = function (argv) {
         sortField: 'name',
     }
 
-    main();
+    await selectHierarchy.resolveOrg();
 
-    async function main() {
+    const fqon = gestalt.getState().org.fqon;
 
-        await selectHierarchy.resolveOrg();
+    const resources = await gestalt.fetchOrgProviders([fqon]);
 
-        const fqon = gestalt.getState().org.fqon;
-
-        const resources = await gestalt.fetchOrgProviders([fqon]);
-
-        for (let item of resources) {
-            item.resource_type = item.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
-            if (item.description) {
-                if (item.description.length > 20) {
-                    item.description = item.description.substring(0, 20) + '...';
-                }
+    for (let item of resources) {
+        item.resource_type = item.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
+        if (item.description) {
+            if (item.description.length > 20) {
+                item.description = item.description.substring(0, 20) + '...';
             }
         }
-
-        displayResource.run(options, resources);
     }
-}
+
+    displayResource.run(options, resources);
+});

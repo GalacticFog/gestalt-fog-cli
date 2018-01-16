@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'orgs'
 exports.desc = 'List orgs'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
 
@@ -12,19 +13,14 @@ exports.handler = function (argv) {
         sortField: 'fqon',
     }
 
-    main();
+    const resources = await gestalt.fetchOrgs();
+    resources.map(r => {
+        r.fqon = r.properties.fqon; // for sorting
+    })
 
-    async function main() {
-
-        const resources = await gestalt.fetchOrgs();
-        resources.map(r => {
-            r.fqon = r.properties.fqon; // for sorting
-        })
-
-        if (argv.debug) {
-            console.log(JSON.stringify(resources, null, 2))
-        }
-
-        displayResource.run(options, resources);
+    if (argv.debug) {
+        console.log(JSON.stringify(resources, null, 2))
     }
-}
+
+    displayResource.run(options, resources);
+});

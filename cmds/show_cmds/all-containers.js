@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'all-containers'
 exports.desc = 'List all containers'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
 
@@ -95,4 +96,4 @@ exports.handler = function (argv) {
 
         displayResource.run(options, containers);
     }
-}
+});

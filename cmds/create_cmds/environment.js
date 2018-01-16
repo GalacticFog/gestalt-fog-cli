@@ -1,43 +1,39 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'environment'
 exports.desc = 'Create environment'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
 
     const inquirer = require('inquirer');
     const gestalt = require('../lib/gestalt')
     const gestaltState = require('../lib/gestalt-state');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    main();
+    await selectHierarchy.resolveWorkspace();
 
-    async function main() {
+    promptForInput(answers => {
 
-        await selectHierarchy.resolveWorkspace();
+        debug(`answers: ${answers}`);
+        if (answers.confirm) {
 
-        promptForInput(answers => {
+            const envSpec = {
+                name: answers.name,
+                description: answers.description,
+                properties: {
+                    environment_type: answers.environment_type
+                }
+            };
 
-            debug(`answers: ${answers}`);
-            if (answers.confirm) {
+            gestalt.createEnvironment(envSpec).then(environment => {
 
-                const envSpec = {
-                    name: answers.name,
-                    description: answers.description,
-                    properties: {
-                        environment_type: answers.environment_type
-                    }
-                };
+                debug(`environment: ${environment}`);
 
-                gestalt.createEnvironment(envSpec).then(environment => {
-
-                    debug(`environment: ${environment}`);
-
-                    console.log('Environment created.');
-                });
-            } else {
-                console.log('Aborted.');
-            }
-        });
-    }
+                console.log('Environment created.');
+            });
+        } else {
+            console.log('Aborted.');
+        }
+    });
 
     function promptForInput(callback) {
         const questions = [
@@ -80,5 +76,4 @@ exports.handler = function (argv) {
             }
         }
     }
-}
-
+});

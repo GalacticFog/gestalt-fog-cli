@@ -1,54 +1,50 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'provider-containers'
 exports.desc = 'List provider containers'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    main();
+    await selectHierarchy.resolveOrg();
 
-    async function main() {
+    const fqon = gestalt.getState().org.fqon;
 
-        await selectHierarchy.resolveOrg();
+    const providers = await gestalt.fetchOrgProviders([fqon]);
 
-        const fqon = gestalt.getState().org.fqon;
+    let promises = providers.map(provider => {
+        provider.short_resource_type = provider.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
+        return gestalt.fetchProviderContainers(provider);
+    });
 
-        const providers = await gestalt.fetchOrgProviders([fqon]);
+    let containers = await Promise.all(promises);
+    containers = [].concat.apply([], containers); // flatten array
 
-        let promises = providers.map(provider => {
-            provider.short_resource_type = provider.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
-            return gestalt.fetchProviderContainers(provider);
-        });
+    let p2 = containers.map(c => {
+        return gestalt.fetchContainer(c);
+    });
 
-        let containers = await Promise.all(promises);
-        containers = [].concat.apply([], containers); // flatten array
-
-        let p2 = containers.map(c => {
-            return gestalt.fetchContainer(c);
-        });
-
-        for (let c of containers) {
-            let b = await gestalt.fetchContainer(c);
-        }
-
-        let containers2 = await Promise.all(promises);
-        containers2 = [].concat.apply([], containers2); // flatten array
-
-        const arr = [];
-        containers2.map(b => {
-            b.running_instances = `${b.properties.tasks_running}/${b.properties.num_instances}`;
-            if (b.description) {
-                if (b.description.length > 20) {
-                    b.description = b.description.substring(0, 20) + '...';
-                }
-            }
-            b.provider = provider;
-            arr.push(b);
-        });
-
-        displayProviderContainers(arr);
+    for (let c of containers) {
+        let b = await gestalt.fetchContainer(c);
     }
+
+    let containers2 = await Promise.all(promises);
+    containers2 = [].concat.apply([], containers2); // flatten array
+
+    const arr = [];
+    containers2.map(b => {
+        b.running_instances = `${b.properties.tasks_running}/${b.properties.num_instances}`;
+        if (b.description) {
+            if (b.description.length > 20) {
+                b.description = b.description.substring(0, 20) + '...';
+            }
+        }
+        b.provider = provider;
+        arr.push(b);
+    });
+
+    displayProviderContainers(arr);
 
     function displayProviderContainers(containers) {
         const options = {
@@ -60,4 +56,4 @@ exports.handler = function (argv) {
 
         displayResource.run(options, containers);
     }
-}
+});

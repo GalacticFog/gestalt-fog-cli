@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'all-lambdas'
 exports.desc = 'List all lambdas'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
 
@@ -12,11 +13,7 @@ exports.handler = function (argv) {
         sortField: 'description',
     }
 
-    main();
-
-    async function main() {
-        let fqons = await gestalt.fetchOrgFqons();
-        let resources = await gestalt.fetchOrgLambdas(fqons);
-        displayResource.run(options, resources);
-    }
-}
+    let fqons = await gestalt.fetchOrgFqons();
+    let resources = await gestalt.fetchOrgLambdas(fqons);
+    displayResource.run(options, resources);
+});

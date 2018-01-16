@@ -1,59 +1,55 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'container'
 exports.desc = 'Scale container'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectResource = require('../lib/selectResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
     const inquirer = require('inquirer');
 
-    main();
+    // Main
+    if (argv.fqon || argv.id || argv.instances) {
+        // Command mode
 
-    async function main() {
+        if (!argv.fqon) throw Error("missing argv.fqon");
+        if (!argv.id) throw Error("missing argv.id");
+        if (!argv.instances) throw Error("missing argv.instances");
 
-        // Main
-        if (argv.fqon || argv.id || argv.instances) {
-            // Command mode
+        const num_instances = argv.instances;
 
-            if (!argv.fqon) throw Error("missing argv.fqon");
-            if (!argv.id) throw Error("missing argv.id");
-            if (!argv.instances) throw Error("missing argv.instances");
+        if (!validate(num_instances)) {
+            return;
+        }
 
-            const num_instances = argv.instances;
+        const container = await gestalt.fetchContainer({ fqon: argv.fqon, id: argv.id });
+        container.properties.num_instances = num_instances;
+        await gestalt.updateContainer(container);
+        console.log('done.');
 
-            if (!validate(num_instances)) {
-                return;
-            }
+    } else {
 
-            const container = await gestalt.fetchContainer({ fqon: argv.fqon, id: argv.id });
+        const container = await selectContainer();
+        const num_instances = await getUserInput();
+        // Validate input
+        if (!validate(num_instances)) {
+            return;
+        }
+
+        // Confirmation step
+        if (await confirmIfNeeded(num_instances)) {
+            // Scale up
             container.properties.num_instances = num_instances;
-            await gestalt.updateContainer(container);
-            console.log('done.');
-
+            const c = await gestalt.updateContainer(container);
+            console.log("Done.");
+            console.log();
+            console.log(`The following command may be run to scale the container directly:`);
+            console.log();
+            console.log(`    ./${argv['$0']} --fqon ${container.org.properties.fqon} --id ${container.id} --instances ${num_instances}`);
+            console.log();
         } else {
-
-            const container = await selectContainer();
-            const num_instances = await getUserInput();
-            // Validate input
-            if (!validate(num_instances)) {
-                return;
-            }
-
-            // Confirmation step
-            if (await confirmIfNeeded(num_instances)) {
-                // Scale up
-                container.properties.num_instances = num_instances;
-                const c = await gestalt.updateContainer(container);
-                console.log("Done.");
-                console.log();
-                console.log(`The following command may be run to scale the container directly:`);
-                console.log();
-                console.log(`    ./${argv['$0']} --fqon ${container.org.properties.fqon} --id ${container.id} --instances ${num_instances}`);
-                console.log();
-            } else {
-                console.log("Aborted");
-            }
+            console.log("Aborted");
         }
     }
 
@@ -119,4 +115,4 @@ exports.handler = function (argv) {
             return new Promise(resolve => resolve(true));
         }
     }
-}
+});

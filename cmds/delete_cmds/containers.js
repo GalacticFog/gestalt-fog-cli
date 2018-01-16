@@ -1,8 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'containers'
 exports.desc = 'Delete containers'
 exports.builder = {}
-exports.handler = function (argv) {
-
+exports.handler = cmd.handler(async function (argv) {
     const selectContainer = require('../lib/selectContainer');
     const gestalt = require('../lib/gestalt');
     const chalk = require('chalk');
@@ -10,47 +10,42 @@ exports.handler = function (argv) {
     const displayResource = require('../lib/displayResourceUI');
     const inquirer = require('inquirer');
 
-    main();
+    await selectHierarchy.resolveEnvironment();
 
-    async function main() {
+    const containers = await gestalt.fetchContainers();
 
-        await selectHierarchy.resolveEnvironment();
+    console.log("Select containers to delete (use arrows and spacebar to modify selection)");
+    console.log();
 
-        const containers = await gestalt.fetchContainers();
-
-        console.log("Select containers to delete (use arrows and spacebar to modify selection)");
+    selectContainer.run({ mode: 'checkbox', defaultChecked: false }, (selectedContainers) => {
         console.log();
 
-        selectContainer.run({ mode: 'checkbox', defaultChecked: false }, (selectedContainers) => {
-            console.log();
+        displayRunningContainers(selectedContainers);
 
-            displayRunningContainers(selectedContainers);
+        doConfirm(confirmed => {
+            if (!confirmed) {
+                console.log('Aborted.');
+                return;
+            }
 
-            doConfirm(confirmed => {
-                if (!confirmed) {
-                    console.log('Aborted.');
-                    return;
-                }
+            // TODO:
+            // const promises = selectedContainers.map(item => {
+            //     return new Promise((reject, resolve) => {
+            //         console.log(`Deleting container ${item.name}`);
+            //         resolve();
+            //     }).then(
+            //         gestalt.deleteContainer(item)
+            //     );
+            // });
+            const promises = selectedContainers.map(item => {
+                return gestalt.deleteContainer(item)
+            });
 
-                // TODO:
-                // const promises = selectedContainers.map(item => {
-                //     return new Promise((reject, resolve) => {
-                //         console.log(`Deleting container ${item.name}`);
-                //         resolve();
-                //     }).then(
-                //         gestalt.deleteContainer(item)
-                //     );
-                // });
-                const promises = selectedContainers.map(item => {
-                    return gestalt.deleteContainer(item)
-                });
-
-                Promise.all(promises).then(results => {
-                    console.log('Done.');
-                });
+            Promise.all(promises).then(results => {
+                console.log('Done.');
             });
         });
-    }
+    });
 
     function displayRunningContainers(containers) {
 

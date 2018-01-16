@@ -1,17 +1,12 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'org'
 exports.desc = 'Change org'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    try {
+    selectHierarchy.displayContext();
+    selectHierarchy.chooseOrg(() => {
         selectHierarchy.displayContext();
-        selectHierarchy.chooseOrg(() => {
-            selectHierarchy.displayContext();
-        });
-    } catch (err) {
-        console.log(err.message);
-        console.log("Try running 'change-context'");
-        console.log();
-    }
-}
+    });
+});

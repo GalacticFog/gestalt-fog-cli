@@ -1,25 +1,22 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'provider-container'
 exports.desc = 'Describe provider container'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectContainer = require('../lib/selectContainer');
     const selectResource = require('../lib/selectResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
 
-    main();
-
-    async function main() {
-        const container = await selectProviderContainers();
-        if (argv.raw) {
-            delete container.running_instances;
-            delete container.provider;
-            console.log(JSON.stringify(container, null, 2));
-        } else {
-            showContainer(container);
-            showInstances(container);
-        }
+    const container = await selectProviderContainers();
+    if (argv.raw) {
+        delete container.running_instances;
+        delete container.provider;
+        console.log(JSON.stringify(container, null, 2));
+    } else {
+        showContainer(container);
+        showInstances(container);
     }
 
     function showContainer(c) {
