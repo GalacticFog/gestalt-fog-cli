@@ -120,4 +120,4 @@ exports.handler = cmd.handler(async function (argv) {
         }
         return arr;
     }
-}
+});

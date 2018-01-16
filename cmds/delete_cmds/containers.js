@@ -78,4 +78,4 @@ exports.handler = cmd.handler(async function (argv) {
             callback(answers.confirm);
         });
     }
-}
+});
