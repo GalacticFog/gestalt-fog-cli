@@ -16,7 +16,6 @@ exports.resolveWorkspace = () => {
 }
 
 exports.resolveEnvironment = () => {
-    console.log('resolving env..')
     return doResolveOrg()
         .then(doResolveWorkspace)
         .then(doResolveEnvironment)
