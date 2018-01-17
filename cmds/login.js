@@ -73,7 +73,7 @@ exports.handler = cmd.handler(async function (argv) {
     };
 
     if (!creds.password) {
-        questions = [
+        let questions = [
             {
                 type: 'password',
                 name: 'password',
