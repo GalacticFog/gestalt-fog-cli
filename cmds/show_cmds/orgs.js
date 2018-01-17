@@ -19,7 +19,7 @@ exports.handler = cmd.handler(async function (argv) {
     })
 
     if (argv.debug) {
-        console.log(JSON.stringify(resources, null, 2))
+        console.log(JSON.stringify(resources, null, 2));
     }
 
     displayResource.run(options, resources);
