@@ -35,7 +35,7 @@ exports.handler = cmd.handler(async function (argv) {
         console.log(`Creating package lambda from ${argv.url}`);
     }
 
-    await selectHierarchy.resolveWorkspace();
+    await selectHierarchy.resolveEnvironment();
 
     promptForInput(answers => {
 

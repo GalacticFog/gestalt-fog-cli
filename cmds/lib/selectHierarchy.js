@@ -16,10 +16,11 @@ exports.resolveWorkspace = () => {
 }
 
 exports.resolveEnvironment = () => {
+    console.log('resolving env..')
     return doResolveOrg()
         .then(doResolveWorkspace)
         .then(doResolveEnvironment)
-        .then(displayContext)
+        .then(displayContext);
 }
 
 exports.chooseOrg = () => {
@@ -48,24 +49,29 @@ exports.chooseContext = (options) => {
 exports.displayContext = displayContext;
 
 function displayContext() {
-    const state = gestalt.getState();
-    let s = `${chalk.bold('Context:')} ${chalk.green(gestalt.getHost())}`
-    // let s = `${chalk.green(gestalt.getHost())}`
-    if (state.org) {
-        s += ` / ${chalk.green(state.org.fqon)}`;
-        if (state.workspace) {
-            let value = state.workspace.description || state.workspace.name
-            s += ` / ${chalk.green(value)}`;
+    return new Promise((resolve, reject) => {
+        const state = gestalt.getState();
+        let s = `${chalk.bold('Context:')} ${chalk.green(gestalt.getHost())}`
+        // let s = `${chalk.green(gestalt.getHost())}`
+        if (state.org) {
+            s += ` / ${chalk.green(state.org.fqon)}`;
+            if (state.workspace) {
+                let value = state.workspace.description || state.workspace.name
+                s += ` / ${chalk.green(value)}`;
+            }
+            if (state.environment) {
+                let value = state.environment.description || state.environment.name
+                s += ` / ${chalk.green(value)}`;
+            }
         }
-        if (state.environment) {
-            let value = state.environment.description || state.environment.name
-            s += ` / ${chalk.green(value)}`;
-        }
-    }
-    // s += ` ${chalk.bold(']')}`;
-    console.log(s);
-    // console.log();
+        // s += ` ${chalk.bold(']')}`;
+        console.log(s);
+        // console.log();
+        resolve();
+    });
 }
+
+// Resolve functions
 
 function doResolveOrg() {
     return new Promise((resolve, reject) => {
@@ -77,6 +83,30 @@ function doResolveOrg() {
         }
     });
 }
+
+function doResolveWorkspace() {
+    return new Promise((resolve, reject) => {
+        if (!gestalt.getCurrentWorkspace()) {
+            console.log("No Workspace in current context, resolving");
+            resolve(chooseWorkspace());
+        } else {
+            resolve();
+        }
+    });
+}
+
+function doResolveEnvironment() {
+    return new Promise((resolve, reject) => {
+        if (!gestalt.getCurrentEnvironment()) {
+            console.log("No Environment in current context, resolving");
+            resolve(chooseEnvironment());
+        } else {
+            resolve();
+        }
+    });
+}
+
+// Choose functions
 
 function chooseOrg() {
     return selectOrg.run()
@@ -94,17 +124,6 @@ function chooseOrg() {
         });
 }
 
-function doResolveWorkspace() {
-    return new Promise((resolve, reject) => {
-        if (!gestalt.getCurrentWorkspace()) {
-            console.log("No Workspace in current context, resolving");
-            chooseWorkspace(resolve);
-        } else {
-            resolve();
-        }
-    });
-}
-
 function chooseWorkspace(resolve) {
     return selectWorkspace.run().then(result => {
         if (result) {
@@ -120,16 +139,6 @@ function chooseWorkspace(resolve) {
     });
 }
 
-function doResolveEnvironment() {
-    return new Promise((resolve, reject) => {
-        if (!gestalt.getCurrentEnvironment()) {
-            console.log("No Environment in current context, resolving");
-            chooseEnvironment(resolve);
-        } else {
-            resolve();
-        }
-    });
-}
 
 function chooseEnvironment(resolve) {
     return selectEnvironment.run({}).then(result => {

@@ -9,7 +9,7 @@ exports.handler = cmd.handler(async function (argv) {
     const selectHierarchy = require('../lib/selectHierarchy');
     const selectProvider = require('../lib/selectProvider');
 
-    await selectHierarchy.resolveWorkspace();
+    await selectHierarchy.resolveEnvironment();
 
     promptForInput(answers => {
 
