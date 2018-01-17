@@ -23,27 +23,27 @@ exports.resolveEnvironment = () => {
         .then(displayContext)
 }
 
-exports.chooseOrg = (callback) => {
-    chooseOrg(callback);
+exports.chooseOrg = () => {
+    return chooseOrg();
 }
 
-exports.chooseWorkspace = (callback) => {
-    doResolveOrg()
+exports.chooseWorkspace = () => {
+    return doResolveOrg()
         .then(function (resolve, reject) {
-            chooseWorkspace(callback);
+            return chooseWorkspace();
         });
 }
 
-exports.chooseEnvironment = (callback) => {
-    doResolveOrg()
+exports.chooseEnvironment = () => {
+    return doResolveOrg()
         .then(doResolveWorkspace)
         .then(function (resolve, reject) {
-            chooseEnvironment(callback)
+            return chooseEnvironment()
         });
 }
 
-exports.chooseContext = (callback) => {
-    selectContext.run({}, callback);
+exports.chooseContext = (options) => {
+    return chooseOrgWorkspaceEnvironment(options);
 }
 
 exports.displayContext = displayContext;
@@ -72,25 +72,27 @@ function doResolveOrg() {
     return new Promise((resolve, reject) => {
         if (!gestalt.getCurrentOrg()) {
             console.log("No Org in current context, resolving");
-            chooseOrg(resolve);
+            resolve(chooseOrg());
         } else {
             resolve();
         }
     });
 }
 
-function chooseOrg(resolve) {
-    selectOrg.run((result) => {
-        if (result) {
-            gestalt.setCurrentOrg(result);
-            console.log();
-            console.log(`Org '${result.fqon}' selected.`);
-            console.log();
-            if (resolve) { resolve(result); }
-        } else {
-            console.log("No selection.");
-        }
-    });
+function chooseOrg() {
+    return selectOrg.run()
+        .then(result => {
+            if (result) {
+                gestalt.setCurrentOrg(result);
+                console.log();
+                console.log(`Org '${result.fqon}' selected.`);
+                console.log();
+                return result;
+            } else {
+                console.log("No selection.");
+                return null;
+            }
+        });
 }
 
 function doResolveWorkspace() {
@@ -105,15 +107,16 @@ function doResolveWorkspace() {
 }
 
 function chooseWorkspace(resolve) {
-    selectWorkspace.run((result) => {
+    return selectWorkspace.run().then(result => {
         if (result) {
             gestalt.setCurrentWorkspace(result);
             console.log();
             console.log(`Workspace '${result.name}' selected.`);
             console.log();
-            if (resolve) { resolve(result); }
+            return result;
         } else {
             console.log("No selection.");
+            return null;
         }
     });
 }
@@ -130,16 +133,65 @@ function doResolveEnvironment() {
 }
 
 function chooseEnvironment(resolve) {
-    selectEnvironment.run({}, (result) => {
+    return selectEnvironment.run({}).then(result => {
         if (result) {
             gestalt.setCurrentEnvironment(result);
 
             console.log();
             console.log(`Environment '${result.name}' selected.`);
             console.log();
-            if (resolve) { resolve(result); }
+            return result;
         } else {
             console.log("No selection.");
+            return null;
         }
     });
+}
+
+
+async function chooseOrgWorkspaceEnvironment(options) {
+    const org = await selectOrg.run();
+    if (!org) {
+        console.log("No selection, exiting.");
+        return;
+    }
+
+    console.log();
+    // console.log(`${org.fqon} selected.`);
+    // console.log();
+
+    gestalt.setCurrentOrg(org);
+
+    const workspace = await selectWorkspace.run();
+    if (!workspace) {
+        console.log("No selection, exiting.");
+        return;
+    }
+
+    console.log();
+    // console.log(`${workspace.name} selected.`);
+    // console.log();
+
+    gestalt.setCurrentWorkspace(workspace);
+
+    if (!options) options = {};
+    if (!options.environment) options.environment = {};
+
+    const environment = await selectEnvironment.run(options.environment);
+    if (!environment) {
+        console.log("No selection, exiting.");
+        return;
+    }
+
+    console.log();
+    // console.log(`${environment.name} selected.`);
+    // console.log();
+
+    gestalt.setCurrentEnvironment(environment);
+
+    return {
+        org: org,
+        workspace: workspace,
+        environment: environment
+    };
 }

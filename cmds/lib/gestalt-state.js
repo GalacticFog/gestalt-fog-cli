@@ -122,7 +122,7 @@ function getJsonFromFile(file) {
 }
 
 function getConfigDir() {
-    let dir = getConfig().gestalt_url.trim();
+    let dir = getConfig().gestalt_url;
     if (dir.indexOf('://') > -1) {
         dir = String(dir).substring(dir.indexOf('://') + 3);
     }
@@ -132,7 +132,7 @@ function getConfigDir() {
 
 exports.getConfigUrl = getConfigUrl;
 function getConfigUrl() {
-    return getConfig().gestalt_url.trim();
+    return getConfig().gestalt_url;
 }
 
 function getConfig() {
@@ -142,6 +142,8 @@ function getConfig() {
         const contents = fs.readFileSync(f, 'utf8');
         return JSON.parse(contents);
     }
+    // throw Error(`'${f}' not found`);
+    // throw { message: `'${f}' not found` };
     return {};
 }
 

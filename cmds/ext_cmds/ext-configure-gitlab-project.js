@@ -5,7 +5,8 @@ exports.builder = {}
 exports.handler = function (argv) {
     const gitlab = require('../lib/gestalt-gitlab-client');
     const selectResource = require('../lib/selectResourceUI');
-    const selectGestaltContext = require('../lib/selectOrgWorkspaceEnvironment');
+    // const selectGestaltContext = require('../lib/selectOrgWorkspaceEnvironment');
+    const selectHierarchy = require('../lib/selectHierarchy');
     const chalk = require('chalk');
     const inquirer = require('inquirer');
 
@@ -104,7 +105,7 @@ exports.handler = function (argv) {
         }
 
         // Choose a Gestalt Org / Workspace / Environment
-        selectGestaltContext.run(opts, (context) => {
+        selectHierarchy.chooseContext(opts).then(context => {
             callback(null, context);
         });
     }

@@ -6,7 +6,6 @@ exports.handler = cmd.handler(async function (argv) {
     const selectHierarchy = require('../lib/selectHierarchy');
 
     selectHierarchy.displayContext();
-    selectHierarchy.chooseContext(result => {
-        selectHierarchy.displayContext();
-    });
+    await selectHierarchy.chooseContext();
+    selectHierarchy.displayContext();
 });
