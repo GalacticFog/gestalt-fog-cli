@@ -3,9 +3,8 @@ exports.desc = 'Show Bash Completion Script'
 exports.builder = {}
 exports.handler = function (argv) {
 
-    console.log(`# To use:
-#
-#     source <(fog bash-completion)  
+    console.log(`#
+# Run: fog bash-completion >> ~/.bashrc
 #
 _fog_completions()
 {
