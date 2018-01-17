@@ -9,12 +9,14 @@ exports.command = 'login'
 exports.desc = 'Log in to Gestalt Platform Instance'
 exports.builder = {
     url: {
-        description: 'Gestalt URL (optional, prompted if not specified)'
+        description: 'Gestalt URL (optional, prompted if not specified)',
     },
     username: {
+        alias: 'u',
         description: 'Username (optional, prompted if not specified)'
     },
     password: {
+        alias: 'p',
         description: 'Password (optional, prompted if not specified)'
     }
 }
@@ -32,29 +34,29 @@ exports.handler = cmd.handler(async function (argv) {
         username: argv.username,
     };
 
-    const config = gestaltState.getConfig();
+    { // Scope
+        const config = gestaltState.getConfig();
 
-    let questions = [];
+        let questions = [];
 
-    if (!argv.url) questions.push({
-        type: 'input',
-        name: 'gestalt_url',
-        message: "Gestalt URL",
-        default: () => {
-            return config.gestalt_url || '';
-        }
-    });
+        if (!argv.url) questions.push({
+            type: 'input',
+            name: 'gestalt_url',
+            message: "Gestalt URL",
+            default: () => {
+                return config.gestalt_url || '';
+            }
+        });
 
-    if (!argv.username) questions.push({
-        type: 'input',
-        name: 'username',
-        message: "Username",
-        default: () => {
-            return config.username || '';
-        }
-    });
+        if (!argv.username) questions.push({
+            type: 'input',
+            name: 'username',
+            message: "Username",
+            default: () => {
+                return config.username || '';
+            }
+        });
 
-    { // block to limit scope
         const answers = await inquirer.prompt(questions);
         params = Object.assign(params, answers);
     }
@@ -82,7 +84,7 @@ exports.handler = cmd.handler(async function (argv) {
         creds.username = params.username;
     }
 
-    doLogin(config.gestalt_url, creds);
+    doLogin(params.gestalt_url, creds);
 });
 
 function doLogin(gestalt_url, creds) {
