@@ -3,7 +3,6 @@ const gestalt = require('./gestalt');
 const selectOrg = require('./selectOrg');
 const selectWorkspace = require('./selectWorkspace');
 const selectEnvironment = require('./selectEnvironment');
-const selectContext = require('./selectOrgWorkspaceEnvironment');
 const chalk = require('chalk');
 
 exports.resolveOrg = () => {
