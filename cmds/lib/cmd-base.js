@@ -35,6 +35,4 @@ function handleError(argv, err) {
             console.error(`Error: ${err}`);
         }
     }
-
-    console.error(`Try running 'fog configure'`);
 }
