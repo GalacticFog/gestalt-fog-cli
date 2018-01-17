@@ -101,7 +101,7 @@ exports.handler = cmd.handler(async function (argv) {
         //     }
         // }
 
-        selectProvider.run({ type: 'CaaS', message: 'Select Provider', mode: 'list' }, provider => {
+        selectProvider.run({ type: 'CaaS', message: 'Select Provider', mode: 'list' }).then(provider => {
 
             const questions = [
                 {

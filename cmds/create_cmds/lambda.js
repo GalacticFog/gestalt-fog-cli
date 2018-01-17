@@ -97,11 +97,11 @@ exports.handler = cmd.handler(async function (argv) {
         //     }
         // }
 
-        selectProvider.run({ type: 'Lambda', message: 'Select Provider' }, lambdaProvider => {
+        selectProvider.run({ type: 'Lambda', message: 'Select Provider' }).then(lambdaProvider => {
 
             debug(lambdaProvider);
 
-            selectProvider.run({ type: 'Executor', message: 'Select Runtime' }, executorProvider => {
+            selectProvider.run({ type: 'Executor', message: 'Select Runtime' }).then(executorProvider => {
 
                 debug(executorProvider);
 

@@ -46,7 +46,7 @@ exports.handler = cmd.handler(async function (argv) {
             console.log();
             console.log(`The following command may be run to scale the container directly:`);
             console.log();
-            console.log(`    ./${argv['$0']} --fqon ${container.org.properties.fqon} --id ${container.id} --instances ${num_instances}`);
+            console.log(`    ${argv['$0']} ${argv._[0]} ${argv._[1]} --fqon ${container.org.properties.fqon} --id ${container.id} --instances ${num_instances}`);
             console.log();
         } else {
             console.log("Aborted");

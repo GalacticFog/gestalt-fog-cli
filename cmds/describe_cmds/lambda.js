@@ -37,7 +37,7 @@ exports.handler = cmd.handler(async function (argv) {
             console.log();
             console.log('Run the following to see this lambda directly:')
             console.log();
-            console.log(`    ./${argv['$0']} --fqon ${lambda.org.properties.fqon} --id ${lambda.id}`);
+            console.log(`    ${argv['$0']} ${argv._[0]} ${argv._[1]} --fqon ${lambda.org.properties.fqon} --id ${lambda.id}`);
             console.log();
         }
     }
