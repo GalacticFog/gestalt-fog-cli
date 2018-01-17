@@ -1,8 +1,9 @@
 'use strict';
+const cmd = require('../lib/cmd-base');
 exports.command = 'elb-port-mappings'
 exports.desc = 'ELB Port Mappings'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt');
     const gestaltState = require('../lib/gestalt-state');
     const displayResource = require('../lib/displayResourceUI');
@@ -39,7 +40,24 @@ exports.handler = function (argv) {
 
     const CLUSTER = argv.cluster;
 
-    main();
+    switch (COMMAND) {
+        case 'list':
+            listServicePortMappings();
+            break;
+        // case 'list-certs':
+        //     listClusterCertificates();
+        //     break;
+        case 'create':
+            createExternalPortMappingInteractive();
+            break;
+        case 'delete':
+            deleteExternalPortMappingInteractive();
+            break;
+        default:
+            console.log(`Invalid command: '${COMMAND}`);
+            console.log();
+            printUsage();
+    }
 
     function printUsage() {
         console.log(`Usage:`);
@@ -50,28 +68,6 @@ exports.handler = function (argv) {
         console.log(`  create port mapping:    ${argv['$0']} --cluster <cluster> create`);
         console.log(`  delete port mapping:    ${argv['$0']} --cluster <cluster> delete`);
         console.log();
-    }
-
-    function main() {
-
-        switch (COMMAND) {
-            case 'list':
-                listServicePortMappings();
-                break;
-            // case 'list-certs':
-            //     listClusterCertificates();
-            //     break;
-            case 'create':
-                createExternalPortMappingInteractive();
-                break;
-            case 'delete':
-                deleteExternalPortMappingInteractive();
-                break;
-            default:
-                console.log(`Invalid command: '${COMMAND}`);
-                console.log();
-                printUsage();
-        }
     }
 
     function createMapping(elb, listener) {
@@ -130,29 +126,29 @@ exports.handler = function (argv) {
     //     }
     // }
 
-    function doGet(path) {
-        const url = getServiceUrl();
-        let resources = gestalt.httpGet(`${url}${path}`);
+    async function doGet(path) {
+        const url = await getServiceUrl();
+        let resources = await gestalt.httpGet(`${url}${path}`);
         return resources;
     }
 
-    function doDelete(path) {
-        const url = getServiceUrl();
-        gestalt.httpDelete(`${url}${path}`);
+    async function doDelete(path) {
+        const url = await getServiceUrl();
+        await gestalt.httpDelete(`${url}${path}`);
     }
 
-    function doPut(path, body) {
-        const url = getServiceUrl();
-        let resources = gestalt.httpPut(`${url}${path}`, body);
+    async function doPut(path, body) {
+        const url = await getServiceUrl();
+        let resources = await gestalt.httpPut(`${url}${path}`, body);
         return resources;
     }
 
-    function listServicePortMappings() {
+    async function listServicePortMappings() {
         try {
             const cluster = argv.cluster;
 
             console.log(`Fetching information from cluster '${cluster}'...`);
-            let resources = doGet(`/clusters/${cluster}/external_mappings`);
+            let resources = await doGet(`/clusters/${cluster}/external_mappings`);
 
             resources.elbs.map(elb => {
                 displayMappedServices(elb.name, elb.listeners);
@@ -241,10 +237,11 @@ exports.handler = function (argv) {
         throw new Error(`${f} not found`);
     }
 
-    function getServiceUrl() {
+    async function getServiceUrl() {
         if (!argv.cluster) throw Error('Missing argv.cluster, try using \'--cluster <cluster>\'');
-        return gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY)[argv.cluster]['service_url'];
+        return (await gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY))[argv.cluster]['service_url'];
     }
+
 
     function promptToContinue(message, callback) {
         // Prompt to continue
@@ -268,9 +265,9 @@ exports.handler = function (argv) {
     }
 
 
-    function deleteExternalPortMappingInteractive() {
+    async function deleteExternalPortMappingInteractive() {
         // Select ELB to expose to
-        const lbs = doGet(`/clusters/${argv.cluster}/elbs`);
+        const lbs = await doGet(`/clusters/${argv.cluster}/elbs`);
 
         selectELB(lbs, (err, elb) => {
             if (err) {
@@ -547,4 +544,4 @@ exports.handler = function (argv) {
             }
         });
     }
-}
+});

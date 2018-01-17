@@ -1,13 +1,26 @@
 const cmd = require('../lib/cmd-base');
 exports.command = 'lambda'
 exports.desc = 'Describe lambda'
-exports.builder = {}
+exports.builder = {
+    all: {
+        description: 'Describe from all lambdas'
+    },
+    org: {
+        description: 'Describe from all lambdas in current org'
+    }
+}
 exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt')
     const displayResource = require('../lib/displayResourceUI');
     const selectResource = require('../lib/selectResourceUI');
     const chalk = require('chalk');
     const selectHierarchy = require('../lib/selectHierarchy');
+    const options = {
+        message: "Lambdas",
+        headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
+        fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
+        sortField: 'description',
+    }
 
     if (argv.fqon || argv.id) {
         // Command mode
@@ -21,8 +34,13 @@ exports.handler = cmd.handler(async function (argv) {
         });
 
         doShowLambda(lambda, argv);
-    } else {
-        // Interactive mode
+    } else if (argv.all) {
+        const lambda = await selectFromAllLambdas();
+        doShowLambda(lambda, argv);
+    } else if (argv.org) {
+        const lambda = await selectFromOrgLambdas();
+        doShowLambda(lambda, argv);
+    } else {        
         const lambda = await selectLambda();
         doShowLambda(lambda, argv);
     }
@@ -43,12 +61,6 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     function showLambda(lambda) {
-        const options = {
-            message: "Lambdas",
-            headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
-            fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
-            sortField: 'description',
-        }
 
         displayResource.run(options, [lambda]);
 
@@ -68,10 +80,25 @@ exports.handler = cmd.handler(async function (argv) {
         console.log();
     }
 
+    async function selectFromAllLambdas() {
+        let fqons = await gestalt.fetchOrgFqons();
+        let res = await gestalt.fetchOrgLambdas(fqons);
+        return select(res);
+    }
+
+    async function selectFromOrgLambdas() {
+        await selectHierarchy.resolveOrg();
+        const res = await gestalt.fetchOrgLambdas();
+        return select(res);
+    }
+
     async function selectLambda() {
         await selectHierarchy.resolveEnvironment();
         const res = await gestalt.fetchLambdas();
+        return select(res);
+    }
 
+    function select(res) {
         let options = {
             mode: 'autocomplete',
             message: "Select Lambda",

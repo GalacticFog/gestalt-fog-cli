@@ -1,11 +1,15 @@
+const state = {};
 
 exports.handler = function (main) {
     return function (argv) {
+        state.argv = argv;
         run(main, argv).then(() => {
             // Post
         });
     }
 }
+
+exports.debug = debug;
 
 async function run(fn, argv) {
     try {
@@ -33,6 +37,18 @@ function handleError(argv, err) {
         } catch (err2) {
             // Failed to parse
             console.error(`Error: ${err}`);
+        }
+    }
+}
+
+function debug(str) {
+    if (!state.argv) console.error('WARNING: state.argv isn\'t initialized in cmd-base.js::debug()');
+    if (state.argv && state.argv.debug) {
+        console.log(typeof str)
+        if (typeof str == 'object') {
+            console.log('[DEBUG] ' + JSON.stringify(str, null, 2));
+        } else {
+            console.log('[DEBUG] ' + str);
         }
     }
 }

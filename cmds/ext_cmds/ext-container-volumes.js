@@ -1,8 +1,9 @@
 'use strict';
+const cmd = require('../lib/cmd-base');
 exports.command = 'container-volumes'
 exports.desc = 'Container volumes'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt');
     const gestaltState = require('../lib/gestalt-state');
     const displayResource = require('../lib/displayResourceUI');
@@ -64,8 +65,8 @@ exports.handler = function (argv) {
         }
     }
 
-    function listClusters() {
-        let resources = Object.keys(gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY));
+    async function listClusters() {
+        let resources = Object.keys(await gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY));
         resources = resources.map(r => {
             return chalk.green(`'${r}'`);
         });
@@ -75,7 +76,7 @@ exports.handler = function (argv) {
         console.log();
     }
 
-    function createVolume() {
+    async function createVolume() {
         if (!argv.name) {
             console.log('missing --name');
             printUsage();
@@ -90,10 +91,10 @@ exports.handler = function (argv) {
         try {
             const name = argv.name;
             const cluster = argv.cluster;
-            const url = getServiceUrl(cluster);
+            const url = await getServiceUrl(cluster);
 
             console.log(`Creating volume '${name}' on cluster '${cluster}'...`);
-            const resources = gestalt.httpPut(`${url}/volumes/${name}`);
+            const resources = await gestalt.httpPut(`${url}/volumes/${name}`);
             console.log('Done.');
             // listVolumes();
         } catch (err) {
@@ -103,7 +104,7 @@ exports.handler = function (argv) {
     }
 
 
-    function deleteVolume() {
+    async function deleteVolume() {
         if (!argv.name) {
             console.log('missing --name');
             printUsage();
@@ -122,10 +123,10 @@ exports.handler = function (argv) {
             if (!cluster) throw Error('missing cluster');
 
 
-            const url = getServiceUrl(cluster);
+            const url = await getServiceUrl(cluster);
 
             console.log(`Fetching volume information from cluster '${cluster}'...`);
-            const volume = gestalt.httpGet(`${url}/volumes/${name}`);
+            const volume = await gestalt.httpGet(`${url}/volumes/${name}`);
             if (!argv.force && volume.status.phase == 'Bound') {
                 console.log(`Not deleting volume '${name}' because status is '${volume.status.phase}', use '--force' to override.`);
             } else {
@@ -133,8 +134,9 @@ exports.handler = function (argv) {
                 promptToContinue(`Proceed to delete volume '${name}' on cluster '${cluster}'?`, confirmed => {
                     if (confirmed) {
                         console.log(`Deleting volume '${name}' on cluster '${cluster}'...`);
-                        gestalt.httpDelete(`${url}/volumes/${name}`);
-                        console.log('Done.');
+                        gestalt.httpDelete(`${url}/volumes/${name}`).then(() => {
+                            console.log('Done.');
+                        });
                     } else {
                         console.log(`Aborted.`);
                     }
@@ -146,7 +148,7 @@ exports.handler = function (argv) {
         }
     }
 
-    function listVolumes() {
+    async function listVolumes() {
         if (!argv.cluster) {
             console.log('missing --cluster');
             printUsage();
@@ -164,11 +166,11 @@ exports.handler = function (argv) {
 
         try {
             const cluster = argv.cluster;
-            const url = getServiceUrl(cluster);
-            const server = getServer(cluster);
+            const url = await getServiceUrl(cluster);
+            const server = await getServer(cluster);
 
             console.log(`Fetching volumes information from cluster '${cluster}'...`);
-            let resources = gestalt.httpGet(`${url}/volumes`);
+            let resources = await gestalt.httpGet(`${url}/volumes`);
 
             // console.log(JSON.stringify(resources, null, 2))
 
@@ -187,7 +189,7 @@ exports.handler = function (argv) {
         }
     }
 
-    function listVolumeDirs() {
+    async function listVolumeDirs() {
         const options = {
             message: `Cluster '${argv.cluster}' Volume Directories:`,
             headers: ["Path"],
@@ -198,9 +200,9 @@ exports.handler = function (argv) {
 
         try {
             const cluster = argv.cluster;
-            const url = getServiceUrl(cluster);
+            const url = await getServiceUrl(cluster);
             console.log(`Fetching server filesystem information from cluster '${cluster}'...`);
-            const resources = gestalt.httpGet(`${url}/volume_dirs`);
+            const resources = await gestalt.httpGet(`${url}/volume_dirs`);
             displayResource.run(options, resources);
         } catch (err) {
             console.log(err.message);
@@ -208,12 +210,12 @@ exports.handler = function (argv) {
         }
     }
 
-    function getServiceUrl(cluster) {
-        return gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY)[cluster]['service_url'];
+    async function getServiceUrl(cluster) {
+        return (await gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY))[cluster]['service_url'];
     }
 
-    function getServer(cluster) {
-        return gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY)[cluster]['server'];
+    async function getServer(cluster) {
+        return (await gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY))[cluster]['server'];
     }
 
     function promptToContinue(message, callback) {
@@ -236,4 +238,4 @@ exports.handler = function (argv) {
             }
         });
     }
-}
+});

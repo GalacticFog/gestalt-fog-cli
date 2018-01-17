@@ -9,7 +9,7 @@ const chalk = require('chalk');
 
 module.exports = { getServiceConfig, runInteractiveConfigure }
 
-function getServiceConfig(key) {
+async function getServiceConfig(key) {
     // First try .local file
     if (gestaltState.fileExists(LOCAL_SERVICES_FILE)) {
         log(`Using local services config file '${LOCAL_SERVICES_FILE}'`);
@@ -23,19 +23,22 @@ function getServiceConfig(key) {
         }
     }
     // Local file or config didn't exist, get from service discovery
-    return getOrFetchConfig()['service_configs'][key];
+    const test = await getOrFetchConfig();
+    return test['service_configs'][key];
 }
 
 function getOrFetchConfig(cluster) {
     if (gestaltState.fileExists(CACHED_SERVICES_FILE)) {
         log(`Loading config from '${CACHED_SERVICES_FILE}'`);
-        return gestaltState.loadConfigFile(CACHED_SERVICES_FILE);
+        return new Promise((resolve) => {
+            resolve(gestaltState.loadConfigFile(CACHED_SERVICES_FILE));
+        });
     }
     console.log(`External service configuration cache '${CACHED_SERVICES_FILE}' not found, fetching...`);
     return fetchConfig();
 }
 
-function fetchConfig() {
+async function fetchConfig() {
     // Don't have it, attmept to download
     if (!gestaltState.fileExists(CONFIG_FILE)) {
         throw Error(`${CONFIG_FILE} doesn't exist, cannot load configuration, try running './ext-configure'`);
@@ -46,11 +49,13 @@ function fetchConfig() {
     if (!config['services_config_url']) throw Error(`Configuration is missing 'services_config_url' field`);
 
     const url = config['services_config_url'];
-    const body = gestalt.httpGet(url);
+    const body = await gestalt.httpGet(url);
     // Now write to cache file
     const file = CACHED_SERVICES_FILE;
     gestaltState.writeFile(file, JSON.stringify(body, null, 2) + '\n');
-    return gestaltState.loadConfigFile(file);
+    return new Promise(resolve => {
+        resolve(gestaltState.loadConfigFile(file));
+    });
 }
 
 function log(str) {
