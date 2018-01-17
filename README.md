@@ -14,11 +14,6 @@ mv fog /usr/local/bin
 fog bash-completion >> ~/.bashrc
 ```
 
-## Initial Configuration
-```sh
-fog configure
-```
-
 ## Login to Gestalt Platform
 ```sh
 fog login

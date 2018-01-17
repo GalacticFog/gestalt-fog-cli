@@ -1,6 +1,4 @@
-#!/usr/bin/env node
-
-exports.run = (opts, elb, callback) => {
+exports.run = async (opts, elb) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
@@ -17,7 +15,5 @@ exports.run = (opts, elb, callback) => {
     // merge in user specified options
     options = Object.assign(options, opts);
 
-    selectResource.run(options, selection => {
-        if (callback) callback(selection);
-    });
+    return selectResource.run(options);
 }

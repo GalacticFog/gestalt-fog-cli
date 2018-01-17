@@ -1,8 +1,8 @@
-'use strict';
+const cmd = require('../lib/cmd-base');
 exports.command = 'deploy-from-docker-compose'
 exports.desc = 'Deploy from Docker Compose file'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const dockerComposeParser = require('../lib/gestalt-docker-compose-parser');
     const selectProvider = require('../lib/selectProvider');
     const displayResource = require('../lib/displayResourceUI');
@@ -25,48 +25,46 @@ exports.handler = function (argv) {
 
     // Now, containers need to have an environment and provider assigned
 
-    selectHierarchy.resolveWorkspace(() => {
-        selectEnvironment.run({}, (env) => {
-            console.log();
+    await selectHierarchy.resolveWorkspace();
+    const env = await selectEnvironment.run({});
+    console.log();
 
-            gestalt.setCurrentEnvironment(env);
+    gestalt.setCurrentEnvironment(env);
 
-            selectProvider.run({}, provider => {
-                console.log();
+    selectProvider.run({}, provider => {
+        console.log();
 
-                // Assign the provider to each container
-                containers.map(item => {
-                    item.properties.provider = {
-                        id: provider.id,
-                    };
-                });
+        // Assign the provider to each container
+        containers.map(item => {
+            item.properties.provider = {
+                id: provider.id,
+            };
+        });
 
-                const state = gestalt.getState();
+        const state = gestalt.getState();
 
-                console.log("Containers will be created in the following location:");
-                console.log();
-                console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
-                console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
-                console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
-                console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
-                console.log();
+        console.log("Containers will be created in the following location:");
+        console.log();
+        console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
+        console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
+        console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
+        console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
+        console.log();
 
-                doConfirm(confirmed => {
-                    if (!confirmed) {
-                        console.log('Aborted.');
-                        return;
-                    }
+        doConfirm(confirmed => {
+            if (!confirmed) {
+                console.log('Aborted.');
+                return;
+            }
 
-                    const createdContainers = containers.map(item => {
-                        console.log(`Creating container ${item.name}`);
-                        const container = gestalt.createContainer(item, state);
-                        return container;
-                    });
-
-                    displayRunningContainers(createdContainers);
-                    console.log('Done.');
-                });
+            const createdContainers = containers.map(item => {
+                console.log(`Creating container ${item.name}`);
+                const container = gestalt.createContainer(item, state);
+                return container;
             });
+
+            displayRunningContainers(createdContainers);
+            console.log('Done.');
         });
     });
 
@@ -120,4 +118,4 @@ exports.handler = function (argv) {
             callback(answers.confirm);
         });
     }
-}
+});

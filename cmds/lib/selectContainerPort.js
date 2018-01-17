@@ -1,6 +1,4 @@
-#!/usr/bin/env node
-
-exports.run = (container, callback) => {
+exports.run = async (container) => {
     const selectResource = require('./selectResourceUI');
 
     const options = {
@@ -11,7 +9,5 @@ exports.run = (container, callback) => {
         resources: container.properties.port_mappings || []
     }
 
-    selectResource.run(options, answers => {
-        if (callback) callback(answers);        
-    });    
+    return selectResource.run(options);
 }

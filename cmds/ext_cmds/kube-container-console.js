@@ -1,7 +1,8 @@
+const cmd = require('../lib/cmd-base');
 exports.command = 'kube-container-console'
 exports.desc = 'Container Console (Kubernetes)'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gestaltState = require('../lib/gestalt-state');
     const GestaltKubeClient = require('../lib/gestalt-kube-client');
     const gestalt = require('../lib/gestalt')
@@ -21,33 +22,32 @@ exports.handler = function (argv) {
     } else {
         const providerConfig = gestaltState.loadConfigFile('providers.json');
         // No command line args, interactive mode
-        selectHierarchy.resolveEnvironment().then(() => {
+        await selectHierarchy.resolveEnvironment();
 
-            // Use the container's provider to get the cluster name e.g. 'dev' or 'prod' so that the kubeconfig can be downloaded via ?cluster=dev
-            const env = gestalt.getCurrentEnvironment();
-            // const container = gestalt.fetchCurrentContainer(); // Get the focused container
+        // Use the container's provider to get the cluster name e.g. 'dev' or 'prod' so that the kubeconfig can be downloaded via ?cluster=dev
+        const env = gestalt.getCurrentEnvironment();
+        // const container = gestalt.fetchCurrentContainer(); // Get the focused container
 
-            selectContainerOrCurrent(container => {
-                if (!container) {
-                    console.log("No selection.");
-                    return;
-                }
-                const clusterName = providerConfig[container.properties.provider.id];
-                const kube = new GestaltKubeClient({ cluster: clusterName });
+        selectContainerOrCurrent(container => {
+            if (!container) {
+                console.log("No selection.");
+                return;
+            }
+            const clusterName = providerConfig[container.properties.provider.id];
+            const kube = new GestaltKubeClient({ cluster: clusterName });
 
-                // Select the container instance
+            // Select the container instance
 
-                if (container.properties.instances.length > 1) {
-                    // More than one container instance, choose
-                    selectContainerInstance.run(container, (inst) => {
-                        displayHint(clusterName, inst.id, env.id);
-                        accessConsole(kube, env, inst);
-                    });
-                } else {
-                    displayHint(clusterName, container.properties.instances[0].id, env.id);
-                    accessConsole(kube, env, container.properties.instances[0]);
-                }
-            });
+            if (container.properties.instances.length > 1) {
+                // More than one container instance, choose
+                selectContainerInstance.run(container).then(inst => {
+                    displayHint(clusterName, inst.id, env.id);
+                    accessConsole(kube, env, inst);
+                });
+            } else {
+                displayHint(clusterName, container.properties.instances[0].id, env.id);
+                accessConsole(kube, env, container.properties.instances[0]);
+            }
         });
     }
 
@@ -59,7 +59,9 @@ exports.handler = function (argv) {
             });
         } else {
             // No container in current context, prompt
-            selectContainer.run({}, callback);
+            selectContainer.run({}).then(container => {
+                callback(container);
+            });
         }
     }
 
@@ -79,4 +81,4 @@ exports.handler = function (argv) {
             console.log('Console session ended.');
         });
     }
-}
+});

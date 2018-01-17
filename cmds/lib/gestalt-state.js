@@ -87,8 +87,8 @@ exports.saveConfig = (config) => {
 function saveConfigToFile(file, config) {
     const contents = `${JSON.stringify(config, null, 2)}\n`;
     if (!fs.existsSync(CONFIG_DIR)) {
-        console.log("Creating...")
         fs.mkdirSync(CONFIG_DIR);
+        console.log(`Created ${CONFIG_DIR}.`);
     }
     fs.writeFileSync(`${CONFIG_DIR}/${file}`, contents);
 }
@@ -105,8 +105,8 @@ function fileExists(file) {
 function writeFile(file, contents) {
     const dir = getConfigDir();
     if (!fs.existsSync(dir)) {
-        console.log("Creating...")
         fs.mkdirSync(dir);
+        console.log(`Created ${dir}.`);
     }
     fs.writeFileSync(`${dir}/${file}`, contents);
 }
@@ -126,7 +126,6 @@ function getConfigDir() {
     if (dir.indexOf('://') > -1) {
         dir = String(dir).substring(dir.indexOf('://') + 3);
     }
-
     return `${CONFIG_DIR}/${dir}`;
 }
 

@@ -17,33 +17,32 @@ exports.handler = cmd.handler(async function (argv) {
     console.log("Select containers to delete (use arrows and spacebar to modify selection)");
     console.log();
 
-    selectContainer.run({ mode: 'checkbox', defaultChecked: false }, (selectedContainers) => {
-        console.log();
+    const selectedContainers = await selectContainer.run({ mode: 'checkbox', defaultChecked: false });
+    console.log();
 
-        displayRunningContainers(selectedContainers);
+    displayRunningContainers(selectedContainers);
 
-        doConfirm(confirmed => {
-            if (!confirmed) {
-                console.log('Aborted.');
-                return;
-            }
+    doConfirm(confirmed => {
+        if (!confirmed) {
+            console.log('Aborted.');
+            return;
+        }
 
-            // TODO:
-            // const promises = selectedContainers.map(item => {
-            //     return new Promise((reject, resolve) => {
-            //         console.log(`Deleting container ${item.name}`);
-            //         resolve();
-            //     }).then(
-            //         gestalt.deleteContainer(item)
-            //     );
-            // });
-            const promises = selectedContainers.map(item => {
-                return gestalt.deleteContainer(item)
-            });
+        // TODO:
+        // const promises = selectedContainers.map(item => {
+        //     return new Promise((reject, resolve) => {
+        //         console.log(`Deleting container ${item.name}`);
+        //         resolve();
+        //     }).then(
+        //         gestalt.deleteContainer(item)
+        //     );
+        // });
+        const promises = selectedContainers.map(item => {
+            return gestalt.deleteContainer(item)
+        });
 
-            Promise.all(promises).then(results => {
-                console.log('Done.');
-            });
+        Promise.all(promises).then(results => {
+            console.log('Done.');
         });
     });
 

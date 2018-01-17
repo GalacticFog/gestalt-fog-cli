@@ -1,11 +1,11 @@
 'use strict';
+const cmd = require('../lib/cmd-base');
 exports.command = 'configure-gitlab-project'
 exports.desc = 'Configure Gitlab project'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const gitlab = require('../lib/gestalt-gitlab-client');
     const selectResource = require('../lib/selectResourceUI');
-    // const selectGestaltContext = require('../lib/selectOrgWorkspaceEnvironment');
     const selectHierarchy = require('../lib/selectHierarchy');
     const chalk = require('chalk');
     const inquirer = require('inquirer');
@@ -88,7 +88,7 @@ exports.handler = function (argv) {
             }
         });
 
-        selectResource.run(options, (selection) => {
+        selectResource.run(options).then(selection => {
             callback(null, selection);
         });
     }
@@ -235,4 +235,4 @@ stop_review:
             callback(answers.confirm);
         });
     }
-}
+});

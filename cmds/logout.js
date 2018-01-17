@@ -1,7 +1,9 @@
+'use strict';
+const cmd = require('./lib/cmd-base');
 exports.command = 'logout'
-exports.desc = 'Logout'
+exports.desc = 'Logout of Gestalt Platform Instance'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
 
     const gestaltState = require('./lib/gestalt-state');
 
@@ -12,4 +14,4 @@ exports.handler = function (argv) {
     gestaltState.clearCachedFiles();
 
     console.log("Logged out.");
-}
+});

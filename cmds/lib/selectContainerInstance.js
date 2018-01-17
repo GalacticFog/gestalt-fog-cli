@@ -1,6 +1,6 @@
 'use strict';
 
-exports.run = (container, callback) => {
+exports.run = async (container) => {
     const selectResource = require('./selectResourceUI');
     const options = {
         mode: 'autocomplete',
@@ -10,7 +10,5 @@ exports.run = (container, callback) => {
         resources: container.properties.instances || []
     }
 
-    selectResource.run(options, answers => {
-        callback(answers);
-    });
+    return selectResource.run(options);
 }

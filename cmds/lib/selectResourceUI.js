@@ -6,6 +6,7 @@ exports.run = (options, callback) => {
     if (!options.fields) throw Error("missing options.fields");
     if (!options.mode) throw Error("missing options.mode");
     // if (!callback) throw Error("missing callback");
+    if (callback) throw Error('Not using callbacks anymore');
 
     const inquirer = require('inquirer');
     inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));

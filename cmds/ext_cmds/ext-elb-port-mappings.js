@@ -279,7 +279,7 @@ exports.handler = function (argv) {
             }
 
             // Collect user input
-            selectElbListeners.run({}, elb, (selectedListeners) => {
+            selectElbListeners.run({}, elb).then(selectedListeners => {
 
                 console.log(selectedListeners);
 
@@ -396,7 +396,7 @@ exports.handler = function (argv) {
             })
         }
 
-        selectResource.run(options, result => {
+        selectResource.run(options).then(result => {
             // console.log();
             // console.log(`${result.value.LoadBalancerName} selected.`);
             // console.log();
@@ -420,7 +420,7 @@ exports.handler = function (argv) {
                 resources: certs
             }
 
-            selectResource.run(options, result => {
+            selectResource.run(options).then(result => {
                 // console.log();
                 // console.log(`${result.DomainName} selected.`);
                 // console.log();
@@ -458,7 +458,7 @@ exports.handler = function (argv) {
                 resources: opts.map(o => { name: o })
             }
 
-            selectResource.run(options, selection => {
+            selectResource.run(options).then(selection => {
                 if (callback) callback(selection.name);
             });
         } else {

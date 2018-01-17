@@ -10,18 +10,17 @@ exports.handler = cmd.handler(async function (argv) {
 
     // 1) Select Container
     await selectHierarchy.resolveEnvironment();
-    selectContainer.run({}, (container) => {
-        if (argv.raw) {
-            console.log(JSON.stringify(container, null, 2));
-        } else {
-            showContainer(container);
-            showInstances(container);
-            // showCommands(container);
+    const container = await selectContainer.run({});
+    if (argv.raw) {
+        console.log(JSON.stringify(container, null, 2));
+    } else {
+        showContainer(container);
+        showInstances(container);
+        // showCommands(container);
 
-            console.log(`Use '--raw' to see raw JSON output`);
-            console.log();
-        }
-    });
+        console.log(`Use '--raw' to see raw JSON output`);
+        console.log();
+    }
 
     function showContainer(c) {
         const options = {
