@@ -522,7 +522,14 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
 
         callback(null, { username: username });
     }).catch(res => {
-        callback(JSON.parse(res.response.body).error_description);
+        // console.log(JSON.stringify(res,null, 2))
+        if (res.message) {
+            callback(res.message);
+        } else if (res.response && res.response.body) {
+            callback(JSON.parse(res.response.body).error_description);
+        } else {
+            callback(res);
+        }
     });
 }
 
