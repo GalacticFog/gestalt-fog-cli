@@ -1,14 +1,15 @@
+const gestaltState = require('../lib/gestalt-state');
+const GestaltKubeClient = require('../lib/gestalt-kube-client');
+const gestalt = require('../lib/gestalt')
+const selectContainerInstance = require('../lib/selectContainerInstance');
+const selectContainer = require('../lib/selectContainer');
+const selectHierarchy = require('../lib/selectHierarchy');
+
 const cmd = require('../lib/cmd-base');
 exports.command = 'kube-container-logs'
 exports.desc = 'Container logs (Kubernetes)'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const gestaltState = require('../lib/gestalt-state');
-    const GestaltKubeClient = require('../lib/gestalt-kube-client');
-    const gestalt = require('../lib/gestalt')
-    const selectContainerInstance = require('../lib/selectContainerInstance');
-    const selectContainer = require('../lib/selectContainer');
-    const selectHierarchy = require('../lib/selectHierarchy');
 
     if (argv.cluster || argv.env || argv.instance) {
         if (!argv.env) throw Error('missing argv.env');
@@ -24,54 +25,48 @@ exports.handler = cmd.handler(async function (argv) {
         const providerConfig = gestaltState.loadConfigFile('providers.json');
         await selectHierarchy.resolveEnvironment();
         const env = gestalt.getCurrentEnvironment();
-        // const container = gestalt.fetchCurrentContainer(); // Get the focused container
 
-        selectContainerOrCurrent(container => {
-            if (!container) {
-                console.log("No selection.");
-                return;
-            }
+        const container = await selectContainerOrCurrent();
+        if (!container) {
+            console.log("No selection.");
+            return;
+        }
 
-            const clusterName = providerConfig[container.properties.provider.id];
-            const kube = new GestaltKubeClient({ cluster: clusterName });
+        const clusterName = providerConfig[container.properties.provider.id];
+        const kube = new GestaltKubeClient({ cluster: clusterName });
 
-            // Select the container instance
+        // Select the container instance
 
-            console.log(`Container ${container.name}:`);
-            console.log();
+        console.log(`Container ${container.name}:`);
+        console.log();
 
-            if (container.properties.instances.length > 1) {
-                // More than one container instance, choose
-                selectContainerInstance.run(container).then(inst => {
-                    displayHint(clusterName, inst.id, env.id);
-                    accessLogs(kube, env, inst, argv);
-                });
-            } else {
-                displayHint(clusterName, container.properties.instances[0].id, env.id);
-                accessLogs(kube, env, container.properties.instances[0], argv);
-            }
-        });
+        if (container.properties.instances.length > 1) {
+            // More than one container instance, choose
+            const inst = await selectContainerInstance.run(container);
+            displayHint(clusterName, inst.id, env.id);
+            accessLogs(kube, env, inst, argv);
+        } else {
+            displayHint(clusterName, container.properties.instances[0].id, env.id);
+            accessLogs(kube, env, container.properties.instances[0], argv);
+        }
     }
 
-    function selectContainerOrCurrent(callback) {
+    async function selectContainerOrCurrent() {
         const state = gestaltState.getState();
         if (state.container && state.container.id) {
-            gestalt.fetchCurrentContainer().then(container => {
-                callback(container);
-            });
+            const container = await gestalt.fetchCurrentContainer();
+            return container;
         } else {
             // No container in current context, prompt
-            selectContainer.run({}).then(container => {
-                callback(container);
-            });
+            return selectContainer.run({});
         }
     }
 
     function displayHint(cluster, instance, env) {
         console.log('To run this command directly, run a command based on the following:');
         console.log();
-        console.log(`    ./container-logs --cluster ${cluster} --instance ${instance} --env ${env}`);
-        console.log(`    ./container-logs --cluster ${cluster} --instance ${instance} --env ${env} --follow --tail 100     # Follow log, view last 100 lines`);
+        console.log(`    fog ext kube-container-logs --cluster ${cluster} --instance ${instance} --env ${env}`);
+        console.log(`    fog ext kube-container-logs --cluster ${cluster} --instance ${instance} --env ${env} --follow --tail 100     # Follow log, view last 100 lines`);
         console.log();
     }
 
@@ -81,7 +76,10 @@ exports.handler = cmd.handler(async function (argv) {
         console.log();
 
         kube.accessPodLogs(env.id, inst.id, { follow: options.follow, tail: options.tail }).then(() => {
+            console.log();
             console.log('Done.');
+        }).catch(err => {
+            // console.log('ERROR ' + err)
         });
     }
 });

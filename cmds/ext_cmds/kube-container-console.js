@@ -1,14 +1,15 @@
+const gestaltState = require('../lib/gestalt-state');
+const GestaltKubeClient = require('../lib/gestalt-kube-client');
+const gestalt = require('../lib/gestalt')
+const selectContainerInstance = require('../lib/selectContainerInstance');
+const selectContainer = require('../lib/selectContainer');
+const selectHierarchy = require('../lib/selectHierarchy');
+
 const cmd = require('../lib/cmd-base');
 exports.command = 'kube-container-console'
 exports.desc = 'Container Console (Kubernetes)'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const gestaltState = require('../lib/gestalt-state');
-    const GestaltKubeClient = require('../lib/gestalt-kube-client');
-    const gestalt = require('../lib/gestalt')
-    const selectContainerInstance = require('../lib/selectContainerInstance');
-    const selectContainer = require('../lib/selectContainer');
-    const selectHierarchy = require('../lib/selectHierarchy');
 
     if (argv.cluster || argv.env || argv.instance) {
         if (!argv.env) throw Error('missing argv.env');
@@ -28,47 +29,42 @@ exports.handler = cmd.handler(async function (argv) {
         const env = gestalt.getCurrentEnvironment();
         // const container = gestalt.fetchCurrentContainer(); // Get the focused container
 
-        selectContainerOrCurrent(container => {
-            if (!container) {
-                console.log("No selection.");
-                return;
-            }
-            const clusterName = providerConfig[container.properties.provider.id];
-            const kube = new GestaltKubeClient({ cluster: clusterName });
+        const container = await selectContainerOrCurrent();
+        if (!container) {
+            console.log("No selection.");
+            return;
+        }
+        const clusterName = providerConfig[container.properties.provider.id];
+        const kube = new GestaltKubeClient({ cluster: clusterName });
 
-            // Select the container instance
+        // Select the container instance
 
-            if (container.properties.instances.length > 1) {
-                // More than one container instance, choose
-                selectContainerInstance.run(container).then(inst => {
-                    displayHint(clusterName, inst.id, env.id);
-                    accessConsole(kube, env, inst);
-                });
-            } else {
-                displayHint(clusterName, container.properties.instances[0].id, env.id);
-                accessConsole(kube, env, container.properties.instances[0]);
-            }
-        });
+        if (container.properties.instances.length > 1) {
+            // More than one container instance, choose
+            const inst = await selectContainerInstance.run(container);
+            displayHint(clusterName, inst.id, env.id);
+            accessConsole(kube, env, inst);
+
+        } else {
+            displayHint(clusterName, container.properties.instances[0].id, env.id);
+            accessConsole(kube, env, container.properties.instances[0]);
+        }
     }
 
-    function selectContainerOrCurrent(callback) {
+    async function selectContainerOrCurrent(callback) {
         const state = gestaltState.getState();
         if (state.container && state.container.id) {
-            gestalt.fetchCurrentContainer().then(container => {
-                callback(container);
-            });
+            return await gestalt.fetchCurrentContainer();
         } else {
             // No container in current context, prompt
-            selectContainer.run({}).then(container => {
-                callback(container);
-            });
+            return selectContainer.run({});
         }
     }
 
     function displayHint(cluster, instance, env) {
         console.log('To run this command directly, run the following:');
         console.log();
-        console.log(`    ./container-console --cluster ${cluster} --instance ${instance} --env ${env}`);
+        console.log(`    fog ext kube-container-console --cluster ${cluster} --instance ${instance} --env ${env}`);
         console.log();
     }
 

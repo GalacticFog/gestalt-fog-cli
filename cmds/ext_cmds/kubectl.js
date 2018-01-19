@@ -1,14 +1,15 @@
 'use strict';
+const cmd = require('../lib/cmd-base');
 exports.command = 'kubectl'
 exports.desc = 'kubectl'
 exports.builder = {}
-exports.handler = function (argv) {
+exports.handler = cmd.handler(async function (argv) {
     const GestaltKubeClient = require('../lib/gestalt-kube-client');
 
     try {
         const argv = [].concat(process.argv);
         argv.splice(0, 4);
-        console.log(argv)
+        // console.log(argv)
 
         // Use the container's provider to get the cluster name e.g. 'dev' or 'prod' so that the kubeconfig can be downloaded via ?cluster=dev
         const kube = new GestaltKubeClient({ cluster: argv[0] });
@@ -17,13 +18,11 @@ exports.handler = function (argv) {
 
         // Select the container instance
 
-        console.log(argv)
+        // console.log(argv)
 
-        kube.runCommand(argv).then(() => {
-            console.log('Done.');
-        });
+        await kube.runCommand(argv);
 
     } catch (err) {
-        console.log(err);
+        // console.log(err.message);
     }
-}
+});
