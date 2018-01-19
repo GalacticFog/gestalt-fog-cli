@@ -2,7 +2,14 @@
 const cmd = require('../lib/cmd-base');
 exports.command = 'elb-port-mappings'
 exports.desc = 'ELB Port Mappings'
-exports.builder = {}
+exports.builder = {
+    cluster: {
+        description: 'cluster'
+    },
+    all: {
+        description: 'Include unmapped ports'
+    },
+}
 exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt');
     const gestaltState = require('../lib/gestalt-state');
@@ -62,24 +69,27 @@ exports.handler = cmd.handler(async function (argv) {
     function printUsage() {
         console.log(`Usage:`);
         console.log();
-        console.log(`  list clusters:          ${argv['$0']} clusters`);
-        // console.log(`  list certificates:      ${argv['$0']} --cluster <cluster> list-certs`);
-        console.log(`  list port mappings:     ${argv['$0']} --cluster <cluster> list`);
-        console.log(`  create port mapping:    ${argv['$0']} --cluster <cluster> create`);
-        console.log(`  delete port mapping:    ${argv['$0']} --cluster <cluster> delete`);
+        console.log(`  list clusters:          ${argv['$0']} elb-port-mappings clusters`);
+        // console.log(`  list certificates:      ${argv['$0']} elb-port-mappings --cluster <cluster> list-certs`);
+        console.log(`  list port mappings:     ${argv['$0']} elb-port-mappings --cluster <cluster> list`);
+        console.log(`  create port mapping:    ${argv['$0']} elb-port-mappings --cluster <cluster> create`);
+        console.log(`  delete port mapping:    ${argv['$0']} elb-port-mappings --cluster <cluster> delete`);
+        console.log();
+        console.log(`  use '--all' to show unmapped ports`);
         console.log();
     }
 
-    function createMapping(elb, listener) {
+    async function createMapping(elb, listener) {
         const cluster = argv.cluster;
         const resources = doPut(`/clusters/${cluster}/elbs/${elb}/ports/${listener.LoadBalancerPort}`, listener);
+        return resources;
     }
 
-    function deleteMapping(elb, lbPort) {
+    async function deleteMapping(elb, lbPort) {
         const cluster = argv.cluster;
         if (!lbPort) throw Error(`missing lbPort`);
 
-        doDelete(`/clusters/${cluster}/elbs/${elb}/ports/${lbPort}`);
+        return doDelete(`/clusters/${cluster}/elbs/${elb}/ports/${lbPort}`);
     }
 
     function listClusters() {
@@ -134,7 +144,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     async function doDelete(path) {
         const url = await getServiceUrl();
-        await gestalt.httpDelete(`${url}${path}`);
+        return gestalt.httpDelete(`${url}${path}`);
     }
 
     async function doPut(path, body) {
@@ -150,9 +160,9 @@ exports.handler = cmd.handler(async function (argv) {
             console.log(`Fetching information from cluster '${cluster}'...`);
             let resources = await doGet(`/clusters/${cluster}/external_mappings`);
 
-            resources.elbs.map(elb => {
+            for (let elb of resources.elbs) {
                 displayMappedServices(elb.name, elb.listeners);
-            })
+            }
 
             if (argv.all) {
                 displayUnmappedServices(resources.unmapped_services);
@@ -242,172 +252,133 @@ exports.handler = cmd.handler(async function (argv) {
         return (await gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY))[argv.cluster]['service_url'];
     }
 
-
-    function promptToContinue(message, callback) {
-        // Prompt to continue
-        const questions = [
-            {
-                message: message,
-                type: 'confirm',
-                name: 'confirm',
-                default: false
-            },
-        ];
-        inquirer.prompt(questions).then(answers => {
-            const contents = JSON.stringify(answers, null, '  ');
-
-            if (answers.confirm) {
-                callback(true);
-            } else {
-                callback(false);
-            }
-        });
-    }
-
-
     async function deleteExternalPortMappingInteractive() {
         // Select ELB to expose to
         const lbs = await doGet(`/clusters/${argv.cluster}/elbs`);
 
-        selectELB(lbs, (err, elb) => {
-            if (err) {
-                console.error(chalk.red(`Error: ${err.message}`));
-                return;
+        const elb = await selectELB(lbs);
+
+        // Collect user input
+        const selectedListeners = await selectElbListeners.run({}, elb);
+
+        // Display summary to the user before executing
+        const confirmed = await summarizeAndConfirmDeleteELBListener(elb.LoadBalancerName, selectedListeners);
+        if (confirmed) {
+
+            // Confirmed, perform the execution
+            for (let listener of selectedListeners) {
+                await deleteMapping(elb.LoadBalancerName, listener.LoadBalancerPort);
+                console.log(chalk.green(`Deleted port ${listener.LoadBalancerPort} from ELB ${elb.LoadBalancerName}.`));
             }
 
-            // Collect user input
-            selectElbListeners.run({}, elb).then(selectedListeners => {
-
-                console.log(selectedListeners);
-
-                // Display summary to the user before executing
-                summarizeAndConfirmDeleteELBListener(elb.LoadBalancerName, selectedListeners, () => {
-
-                    // Confirmed, perform the execution
-                    selectedListeners.map(listener => {
-                        deleteMapping(elb.LoadBalancerName, listener.LoadBalancerPort);
-                        console.log(chalk.green(`Deleted port ${listener.LoadBalancerPort} from ELB ${elb.LoadBalancerName}.`));
-                    })
-
-                    // Show details after the delete operations
-                    // showElbDetails(elb.LoadBalancerName);
-                });
-            });
-        });
+            // Show details after the delete operations
+            // showElbDetails(elb.LoadBalancerName);
+        } else {
+            console.log('Aborted.');
+        }
     }
 
-    function createExternalPortMappingInteractive() {
+    async function createExternalPortMappingInteractive() {
 
         console.log(`Fetching ELBS for cluster '${argv.cluster}'...`);
-        const elbs = doGet(`/clusters/${argv.cluster}/elbs`);
+        const elbs = await doGet(`/clusters/${argv.cluster}/elbs`);
 
-        selectELB(elbs, (err, elb) => {
-            if (err) {
-                console.error(chalk.red(`Error: ${err.message}`));
-                return;
+        const elb = await selectELB(elbs);
+
+        // Show ELB Details
+        displayAmazon.displayDetails(elb);
+
+        const externalPort = await userInput('ELB port to expose:', null);
+
+        const internalPort = await userInput("Cluster Service port to expose:", externalPort);
+
+        const externalProtocol = await selectOptions('ELB protocol:', ['TCP', 'HTTPS', 'HTTP']);
+
+        const cert = await selectCertificateIfNecessary(externalProtocol == 'HTTPS', elb.LoadBalancerName);
+
+        let protocols = null;
+        if (externalProtocol === 'TCP') {
+            protocols = ['TCP'];
+        } else {
+            protocols = ['HTTP', 'HTTPS'];
+        }
+
+        const internalProtocol = await selectOptions('Cluster Service protocol:', protocols);
+
+        const params = {
+            elb: elb.LoadBalancerName,
+            listener: {
+                InstancePort: internalPort,
+                InstanceProtocol: internalProtocol,
+                LoadBalancerPort: externalPort,
+                Protocol: externalProtocol
             }
+        };
 
-            // Show ELB Details
-            displayAmazon.displayDetails(elb);
+        if (cert) {
+            params.cert = cert;
+            params.listener.SSLCertificateId = cert.CertificateArn;
+        }
 
-            userInput('ELB port to expose:', null, externalPort => {
+        // Display summary to the user before executing
+        const confirmed = await summarizeAndConfirmCreateELBListener(params);
+        if (confirmed) {
 
-                userInput("Cluster Service port to expose:", externalPort, internalPort => {
+            // Confirmed, perform the execution
+            await createMapping(params.elb, params.listener);
+            console.log(chalk.bold.green("Added listener."));
 
-                    selectOptions('ELB protocol:', ['TCP', 'HTTPS', 'HTTP'], externalProtocol => {
-
-                        selectCertificateIfNecessary(externalProtocol == 'HTTPS', elb.LoadBalancerName, (cert) => {
-
-                            let protocols = null;
-                            if (externalProtocol === 'TCP') {
-                                protocols = ['TCP'];
-                            } else {
-                                protocols = ['HTTP', 'HTTPS'];
-                            }
-
-                            selectOptions('Cluster Service protocol:', protocols, internalProtocol => {
-
-                                const params = {
-                                    elb: elb.LoadBalancerName,
-                                    listener: {
-                                        InstancePort: internalPort,
-                                        InstanceProtocol: internalProtocol,
-                                        LoadBalancerPort: externalPort,
-                                        Protocol: externalProtocol
-                                    }
-                                };
-
-                                if (cert) {
-                                    params.cert = cert;
-                                    params.listener.SSLCertificateId = cert.CertificateArn;
-                                }
-
-                                // console.log(JSON.stringify(params, null, 2));
-
-                                // Display summary to the user before executing
-                                summarizeAndConfirmCreateELBListener(params, () => {
-
-                                    // Confirmed, perform the execution
-                                    createMapping(params.elb, params.listener);
-                                    console.log(chalk.bold.green("Added listener."));
-
-                                    // showElbDetails(elb.LoadBalancerName);
-                                });
-                            });
-                        });
-                    });
-                });
-            });
-        });
+            // showElbDetails(elb.LoadBalancerName);
+        } else {
+            console.log('Aborted');
+        }
     }
 
     // ----------------------------INTERACTIVE FUNCTIONS
 
     function showElbDetails(elbName) {
         const lbs = doGet(`/clusters/${argv.cluster}/elbs`);
-        lbs.map(lb => {
+        for (let lb of lbs) {
             if (elbName == lb.LoadBalancerName) {
                 // console.log(JSON.stringify(lb, null, 2));
                 displayAmazon.displayDetails(lb);
             }
-        });
+        }
     }
 
 
-    function selectELB(lbs, callback) {
+    function selectELB(lbs) {
+
+        const res = lbs.map(lbd => {
+            return {
+                name: lbd.LoadBalancerName,
+                dnsname: lbd.DNSName,
+                listeners: `${lbd.ListenerDescriptions.length} listeners`,
+                zones: `${lbd.AvailabilityZones.join(',')}`,
+                instances: `${lbd.Instances.length} instances`,
+                value: Object.assign({}, lbd)
+            }
+        });
 
         const options = {
             mode: 'autocomplete',
             message: "Select ELB",
             fields: ['name', 'dnsname', 'listeners', 'zones', 'instances'],
             sortBy: 'name',
-            resources: lbs.map(lbd => {
-                return {
-                    name: lbd.LoadBalancerName,
-                    dnsname: lbd.DNSName,
-                    listeners: `${lbd.ListenerDescriptions.length} listeners`,
-                    zones: `${lbd.AvailabilityZones.join(',')}`,
-                    instances: `${lbd.Instances.length} instances`,
-                    value: Object.assign({}, lbd)
-                }
-            })
+            resources: res
         }
 
-        selectResource.run(options).then(result => {
-            // console.log();
-            // console.log(`${result.value.LoadBalancerName} selected.`);
-            // console.log();
-
-            callback(null, result.value);
+        return selectResource.run(options).then(result => {
+            return result.value;
         });
     }
 
-    function selectCertificateIfNecessary(necessary, elb, callback) {
+    async function selectCertificateIfNecessary(necessary, elb, callback) {
         if (!necessary) {
-            callback()
+            return new Promise(resolve => resolve());
         } else {
             console.log(`Fetching HTTPS certificates allowed for ELB '${elb}'...`);
-            const certs = doGet(`/clusters/${argv.cluster}/elbs/${elb}/certs`);
+            const certs = await doGet(`/clusters/${argv.cluster}/elbs/${elb}/certs`);
 
             const options = {
                 mode: 'autocomplete',
@@ -417,14 +388,14 @@ exports.handler = cmd.handler(async function (argv) {
                 resources: certs
             }
 
-            selectResource.run(options).then(result => {
+            return selectResource.run(options).then(result => {
                 // console.log();
                 // console.log(`${result.DomainName} selected.`);
                 // console.log();
 
                 result.SSLCertificateId = result.CertificateArn.split('/')[1];
 
-                callback(result);
+                return result;
             });
         }
     }
@@ -439,56 +410,31 @@ exports.handler = cmd.handler(async function (argv) {
             },
         ];
 
-        inquirer.prompt(questions).then(answers => {
-            callback(answers.value);
+        return inquirer.prompt(questions).then(answers => {
+            return answers.value;
         });
     }
 
     function selectOptions(message, opts, callback) {
         if (opts.length == 0) throw Error('No options specified');
         if (opts.length > 1) {
+            const res = opts.map(o => { return { name: o } });
             let options = {
                 mode: 'list',
                 message: message,
                 fields: ['name'],
                 sortBy: 'name',
-                resources: opts.map(o => { name: o })
+                resources: res
             }
 
-            selectResource.run(options).then(selection => {
-                if (callback) callback(selection.name);
-            });
+            console.log('test')
+
+            return selectResource.run(options).then(selection => selection.name);
         } else {
-            callback(opts[0]);
+            return new Promise(resolve => {
+                resolve(opts[0]);
+            })
         }
-    }
-
-
-    function summarizeAndConfirmCreateELBListener(params, callback) {
-        console.log();
-        console.log(chalk.bold(`The following listener will be added to ELB ${chalk.green(params.elb)}:`));
-
-        displayAddListenerAction(params);
-
-        // Prompt to continue
-        const questions = [
-            {
-                message: "Proceed to add ELB listener?",
-                type: 'confirm',
-                name: 'confirm',
-                default: false
-            },
-        ];
-
-        inquirer.prompt(questions).then(answers => {
-            const contents = JSON.stringify(answers, null, '  ');
-
-            if (answers.confirm) {
-                callback();
-            } else {
-                console.log("Aborted.")
-            }
-        });
     }
 
     function displayListeners(listeners) {
@@ -517,8 +463,28 @@ exports.handler = cmd.handler(async function (argv) {
         displayResource.run(options, resources);
     }
 
+    function summarizeAndConfirmCreateELBListener(params) {
+        console.log();
+        console.log(chalk.bold(`The following listener will be added to ELB ${chalk.green(params.elb)}:`));
 
-    function summarizeAndConfirmDeleteELBListener(elb, listeners, callback) {
+        displayAddListenerAction(params);
+
+        // Prompt to continue
+        const questions = [
+            {
+                message: "Proceed to add ELB listener?",
+                type: 'confirm',
+                name: 'confirm',
+                default: false
+            },
+        ];
+
+        return inquirer.prompt(questions).then(answers => {
+            return answers.confirm;
+        });
+    }
+
+    function summarizeAndConfirmDeleteELBListener(elb, listeners) {
         console.log();
         console.log(chalk.bold(`The following listeners will be deleted from ELB ${chalk.green(elb)}:`));
 
@@ -534,14 +500,8 @@ exports.handler = cmd.handler(async function (argv) {
             },
         ];
 
-        inquirer.prompt(questions).then(answers => {
-            const contents = JSON.stringify(answers, null, '  ');
-
-            if (answers.confirm) {
-                callback();
-            } else {
-                console.log("Aborted.")
-            }
+        return inquirer.prompt(questions).then(answers => {
+            return answers.confirm;
         });
     }
 });
