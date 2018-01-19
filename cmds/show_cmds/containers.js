@@ -43,7 +43,6 @@ async function showContainers(argv) {
 
 async function showAllContainers(argv) {
 
-
     process.stdout.write('Reading environments');
 
     const fqons = await gestalt.fetchOrgFqons();
@@ -61,19 +60,23 @@ async function showAllContainers(argv) {
                 id: env.id
             }
         }
-        let containers = await gestalt.fetchContainers(state);
-        containers.map(item => {
-            // TODO
-            item.env = { name: env.name };
-            item.fqon = env.org.properties.fqon;
-            item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
-            if (item.description) {
-                if (item.description.length > 20) {
-                    item.description = item.description.substring(0, 20) + '...';
+        try {
+            let containers = await gestalt.fetchContainers(state);
+            containers.map(item => {
+                // TODO
+                item.env = { name: env.name };
+                item.fqon = env.org.properties.fqon;
+                item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
+                if (item.description) {
+                    if (item.description.length > 20) {
+                        item.description = item.description.substring(0, 20) + '...';
+                    }
                 }
-            }
-        });
-        allContainers = allContainers.concat(containers);
+            });
+            allContainers = allContainers.concat(containers);
+        } catch (err) {
+            console.log(`Err processing env ${env.name}, org ${env.org.properties.fqon}`);
+        }
     }
 
     // Transform for display

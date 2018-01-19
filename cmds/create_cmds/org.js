@@ -18,8 +18,6 @@ exports.handler = cmd.handler(async function (argv) {
 
         debug(`answers: ${answers}`);
         if (answers.confirm) {
-
-
             const orgSpec = {
                 name: answers.name,
                 description: answers.description
