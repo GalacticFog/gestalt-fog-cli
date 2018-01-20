@@ -59,23 +59,21 @@ exports.handler = cmd.handler(async function (argv) {
 
     displayRunningContainers(selectedContainers);
 
-    doConfirm(confirmed => {
-        if (!confirmed) {
-            console.log('Aborted.');
-            return;
-        }
+    const confirmed = await doConfirm();
+    if (!confirmed) {
+        console.log('Aborted.');
+        return;
+    }
 
-        const createContainerPromises = selectedContainers.map(item => {
-            const c = cloneContainerPayload(item);
-            return gestalt.createContainer(c, state);
-        });
+    const createContainerPromises = selectedContainers.map(item => {
+        const c = cloneContainerPayload(item);
+        return gestalt.createContainer(c, state);
+    });
 
-        Promise.all(createContainerPromises).then(results => {
-
-            const createdContainers = [].concat.apply([], results); // flatten array
-            displayRunningContainers(createdContainers);
-            console.log('Done.');
-        });
+    Promise.all(createContainerPromises).then(results => {
+        const createdContainers = [].concat.apply([], results); // flatten array
+        displayRunningContainers(createdContainers);
+        console.log('Done.');
     });
 
     function cloneContainerPayload(src) {
@@ -126,7 +124,7 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
 
-    function doConfirm(callback) {
+    function doConfirm() {
         const questions = [
             {
                 message: "Proceed?",
@@ -136,8 +134,8 @@ exports.handler = cmd.handler(async function (argv) {
             },
         ];
 
-        inquirer.prompt(questions).then(answers => {
-            callback(answers.confirm);
+        return inquirer.prompt(questions).then(answers => {
+            return answers.confirm;
         });
     }
 });

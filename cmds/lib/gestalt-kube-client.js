@@ -124,12 +124,11 @@ class GestaltKubeClient {
         });
     }
 
-    getServicesAllNamespaces(callback) {
+    getServicesAllNamespaces() {
         return obtainKubeConfig(this.options.cluster).then(kubeconfig => {
             const token = gestaltState.getCachedAuthToken();
             if (!token) {
-                callback(new Error(`No cached Gestalt auth token found, you may need to login first`, null));
-                return;
+                throw Error(`No cached Gestalt auth token found, you may need to login first`, null);
             }
 
             // call kubectl, passing in gestalt auth token.  This requires the target kube cluster has webhook
@@ -146,20 +145,12 @@ class GestaltKubeClient {
                     fs.unlinkSync(kubeconfig);
 
                     // report error
-                    if (callback) {
-                        callback(err, null);
-                    } else {
-                        return new Promise((resolve, reject) => { reject(err) });
-                    }
+                    return new Promise((resolve, reject) => { reject(err) });
                 } else {
                     const kuberesponse = JSON.parse(stdout);
 
                     // success
-                    if (callback) {
-                        callback(null, kuberesponse);
-                    } else {
-                        return new Promise(resolve => { resolve(kuberesponse) });
-                    }
+                    return new Promise(resolve => { resolve(kuberesponse) });
                 }
             });
         });

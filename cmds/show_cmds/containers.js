@@ -24,105 +24,41 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 async function showContainers(argv) {
-    const options = {
-        message: "Containers",
-        headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner'],
-        fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name'],
-        sortField: 'description',
-    }
-
     await selectHierarchy.resolveEnvironment();
-
-    const resources = await gestalt.fetchContainers();
-    resources.map(item => {
-        item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
-    })
-
-    displayResource.run(options, resources);
+    const containers = await gestalt.fetchContainers();
+    displayContainers(containers);
 }
 
 async function showAllContainers(argv) {
-
-    process.stdout.write('Reading environments');
-
     const fqons = await gestalt.fetchOrgFqons();
-    const envs = await gestalt.fetchOrgEnvironments(fqons);
-
-    let allContainers = [];
-
-    for (let env of envs) {
-        process.stdout.write('.');
-        const state = {
-            org: {
-                fqon: env.org.properties.fqon
-            },
-            environment: {
-                id: env.id
-            }
-        }
-        try {
-            let containers = await gestalt.fetchContainers(state);
-            containers.map(item => {
-                // TODO
-                item.env = { name: env.name };
-                item.fqon = env.org.properties.fqon;
-                item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
-                if (item.description) {
-                    if (item.description.length > 20) {
-                        item.description = item.description.substring(0, 20) + '...';
-                    }
-                }
-            });
-            allContainers = allContainers.concat(containers);
-        } catch (err) {
-            console.log(`Err processing env ${env.name}, org ${env.org.properties.fqon}`);
-        }
-    }
-
-    // Transform for display
-
-    displayContainers(allContainers);
+    let containers = await gestalt.fetchOrgContainers(fqons);
+    displayContainers(containers);
 }
 
 async function showOrgContainers(argv) {
-
     await selectHierarchy.resolveOrg();
-
     const fqon = gestalt.getCurrentOrg().fqon;
-
-    const envs = await gestalt.fetchOrgEnvironments([fqon]);
-    const promises = envs.map(env => {
-        console.log(`Fetching containers from ${fqon}/'${env.name}'`);
-        const state = {
-            org: {
-                fqon: fqon
-            },
-            environment: {
-                id: env.id
-            }
-        }
-        return gestalt.fetchContainers(state);
-    });
-
-    const arr = await Promise.all(promises);
-    const containers = [].concat.apply([], arr);
-
-    containers.map(item => {
-        // TODO: How to pass environment
-        // item.env = { name: env.name };
-        item.fqon = fqon;
-        item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
-    });
-
+    const containers = await gestalt.fetchOrgContainers();
     displayContainers(containers);
 }
 
 function displayContainers(containers) {
     const options = {
         message: "Containers",
-        headers: ['Container', 'Description', 'Status', /*'Image',*/ 'Instances', 'Owner', 'FQON', 'ENV'],
-        fields: ['name', 'description', 'properties.status', /*'properties.image',*/ 'running_instances', 'owner.name', 'org.properties.fqon', 'env.name'],
+        headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner', 'FQON', 'ENV'],
+        fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'org.properties.fqon', 'environment.name'],
         sortField: 'org.properties.fqon',
+    }
+
+    // Transform for display
+    for (let item of containers) {
+        if (item.description) {
+            if (item.description.length > 20) {
+                item.description = item.description.substring(0, 20) + '...';
+            }
+        }
+        // item.fqon = fqon;
+        item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
     }
 
     displayResource.run(options, containers);

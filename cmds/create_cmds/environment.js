@@ -1,4 +1,6 @@
+const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
+const debug = cmd.debug;
 exports.command = 'environment'
 exports.desc = 'Create environment'
 exports.builder = {}
@@ -11,41 +13,41 @@ exports.handler = cmd.handler(async function (argv) {
 
     await selectHierarchy.resolveWorkspace();
 
-    promptForInput(answers => {
+    const answers = await promptForInput();
 
-        debug(`answers: ${answers}`);
-        if (answers.confirm) {
+    debug(`answers: ${answers}`);
+    if (answers.confirm) {
 
-            const envSpec = {
-                name: answers.name,
-                description: answers.description,
-                properties: {
-                    environment_type: answers.environment_type
-                }
-            };
+        const envSpec = {
+            name: answers.name,
+            description: answers.description,
+            properties: {
+                environment_type: answers.environment_type
+            }
+        };
 
-            gestalt.createEnvironment(envSpec).then(environment => {
+        const environment = await gestalt.createEnvironment(envSpec);
 
-                debug(`environment: ${environment}`);
+        debug(`environment: ${environment}`);
 
-                console.log('Environment created.');
-            });
-        } else {
-            console.log('Aborted.');
-        }
-    });
+        console.log('Environment created.');
+    } else {
+        console.log('Aborted.');
+    }
 
-    function promptForInput(callback) {
+    function promptForInput() {
         const questions = [
             {
                 message: "Name",
                 type: 'input',
                 name: 'name',
+                validate: inputValidation.resourceName
             },
             {
                 message: "Description",
                 type: 'input',
                 name: 'description',
+                validate: inputValidation.resourceDescription
             },
             {
                 message: "Type",
@@ -61,19 +63,6 @@ exports.handler = cmd.handler(async function (argv) {
             },
         ];
 
-        inquirer.prompt(questions).then(answers => {
-            callback(answers);
-        });
-    }
-
-    function debug(str) {
-        if (argv.debug) {
-            console.log(typeof str)
-            if (typeof str == 'object') {
-                console.log('[DEBUG] ' + JSON.stringify(str, null, 2));
-            } else {
-                console.log('[DEBUG] ' + str);
-            }
-        }
+        return inquirer.prompt(questions);
     }
 });

@@ -131,16 +131,14 @@ exports.handler = cmd.handler(async function (argv) {
                 console.log(`Not deleting volume '${name}' because status is '${volume.status.phase}', use '--force' to override.`);
             } else {
                 console.log();
-                promptToContinue(`Proceed to delete volume '${name}' on cluster '${cluster}'?`, confirmed => {
-                    if (confirmed) {
-                        console.log(`Deleting volume '${name}' on cluster '${cluster}'...`);
-                        gestalt.httpDelete(`${url}/volumes/${name}`).then(() => {
-                            console.log('Done.');
-                        });
-                    } else {
-                        console.log(`Aborted.`);
-                    }
-                });
+                const confirmed = await promptToContinue(`Proceed to delete volume '${name}' on cluster '${cluster}'?`);
+                if (confirmed) {
+                    console.log(`Deleting volume '${name}' on cluster '${cluster}'...`);
+                    await gestalt.httpDelete(`${url}/volumes/${name}`);
+                    console.log('Done.');
+                } else {
+                    console.log(`Aborted.`);
+                }
             }
         } catch (err) {
             console.log(err.message);
@@ -218,7 +216,7 @@ exports.handler = cmd.handler(async function (argv) {
         return (await gestaltServicesConfig.getServiceConfig(SERVICE_CONFIG_KEY))[cluster]['server'];
     }
 
-    function promptToContinue(message, callback) {
+    function promptToContinue(message) {
         // Prompt to continue
         const questions = [
             {
@@ -228,14 +226,8 @@ exports.handler = cmd.handler(async function (argv) {
                 default: false
             },
         ];
-        inquirer.prompt(questions).then(answers => {
-            const contents = JSON.stringify(answers, null, '  ');
-
-            if (answers.confirm) {
-                callback(true);
-            } else {
-                callback(false);
-            }
+        return inquirer.prompt(questions).then(answers => {
+            return answers.confirm;
         });
     }
 });

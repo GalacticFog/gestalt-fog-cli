@@ -57,7 +57,9 @@ exports.fetchGroups = () => {
     return fetchFromOrgs("groups", ['root']);
 }
 
-exports.fetchOrgEnvironments = (fqonList) => {
+exports.fetchOrgEnvironments = fetchOrgEnvironments;
+
+function fetchOrgEnvironments(fqonList) {
     return fetchFromOrgs("environments", fqonList);
 }
 
@@ -69,11 +71,59 @@ exports.fetchOrgLambdas = (fqonList) => {
     return fetchFromOrgs("lambdas", fqonList);
 }
 
+exports.fetchOrgContainers = (fqonList) => {
+    if (!fqonList) fqonList = [getGestaltState().org.fqon];
+
+    let promises = fqonList.map(fqon => {
+        const res = fetchContainersFromOrg(fqon);
+        return res;
+    });
+
+    return Promise.all(promises).then(results => {
+        return [].concat.apply([], results);
+    });
+}
+
+async function fetchContainersFromOrg(fqon) {
+    const state = getGestaltState();
+    if (!fqon) fqon = state.org.fqon; // default org
+
+    const envs = await fetchOrgEnvironments([fqon]);
+    const promises = envs.map(env => {
+        console.log(`Fetching containers from ${fqon}/'${env.name}'`);
+        const state2 = {
+            org: {
+                fqon: fqon
+            },
+            environment: {
+                id: env.id
+            }
+        }
+        return fetchContainers(state2).then(containers => {
+            for (let c of containers) {
+                c.environment = {
+                    name: env.name,
+                    description: env.description,
+                    id: env.id
+                };
+            }
+            return containers;
+        }).catch(err => {
+            console.log('Warning: ' + err.message);
+            return [];
+        });
+    });
+
+    const arr = await Promise.all(promises);
+    const containers = [].concat.apply([], arr);
+    return containers;
+}
+
 function fetchFromOrgs(type, fqonList) {
     if (!fqonList) fqonList = [getGestaltState().org.fqon];
 
     let promises = fqonList.map(fqon => {
-        console.log(`Fetching from ${fqon}...`);
+        console.log(`Fetching ${type} from ${fqon}...`);
         const res = meta_GET(`/${fqon}/${type}?expand=true`)
         return res;
     });
@@ -92,8 +142,21 @@ exports.fetchApis = (providedState) => {
     return fetchFromEnvironment('apis', providedState);
 }
 
-exports.fetchContainers = (providedState) => {
-    return fetchFromEnvironment('containers', providedState);
+exports.fetchContainers = fetchContainers;
+function fetchContainers(providedState) {
+    const state = providedState || getGestaltState();
+    if (!state.org) throw Error("No Org in current context");
+    if (!state.org.fqon) throw Error("No FQON in current context");
+    if (!state.environment) throw Error("No Environment in current context");
+    if (!state.environment.id) throw Error("No Environment ID in current context");
+    let url = `/${state.org.fqon}/environments/${state.environment.id}/containers?expand=true`;
+    return meta_GET(url).then(containers => {
+        for (let c of containers) {
+            c.environment = state.environment;
+            c.workspace = state.workspace;
+        }
+        return containers;
+    });
 }
 
 exports.fetchLambdas = (providedState) => {
@@ -129,13 +192,6 @@ exports.fetchApiEndpoints = (apiList) => {
         return [].concat.apply([], results);
     });
 }
-
-exports.fetchOrgContainers = (fqon) => {
-    const state = getGestaltState();
-    if (!fqon) fqon = state.org.fqon; // default org
-    return meta_GET(`/${fqon}/containers`); // can't use '?expand=true' unless in environment
-}
-
 
 exports.fetchProviderContainers = (provider) => {
     const state = getGestaltState();
@@ -291,20 +347,25 @@ exports.updateContainer = (container, providedState) => {
     return res;
 }
 
-exports.deleteContainer = (container, providedState) => {
+exports.deleteContainer = (container /*, providedState*/) => {
     if (!container) throw Error('missing container');
     if (!container.id) throw Error('missing container.id');
+    if (!container.org) throw Error('missing container.org');
+    if (!container.org.properties) throw Error('missing container.org.properties');
+    if (!container.org.properties.fqon) throw Error('missing container.org.properties.fqon');
 
-    const state = providedState || getGestaltState();
-    if (!state.org) throw Error("missing state.org");
-    if (!state.org.fqon) throw Error("missing state.org.fqon");
-    if (!container) throw Error("missing container");
-    if (!container.id) throw Error("missing container.id");
+    const fqon = container.org.properties.fqon;
+
+    // const state = providedState || getGestaltState();
+    // if (!state.org) throw Error("missing state.org");
+    // if (!state.org.fqon) throw Error("missing state.org.fqon");
+    // if (!container) throw Error("missing container");
+    // if (!container.id) throw Error("missing container.id");
 
     delete container.resource_type;
     delete container.resource_state;
 
-    const res = meta_DELETE(`/${state.org.fqon}/containers/${container.id}`);
+    const res = meta_DELETE(`/${fqon}/containers/${container.id}`);
     return res;
 }
 
@@ -546,6 +607,7 @@ async function http_GET(url, opts) {
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
     options.method = 'GET';
     options.uri = url;
+    // console.log(`GET ${url}`)
     const res = await request(options);
     return JSON.parse(res);
 }

@@ -4,7 +4,7 @@ const gestaltState = require('../lib/gestalt-state');
 const selectHierarchy = require('../lib/selectHierarchy');
 const selectProvider = require('../lib/selectProvider');
 const fs = require('fs');
-
+const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
 exports.command = 'container'
@@ -20,8 +20,6 @@ exports.builder = {
     }
 }
 exports.handler = cmd.handler(async function (argv) {
-
-
     if (argv.file) {
         // load from file
         // Create
@@ -70,89 +68,31 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     async function promptForInput() {
-
-        // Provider
-
-        // Name
-
-        // Network
-
-        // -- Resources --
-        // Image
-        // Num Instances
-        // CPU
-        // Memory
-        // Force Pull
-
-        // Command
-
-        // Description
-
-        // Port Mappings
-
-        // Volumes
-
-        // Secrets
-
-        // Env Vars
-
-        // Labels
-
-        // Health Checks
-
-
-        // {
-        //     "name": "test1",
-        //     "properties": {
-        //         "env": {
-        //         },
-        //         "labels": {
-        //         },
-        //         "volumes": [
-
-        //         ],
-        //         "secrets": [
-
-        //         ],
-        //         "port_mappings": [
-
-        //         ],
-        //         "health_checks": [
-
-        //         ],
-        //         "provider": {
-        //             "locations": [
-
-        //             ],
-        //             "id": "ff2c2f85-fa32-482c-a9e5-e421180f05e3"
-        //         },
-        //         "container_type": "DOCKER",
-        //         "force_pull": false,
-        //         "cpus": 0.1,
-        //         "memory": 128,
-        //         "num_instances": 1,
-        //         "network": "BRIDGE",
-        //         "image": "nginx"
-        //     }
-        // }
-
         const provider = await selectProvider.run({ type: 'CaaS', message: 'Select Provider', mode: 'list' });
 
-        const questions = [
+        const template = {};
+        if (provider.resource_type == 'CaaS::Kubernetes') {
+            template.network = 'default';
+        }
+
+        let questions = [
             {
                 message: "Name",
                 type: 'input',
                 name: 'name',
+                validate: inputValidation.resourceName
             },
             {
                 message: "Description",
                 type: 'input',
                 name: 'description',
+                validate: inputValidation.resourceDescription
             },
             {
                 message: "Image",
                 type: 'input',
                 name: 'properties.image',
+                validate: inputValidation.containerImage
             },
             {
                 message: "Force Pull Image",
@@ -160,29 +100,34 @@ exports.handler = cmd.handler(async function (argv) {
                 name: 'properties.force_pull',
                 default: true
             },
-            {
-                message: "Network",
-                type: 'input',
+            {   // For DCOS Only 
+                when: provider.resource_type == 'CaaS::DCOS',
+                message: "DC/OS Network Type",
+                type: 'list',
                 name: 'properties.network',
+                choices: ['BRIDGE', 'HOST'],
                 default: "BRIDGE"
             },
             {
                 message: "CPU",
                 type: 'input',
                 name: 'properties.cpus',
-                default: 0.1
+                default: 0.1,
+                validate: inputValidation.cpu
             },
             {
                 message: "Memory (MB)",
                 type: 'input',
                 name: 'properties.memory',
-                default: 128
+                default: 128,
+                validate: inputValidation.memory
             },
             {
                 message: "Number of instances",
                 type: 'input',
                 name: 'properties.num_instances',
-                default: 1
+                default: 1,
+                validate: inputValidation.containerNumInstances
             },
             {
                 message: "\nProceed to create container?",
@@ -196,6 +141,10 @@ exports.handler = cmd.handler(async function (argv) {
             answers.properties.provider = {
                 id: provider.id
             };
+
+            // merge in defaults
+            answers.properties = Object.assign(template, answers.properties);
+
             return answers;
         });
     }

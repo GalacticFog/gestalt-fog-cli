@@ -2,7 +2,8 @@ exports.run = async (opts, res) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
-    if (!res) res = await gestalt.fetchContainers();
+    if (!res) res = await gestalt.fetchLambdas();
+
     if (opts.name) {
         res = res.filter(c => {
             return c.name == opts.name;
@@ -14,8 +15,8 @@ exports.run = async (opts, res) => {
 
     let options = {
         mode: 'autocomplete',
-        message: "Select Container(s)",
-        fields: ['name', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'properties.provider.name'],
+        message: "Select Lambda",
+        fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
         sortBy: 'name',
         resources: res
     }

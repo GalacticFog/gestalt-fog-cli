@@ -1,4 +1,6 @@
+const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
+const debug = cmd.debug;
 exports.command = 'workspace'
 exports.desc = 'Create workspace'
 exports.builder = {}
@@ -15,37 +17,37 @@ exports.handler = cmd.handler(async function (argv) {
 
     debug(`parent: ${JSON.stringify(parent, null, 2)}`);
 
-    promptForInput(answers => {
+    const answers = await promptForInput();
 
-        debug(`answers: ${answers}`);
+    debug(`answers: ${answers}`);
 
-        if (answers.confirm) {
+    if (answers.confirm) {
 
-            const workspaceSpec = {
-                name: answers.name,
-                description: answers.description
-            };
+        const workspaceSpec = {
+            name: answers.name,
+            description: answers.description
+        };
 
-            gestalt.createWorkspace(workspaceSpec, parent.fqon).then(workspace => {
-                debug(`workspace: ${workspace}`);
-                console.log(`Workspace '${workspace.name}' created.`);
-            });
-        } else {
-            console.log('Aborted.');
-        }
-    });
+        const workspace = await gestalt.createWorkspace(workspaceSpec, parent.fqon);
+        debug(`workspace: ${workspace}`);
+        console.log(`Workspace '${workspace.name}' created.`);
+    } else {
+        console.log('Aborted.');
+    }
 
-    function promptForInput(callback) {
+    function promptForInput() {
         const questions = [
             {
                 message: "Name",
                 type: 'input',
                 name: 'name',
+                validate: inputValidation.resourceName
             },
             {
                 message: "Description",
                 type: 'input',
                 name: 'description',
+                validate: inputValidation.resourceDescription
             },
             {
                 message: "Proceed?",
@@ -55,19 +57,6 @@ exports.handler = cmd.handler(async function (argv) {
             },
         ];
 
-        inquirer.prompt(questions).then(answers => {
-            callback(answers);
-        });
-    }
-
-    function debug(str) {
-        if (argv.debug) {
-            console.log(typeof str)
-            if (typeof str == 'object') {
-                console.log('[DEBUG] ' + JSON.stringify(str, null, 2));
-            } else {
-                console.log('[DEBUG] ' + str);
-            }
-        }
+        return inquirer.prompt(questions);
     }
 });
