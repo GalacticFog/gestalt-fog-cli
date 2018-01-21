@@ -1,7 +1,5 @@
 const gestalt = require('../lib/gestalt')
-const displayResource = require('../lib/displayResourceUI');
-const selectHierarchy = require('../lib/selectHierarchy');
-
+const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 exports.command = 'environments'
 exports.desc = 'List enviornments'
@@ -24,7 +22,7 @@ exports.handler = cmd.handler(async function (argv) {
 
         let fqons = await gestalt.fetchOrgFqons();
         let resources = await gestalt.fetchOrgEnvironments(fqons);
-        displayResource.run(options, resources);
+        ui.displayResource(options, resources);
     } else if (argv.org) {
         const options = {
             message: "Environments",
@@ -33,9 +31,9 @@ exports.handler = cmd.handler(async function (argv) {
             sortField: 'description',
         }
 
-        await selectHierarchy.resolveOrg();
-        const resources = await gestalt.fetchOrgEnvironments();
-        displayResource.run(options, resources);
+        const state = await ui.resolveOrg();
+        const resources = await gestalt.fetchOrgEnvironments([state.org.fqon]);
+        ui.displayResource(options, resources);
     } else {
         const options = {
             message: "Environments",
@@ -44,8 +42,8 @@ exports.handler = cmd.handler(async function (argv) {
             sortField: 'description',
         }
 
-        await selectHierarchy.resolveWorkspace();
-        const resources = await gestalt.fetchEnvironments();
-        displayResource.run(options, resources);
+        const state = await ui.resolveWorkspace();
+        const resources = await gestalt.fetchWorkspaceEnvironments(state);
+        ui.displayResource(options, resources);
     }
 });

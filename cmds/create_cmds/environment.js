@@ -1,3 +1,6 @@
+const inquirer = require('inquirer');
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
@@ -5,14 +8,7 @@ exports.command = 'environment'
 exports.desc = 'Create environment'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-
-    const inquirer = require('inquirer');
-    const gestalt = require('../lib/gestalt')
-    const gestaltState = require('../lib/gestalt-state');
-    const selectHierarchy = require('../lib/selectHierarchy');
-
-    await selectHierarchy.resolveWorkspace();
-
+    const state = await ui.resolveWorkspace();
     const answers = await promptForInput();
 
     debug(`answers: ${answers}`);
@@ -26,7 +22,7 @@ exports.handler = cmd.handler(async function (argv) {
             }
         };
 
-        const environment = await gestalt.createEnvironment(envSpec);
+        const environment = await gestalt.createEnvironment(envSpec, state);
 
         debug(`environment: ${environment}`);
 

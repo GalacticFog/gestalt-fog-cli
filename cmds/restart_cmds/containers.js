@@ -1,15 +1,14 @@
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 exports.command = 'containers'
 exports.desc = 'Restart containers'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const gestalt = require('../lib/gestalt')
-    const displayResource = require('../lib/displayResourceUI');
-    const selectContainer = require('../lib/selectContainer');
-    const selectHierarchy = require('../lib/selectHierarchy');
 
-    await selectHierarchy.resolveEnvironment();
-    const selectedContainers = await selectContainer.run({ mode: 'checkbox', defaultChecked: false });
+    const state = await ui.resolveEnvironment();
+    const containers = gestalt.fetchEnvironmentContainers(state);
+    const selectedContainers = await ui.selectContainer({ mode: 'checkbox', defaultChecked: false }, containers);
     for (let container of selectedContainers) {
         console.log(`Restarting container ${container.name}`);
 

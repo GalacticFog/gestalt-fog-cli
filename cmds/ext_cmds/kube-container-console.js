@@ -27,7 +27,6 @@ exports.handler = cmd.handler(async function (argv) {
 
         // Use the container's provider to get the cluster name e.g. 'dev' or 'prod' so that the kubeconfig can be downloaded via ?cluster=dev
         const env = gestalt.getCurrentEnvironment();
-        // const container = gestalt.fetchCurrentContainer(); // Get the focused container
 
         const container = await selectContainerOrCurrent();
         if (!container) {
@@ -52,13 +51,8 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     async function selectContainerOrCurrent(callback) {
-        const state = gestaltState.getState();
-        if (state.container && state.container.id) {
-            return await gestalt.fetchCurrentContainer();
-        } else {
-            // No container in current context, prompt
-            return selectContainer.run({});
-        }
+        // No container in current context, prompt
+        return selectContainer.run({});
     }
 
     function displayHint(cluster, instance, env) {

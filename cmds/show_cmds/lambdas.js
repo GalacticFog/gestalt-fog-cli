@@ -1,6 +1,5 @@
 const gestalt = require('../lib/gestalt')
-const displayResource = require('../lib/displayResourceUI');
-const selectHierarchy = require('../lib/selectHierarchy');
+const ui = require('../lib/gestalt-ui')
 
 const options = {
     message: "Lambdas",
@@ -32,19 +31,19 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 async function showLambdas(argv) {
-    await selectHierarchy.resolveEnvironment();
-    const resources = await gestalt.fetchLambdas();
-    displayResource.run(options, resources);
+    const state = await ui.resolveEnvironment();
+    const resources = await gestalt.fetchEnvironmentLambdas(state);
+    ui.displayResource(options, resources);
 }
 
 async function showAllLambdas(argv) {
     let fqons = await gestalt.fetchOrgFqons();
     let resources = await gestalt.fetchOrgLambdas(fqons);
-    displayResource.run(options, resources);
+    ui.displayResource(options, resources);
 }
 
 async function showOrgLambdas(argv) {
-    await selectHierarchy.resolveOrg();
-    const resources = await gestalt.fetchOrgLambdas();
-    displayResource.run(options, resources);
+    const state = await ui.resolveOrg();
+    const resources = await gestalt.fetchOrgLambdas([state.org.fqon]);
+    ui.displayResource(options, resources);
 }

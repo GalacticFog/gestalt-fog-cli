@@ -1,7 +1,6 @@
 const inquirer = require('inquirer');
 const gestalt = require('../lib/gestalt')
-const gestaltState = require('../lib/gestalt-state');
-const selectHierarchy = require('../lib/selectHierarchy');
+const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
@@ -10,9 +9,9 @@ exports.desc = 'Create org'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
 
-    await selectHierarchy.resolveOrg();
+    const state = await ui.resolveOrg();
 
-    const parent = gestaltState.getState().org;
+    const parent = state.org;
 
     debug(`parent: ${JSON.stringify(parent, null, 2)}`);
 

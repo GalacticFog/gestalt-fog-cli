@@ -1,7 +1,5 @@
 const gestalt = require('../lib/gestalt')
-const displayResource = require('../lib/displayResourceUI');
-const selectContainer = require('../lib/selectContainer');
-const selectHierarchy = require('../lib/selectHierarchy');
+const ui = require('../lib/gestalt-ui');
 const cmd = require('../lib/cmd-base');
 exports.command = 'container [name]'
 exports.desc = 'Describe container'
@@ -22,11 +20,11 @@ exports.handler = cmd.handler(async function (argv) {
         const fqons = await gestalt.fetchOrgFqons();
         containers = await gestalt.fetchOrgContainers(fqons);
     } else if (argv.org) {
-        await selectHierarchy.resolveOrg();
-        containers = await gestalt.fetchOrgContainers();
+        const state = await ui.resolveWorkspace();
+        containers = await gestalt.fetchOrgContainers([state.org.fqon]);
     } else {
-        await selectHierarchy.resolveEnvironment();
-        containers = await gestalt.fetchContainers();
+        const state = await ui.resolveEnvironment();
+        containers = await gestalt.fetchEnvironmentContainers(state);
     }
 
     if (containers.length == 0) {
@@ -34,7 +32,7 @@ exports.handler = cmd.handler(async function (argv) {
         return;
     }
 
-    const container = await selectContainer.run({ name: containerName }, containers);
+    const container = await ui.selectContainer({ name: containerName }, containers);
     if (!container) {
         console.error(`No container '${containerName}' found in the current envrionment.`);
     } else if (argv.raw) {
@@ -55,7 +53,7 @@ function showContainer(c) {
         sortField: 'description',
     }
 
-    displayResource.run(options, [c]);
+    ui.displayResource(options, [c]);
 
     const options2 = {
         message: "Instances",
@@ -64,5 +62,5 @@ function showContainer(c) {
         sortField: 'description',
     }
 
-    displayResource.run(options2, c.properties.instances);
+    ui.displayResource(options2, c.properties.instances);
 }

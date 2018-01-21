@@ -1,9 +1,7 @@
 const inquirer = require('inquirer');
-const gestalt = require('../lib/gestalt')
-const gestaltState = require('../lib/gestalt-state');
-const selectHierarchy = require('../lib/selectHierarchy');
-const selectProvider = require('../lib/selectProvider');
 const fs = require('fs');
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
@@ -36,14 +34,11 @@ exports.handler = cmd.handler(async function (argv) {
     } else {
 
         // Interactive mode
-        await selectHierarchy.resolveEnvironment();
-
         const answers = await promptForInput();
 
         debug(`answers: ${JSON.stringify(answers, null, 2)}`);
 
         if (answers.confirm) {
-
             const containerSpec = Object.assign({}, answers);
             delete containerSpec.confirm;
             containerSpec.properties.container_type = 'DOCKER';
@@ -68,8 +63,8 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     async function promptForInput() {
-        const provider = await selectProvider.run({ type: 'CaaS', message: 'Select Provider', mode: 'list' });
-
+        const state = await ui.resolveEnvironment();
+        const provider = await ui.selectProvider({ type: 'CaaS', message: 'Select Provider', mode: 'list' }, state);
         const template = {};
         if (provider.resource_type == 'CaaS::Kubernetes') {
             template.network = 'default';

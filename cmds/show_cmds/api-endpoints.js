@@ -1,7 +1,5 @@
-const displayResource = require('../lib/displayResourceUI');
 const gestalt = require('../lib/gestalt');
-const selectHierarchy = require('../lib/selectHierarchy');
-
+const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 exports.command = 'api-endpoints'
 exports.desc = 'List API endpoints'
@@ -52,7 +50,8 @@ async function showApiEndpoints(argv) {
         sortField: 'description',
     }
 
-    const resources = await gestalt.fetchApis();
+    const state = await ui.resolveEnvironment();
+    const resources = await gestalt.fetchEnvironmentApis(state);
     const apis = resources.map(item => {
         return {
             id: item.id,
@@ -60,8 +59,8 @@ async function showApiEndpoints(argv) {
         }
     });
 
-    const wsName = gestalt.getCurrentWorkspace().name;
-    const envName = gestalt.getCurrentEnvironment().name;
+    const wsName = state.workspace.name;
+    const envName = state.environment.name;
 
     const eps = await gestalt.fetchApiEndpoints(apis);
     eps.map(ep => {
@@ -70,7 +69,7 @@ async function showApiEndpoints(argv) {
         ep.properties.workspace = wsName;
     });
 
-    displayResource.run(options, eps);
+    ui.displayResource(options, eps);
 }
 
 async function showOrgApiEndpoints(argv) {
@@ -102,9 +101,9 @@ async function showOrgApiEndpoints(argv) {
         sortField: 'description',
     }
 
-    await selectHierarchy.resolveOrg();
+    const state = await ui.resolveOrg();
 
-    const resources = await gestalt.fetchOrgApis();
+    const resources = await gestalt.fetchOrgApis([state.org.fqon]);
 
     const apis = resources.map(item => {
         return {
@@ -119,7 +118,7 @@ async function showOrgApiEndpoints(argv) {
         ep.properties.workspace = '(empty)';
     });
 
-    displayResource.run(options, eps);
+    ui.displayResource(options, eps);
 }
 
 async function showAllApiEndpoints(argv) {
@@ -167,5 +166,5 @@ async function showAllApiEndpoints(argv) {
         //     ep.properties.workspace = '(empty)';
     }
 
-    displayResource.run(options, eps);
+    ui.displayResource(options, eps);
 }

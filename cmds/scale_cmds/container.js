@@ -1,13 +1,12 @@
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
+const selectResource = require('../lib/selectResourceUI');
+const inquirer = require('inquirer');
 const cmd = require('../lib/cmd-base');
 exports.command = 'container'
 exports.desc = 'Scale container'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const gestalt = require('../lib/gestalt')
-    const displayResource = require('../lib/displayResourceUI');
-    const selectResource = require('../lib/selectResourceUI');
-    const selectHierarchy = require('../lib/selectHierarchy');
-    const inquirer = require('inquirer');
 
     // Main
     if (argv.fqon || argv.id || argv.instances) {
@@ -71,9 +70,9 @@ exports.handler = cmd.handler(async function (argv) {
 
     async function selectContainer() {
 
-        await selectHierarchy.resolveEnvironment();
+        const state = await ui.resolveEnvironment();
 
-        const res = await gestalt.fetchContainers();
+        const res = await gestalt.fetchEnvironmentContainers(state);
 
         let options = {
             mode: 'autocomplete',

@@ -2,7 +2,7 @@ exports.run = async (opts, res) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
-    if (!res) res = await gestalt.fetchLambdas();
+    if (!res) res = await gestalt.fetchEnvironmentLambdas();
 
     if (opts.name) {
         res = res.filter(c => {

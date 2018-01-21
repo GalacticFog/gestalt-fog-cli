@@ -1,7 +1,5 @@
 const gestalt = require('../lib/gestalt')
-const displayResource = require('../lib/displayResourceUI');
-const selectHierarchy = require('../lib/selectHierarchy');
-
+const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 exports.command = 'containers'
 exports.desc = 'List containers'
@@ -24,8 +22,8 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 async function showContainers(argv) {
-    await selectHierarchy.resolveEnvironment();
-    const containers = await gestalt.fetchContainers();
+    const state = await ui.resolveEnvironment();
+    const containers = await gestalt.fetchEnvironmentContainers(state);
     displayContainers(containers);
 }
 
@@ -36,9 +34,9 @@ async function showAllContainers(argv) {
 }
 
 async function showOrgContainers(argv) {
-    await selectHierarchy.resolveOrg();
-    const fqon = gestalt.getCurrentOrg().fqon;
-    const containers = await gestalt.fetchOrgContainers();
+    const state = await ui.resolveOrg();
+    const fqon = state.org.fqon;
+    const containers = await gestalt.fetchOrgContainers([fqon]);
     displayContainers(containers);
 }
 
@@ -61,5 +59,5 @@ function displayContainers(containers) {
         item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
     }
 
-    displayResource.run(options, containers);
+    ui.displayResource(options, containers);
 }

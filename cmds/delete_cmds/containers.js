@@ -1,8 +1,6 @@
-const selectContainer = require('../lib/selectContainer');
 const gestalt = require('../lib/gestalt');
+const ui = require('../lib/gestalt-ui')
 const chalk = require('chalk');
-const selectHierarchy = require('../lib/selectHierarchy');
-const displayResource = require('../lib/displayResourceUI');
 const inquirer = require('inquirer');
 const cmd = require('../lib/cmd-base');
 exports.command = 'containers'
@@ -21,11 +19,11 @@ exports.handler = cmd.handler(async function (argv) {
         const fqons = await gestalt.fetchOrgFqons();
         containers = await gestalt.fetchOrgContainers(fqons);
     } else if (argv.org) {
-        await selectHierarchy.resolveOrg();
-        containers = await gestalt.fetchOrgContainers();
+        const state = await ui.resolveOrg();
+        containers = await gestalt.fetchOrgContainers([state.org.fqon]);
     } else {
-        await selectHierarchy.resolveEnvironment();
-        containers = await gestalt.fetchContainers();
+        const state = await ui.resolveEnvironment();
+        containers = await gestalt.fetchEnvironmentContainers(state);
     }
 
     if (containers.length == 0) {
@@ -38,7 +36,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     const fields = ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'org.properties.fqon', 'environment.name'];
 
-    const selectedContainers = await selectContainer.run({ mode: 'checkbox', defaultChecked: false, fields: fields }, containers);
+    const selectedContainers = await ui.selectContainer({ mode: 'checkbox', defaultChecked: false, fields: fields }, containers);
     console.log();
 
     displayRunningContainers(selectedContainers);
@@ -71,7 +69,7 @@ function displayRunningContainers(containers) {
         item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
     })
 
-    displayResource.run(options, containers);
+    ui.displayResource(options, containers);
 }
 
 function doConfirm() {

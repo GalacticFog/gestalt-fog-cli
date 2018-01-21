@@ -1,15 +1,14 @@
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 exports.command = 'provider-containers'
 exports.desc = 'List provider containers'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const gestalt = require('../lib/gestalt')
-    const displayResource = require('../lib/displayResourceUI');
-    const selectHierarchy = require('../lib/selectHierarchy');
 
-    await selectHierarchy.resolveOrg();
+    const state = await ui.resolveOrg();
 
-    const fqon = gestalt.getState().org.fqon;
+    const fqon = state.org.fqon;
 
     const providers = await gestalt.fetchOrgProviders([fqon]);
 
@@ -54,6 +53,6 @@ exports.handler = cmd.handler(async function (argv) {
             sortField: 'org.properties.fqon',
         }
 
-        displayResource.run(options, containers);
+        ui.displayResource(options, containers);
     }
 });

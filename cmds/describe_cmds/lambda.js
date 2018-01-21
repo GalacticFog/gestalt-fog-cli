@@ -1,9 +1,6 @@
 const gestalt = require('../lib/gestalt')
-const displayResource = require('../lib/displayResourceUI');
-const selectResource = require('../lib/selectResourceUI');
-const selectLambda = require('../lib/selectLambda');
+const ui = require('../lib/gestalt-ui');
 const chalk = require('chalk');
-const selectHierarchy = require('../lib/selectHierarchy');
 const cmd = require('../lib/cmd-base');
 exports.command = 'lambda [name]'
 exports.desc = 'Describe lambda'
@@ -71,7 +68,7 @@ function showLambda(lambda) {
         fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
         sortField: 'description',
     }
-    displayResource.run(options, [lambda]);
+    ui.displayResource(options, [lambda]);
 
     // Display Code
     if (lambda.properties) {
@@ -89,17 +86,17 @@ function showLambda(lambda) {
 async function selectFromAllLambdas(lambdaName) {
     let fqons = await gestalt.fetchOrgFqons();
     let res = await gestalt.fetchOrgLambdas(fqons);
-    return selectLambda.run({ name: lambdaName }, res);
+    return ui.selectLambda({ name: lambdaName }, res);
 }
 
 async function selectFromOrgLambdas(lambdaName) {
-    await selectHierarchy.resolveOrg();
-    const res = await gestalt.fetchOrgLambdas();
-    return selectLambda.run({ name: lambdaName }, res);
+    const state = await ui.resolveOrg();
+    const res = await gestalt.fetchOrgLambdas([state.org.fqon]);
+    return ui.selectLambda({ name: lambdaName }, res);
 }
 
 async function selectFromEnvLambdas(lambdaName) {
-    await selectHierarchy.resolveEnvironment();
-    const res = await gestalt.fetchLambdas();
-    return selectLambda.run({ name: lambdaName }, res);
+    const state = await ui.resolveEnvironment();
+    const res = await gestalt.fetchEnvironmentLambdas(state);
+    return ui.selectLambda({ name: lambdaName }, res);
 }

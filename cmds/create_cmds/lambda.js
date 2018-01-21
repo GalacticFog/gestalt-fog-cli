@@ -1,3 +1,7 @@
+const inquirer = require('inquirer');
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
+const fs = require('fs');
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
@@ -8,12 +12,6 @@ exports.builder = {
     url: {}
 }
 exports.handler = cmd.handler(async function (argv) {
-    const inquirer = require('inquirer');
-    const gestalt = require('../lib/gestalt')
-    const gestaltState = require('../lib/gestalt-state');
-    const selectHierarchy = require('../lib/selectHierarchy');
-    const selectProvider = require('../lib/selectProvider');
-    const fs = require('fs');
 
     if (argv.source && argv.url) {
         console.log("Error: Only one of --source or --url can be specified");
@@ -36,8 +34,6 @@ exports.handler = cmd.handler(async function (argv) {
     } else if (argv.url) {
         console.log(`Creating package lambda from ${argv.url}`);
     }
-
-    await selectHierarchy.resolveEnvironment();
 
     const answers = await promptForInput();
 
@@ -70,10 +66,13 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     async function promptForInput() {
-        const lambdaProvider = await selectProvider.run({ type: 'Lambda', message: 'Select Provider' });
+        const state = await ui.resolveEnvironment();
+
+        //TODO: The following makes two API calls to provider.  Should reduce to 1, and do filtering here.
+        const lambdaProvider = await ui.selectProvider({ type: 'Lambda', message: 'Select Provider' }, state);
         debug(lambdaProvider);
 
-        const executorProvider = await selectProvider.run({ type: 'Executor', message: 'Select Runtime' });
+        const executorProvider = await ui.selectProvider({ type: 'Executor', message: 'Select Runtime' }, state);
         debug(executorProvider);
 
         let questions = [

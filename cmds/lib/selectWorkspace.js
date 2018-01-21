@@ -1,8 +1,18 @@
-exports.run = async () => {
+exports.run = async (selectOpts, state) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
-    const res = await gestalt.fetchWorkspaces([gestalt.getState().org.fqon]);
+    if (!state) state = gestalt.getState();
+
+    const res = await gestalt.fetchOrgWorkspaces([state.org.fqon]);
+
+    // Filter
+    if (selectOpts) {
+        if (selectOpts.filter) {
+            res = res.filter(selectOpts.filter);
+        }
+    }
+
 
     const options = {
         mode: 'autocomplete',

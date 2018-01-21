@@ -1,13 +1,11 @@
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
+const selectResource = require('../lib/selectResourceUI');
 const cmd = require('../lib/cmd-base');
 exports.command = 'provider-container'
 exports.desc = 'Describe provider container'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const gestalt = require('../lib/gestalt')
-    const displayResource = require('../lib/displayResourceUI');
-    const selectContainer = require('../lib/selectContainer');
-    const selectResource = require('../lib/selectResourceUI');
-    const selectHierarchy = require('../lib/selectHierarchy');
 
     const container = await selectProviderContainers();
     if (argv.raw) {
@@ -29,7 +27,7 @@ exports.handler = cmd.handler(async function (argv) {
 
         // console.log()
         // console.log("Container Details:")
-        displayResource.run(options, [c]);
+        ui.displayResource(options, [c]);
     }
 
     function showInstances(c) {
@@ -44,7 +42,7 @@ exports.handler = cmd.handler(async function (argv) {
         // console.log()
         // console.log("Container Instances:")
 
-        displayResource.run(options2, c.properties.instances);
+        ui.displayResource(options2, c.properties.instances);
     }
 
     // function showCommands(c) {
@@ -72,8 +70,8 @@ exports.handler = cmd.handler(async function (argv) {
 
 
     async function selectProviderContainers() {
-        await selectHierarchy.resolveOrg();
-        const providerContainers = await getProviderContainers();
+        const state = await ui.resolveOrg();
+        const providerContainers = await getProviderContainers(state);
         let options = {
             mode: 'autocomplete',
             message: "Select Container(s)",
@@ -85,9 +83,9 @@ exports.handler = cmd.handler(async function (argv) {
         return selectResource.run(options);
     }
 
-    async function getProviderContainers() {
+    async function getProviderContainers(state) {
 
-        const fqon = gestalt.getState().org.fqon;
+        const fqon = state.org.fqon;
 
         const providers = await gestalt.fetchOrgProviders([fqon]);
 

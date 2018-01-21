@@ -1,8 +1,8 @@
-exports.run = async (opts) => {
+exports.run = async (opts, state) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
-    const res = await gestalt.fetchProviders(null, opts.type);
+    const res = await gestalt.fetchProviders(state, opts.type);
 
     const options = {
         mode: opts.mode || 'autocomplete',

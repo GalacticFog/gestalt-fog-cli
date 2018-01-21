@@ -52,14 +52,8 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     async function selectContainerOrCurrent() {
-        const state = gestaltState.getState();
-        if (state.container && state.container.id) {
-            const container = await gestalt.fetchCurrentContainer();
-            return container;
-        } else {
-            // No container in current context, prompt
-            return selectContainer.run({});
-        }
+        // No container in current context, prompt
+        return selectContainer.run({});
     }
 
     function displayHint(cluster, instance, env) {

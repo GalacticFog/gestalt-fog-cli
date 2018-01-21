@@ -1,16 +1,15 @@
 'use strict';
+const gestalt = require('../lib/gestalt');
+const ui = require('../lib/gestalt-ui')
+const gestaltServicesConfig = require('../lib/gestalt-services-config');
+const inquirer = require('inquirer');
+const SERVICE_CONFIG_KEY = 'kube_efs_volumes.v1';
+const chalk = require('chalk');
 const cmd = require('../lib/cmd-base');
 exports.command = 'container-volumes'
 exports.desc = 'Container volumes'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const gestalt = require('../lib/gestalt');
-    const gestaltState = require('../lib/gestalt-state');
-    const displayResource = require('../lib/displayResourceUI');
-    const gestaltServicesConfig = require('../lib/gestalt-services-config');
-    const inquirer = require('inquirer');
-    const SERVICE_CONFIG_KEY = 'kube_efs_volumes.v1';
-    const chalk = require('chalk');
 
     if (argv._.length < 3) {
         printUsage();
@@ -177,7 +176,7 @@ exports.handler = cmd.handler(async function (argv) {
                     return item.spec.nfs.server == server;
                 });
             }
-            displayResource.run(options, resources);
+            ui.displayResource(options, resources);
             console.log(`Note: Volumes with status of 'Available' are not attached to a container.`);
             console.log();
 
@@ -201,7 +200,7 @@ exports.handler = cmd.handler(async function (argv) {
             const url = await getServiceUrl(cluster);
             console.log(`Fetching server filesystem information from cluster '${cluster}'...`);
             const resources = await gestalt.httpGet(`${url}/volume_dirs`);
-            displayResource.run(options, resources);
+            ui.displayResource(options, resources);
         } catch (err) {
             console.log(err.message);
             console.log();

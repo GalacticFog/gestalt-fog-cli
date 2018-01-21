@@ -30,8 +30,8 @@ exports.fetchOrgs = () => {
     return meta_GET('/orgs?expand=true');
 }
 
-exports.fetchEnvironments = () => {
-    const state = getGestaltState();
+exports.fetchWorkspaceEnvironments = (state) => {
+    state = state || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
     if (!state.workspace) throw Error("No Workspace in current context");
@@ -40,7 +40,7 @@ exports.fetchEnvironments = () => {
     return meta_GET(`/${state.org.fqon}/workspaces/${state.workspace.id}/environments?expand=true`)
 }
 
-exports.fetchWorkspaces = (fqonList) => {
+exports.fetchOrgWorkspaces = (fqonList) => {
     return fetchFromOrgs("workspaces", fqonList);
 }
 
@@ -99,7 +99,7 @@ async function fetchContainersFromOrg(fqon) {
                 id: env.id
             }
         }
-        return fetchContainers(state2).then(containers => {
+        return fetchEnvironmentContainers(state2).then(containers => {
             for (let c of containers) {
                 c.environment = {
                     name: env.name,
@@ -134,16 +134,44 @@ function fetchFromOrgs(type, fqonList) {
 }
 
 // TODO: Unsure if this gets all providers
-exports.fetchProviders = (providedState, type) => {
-    return fetchFromEnvironment('providers', providedState, type);
+exports.fetchEnvironmentProviders = (providedState) => {
+    const state = providedState || getGestaltState();
+    if (!state.org) throw Error("No Org in current context");
+    if (!state.org.fqon) throw Error("No FQON in current context");
+    if (!state.environment) throw Error("No Environment in current context");
+    if (!state.environment.id) throw Error("No Environment ID in current context");
+    let url = `/${state.org.fqon}/environments/${state.environment.id}/providers?expand=true`;
+    return meta_GET(url).then(providers => {
+        for (let c of providers) {
+            c.environment = state.environment;
+            c.workspace = state.workspace;
+        }
+        return providers;
+    });
 }
 
-exports.fetchApis = (providedState) => {
+exports.fetchWorkspaceProviders = (providedState) => {
+    const state = providedState || getGestaltState();
+    if (!state.org) throw Error("No Org in current context");
+    if (!state.org.fqon) throw Error("No FQON in current context");
+    if (!state.workspace) throw Error("No Environment in current context");
+    if (!state.workspace.id) throw Error("No Environment ID in current context");
+    let url = `/${state.org.fqon}/workspaces/${state.workspace.id}/providers?expand=true`;
+    return meta_GET(url).then(providers => {
+        for (let c of providers) {
+            // c.environment = state.environment;
+            c.workspace = state.workspace;
+        }
+        return providers;
+    });
+}
+
+exports.fetchEnvironmentApis = (providedState) => {
     return fetchFromEnvironment('apis', providedState);
 }
 
-exports.fetchContainers = fetchContainers;
-function fetchContainers(providedState) {
+exports.fetchEnvironmentContainers = fetchEnvironmentContainers;
+function fetchEnvironmentContainers(providedState) {
     const state = providedState || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
@@ -159,11 +187,11 @@ function fetchContainers(providedState) {
     });
 }
 
-exports.fetchLambdas = (providedState) => {
+exports.fetchEnvironmentLambdas = (providedState) => {
     return fetchFromEnvironment('lambdas', providedState);
 }
 
-exports.fetchPolicies = (providedState) => {
+exports.fetchEnvironmentPolicies = (providedState) => {
     return fetchFromEnvironment('policies', providedState);
 }
 
@@ -180,7 +208,6 @@ function fetchFromEnvironment(type, providedState, type2) {
 }
 
 exports.fetchApiEndpoints = (apiList) => {
-    const state = getGestaltState();
     if (!apiList) throw Error("No apiList provided");
 
     let eps = apiList.map(api => {
@@ -194,10 +221,10 @@ exports.fetchApiEndpoints = (apiList) => {
 }
 
 exports.fetchProviderContainers = (provider) => {
-    const state = getGestaltState();
-    if (!state.org) throw Error("No Org in current context");
-    if (!state.org.fqon) throw Error("No FQON in current context");
-    const fqon = state.org.fqon; // default org
+    if (!provider.org) throw Error("No Org in current context");
+    if (!provider.org.properties) throw Error("No FQON in current context");
+    if (!provider.org.properties.fqon) throw Error("No FQON in current context");
+    const fqon = provider.org.properties.fqon; // default org
     return meta_GET(`/${fqon}/providers/${provider.id}/containers`); // can't use '?expand=true' unless in environment
 }
 
@@ -221,10 +248,6 @@ exports.fetchProviderContainers = (provider) => {
 
 //     return apis;
 // }
-
-exports.fetchCurrentContainer = () => {
-    return this.fetchContainer(getGestaltState().container);
-}
 
 exports.fetchCurrentEnvironment = () => {
     const state = getGestaltState();
@@ -401,16 +424,16 @@ exports.fetchLambda = (lambda) => {
 }
 
 
-exports.fetchOrgEntitlements = () => {
-    const state = getGestaltState();
+exports.fetchOrgEntitlements = (state) => {
+    state = state || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
     const res = meta_GET(`/${state.org.fqon}/entitlements?expand=true`)
     return res;
 }
 
-exports.fetchWorkspaceEntitlements = () => {
-    const state = getGestaltState();
+exports.fetchWorkspaceEntitlements = (state) => {
+    state = state || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
     if (!state.workspace) throw Error("No Workspace in current context");
@@ -419,8 +442,8 @@ exports.fetchWorkspaceEntitlements = () => {
     return res;
 }
 
-exports.fetchEnvironmentEntitlements = () => {
-    const state = getGestaltState();
+exports.fetchEnvironmentEntitlements = (state) => {
+    state = state || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
     if (!state.environment) throw Error("No Workspace in current context");
@@ -441,12 +464,8 @@ exports.getCurrentOrg = () => {
     return getGestaltState().org;
 }
 
-exports.getCurrentContainer = () => {
-    return getGestaltState().container;
-}
-
-exports.getEnvironment = (uid) => {
-    const state = getGestaltState();
+exports.getEnvironment = (uid, state) => {
+    state = state || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
     return meta_GET(`/${state.org.fqon}/environments/${uid}`)
@@ -489,34 +508,34 @@ exports.setCurrentEnvironment = (s) => {
     gestaltState.setState(state);
 }
 
-exports.setCurrentContainer = (s) => {
-    if (!s) throw Error("container not specified")
-    if (!s.id) throw Error("container.id not specified")
-    let fqon = null;
-    if (s.fqon) {
-        fqon = s.fqon;
-    } else {
-        if (s.org) {
-            if (s.org.properties) {
-                if (s.org.properties.fqon) {
-                    fqon = s.org.properties.fqon;
-                }
-            }
-        }
-    }
-    if (!fqon) throw Error("fqon not found in parameter");
+// exports.setCurrentContainer = (s) => {
+//     if (!s) throw Error("container not specified")
+//     if (!s.id) throw Error("container.id not specified")
+//     let fqon = null;
+//     if (s.fqon) {
+//         fqon = s.fqon;
+//     } else {
+//         if (s.org) {
+//             if (s.org.properties) {
+//                 if (s.org.properties.fqon) {
+//                     fqon = s.org.properties.fqon;
+//                 }
+//             }
+//         }
+//     }
+//     if (!fqon) throw Error("fqon not found in parameter");
 
-    const ctr = {
-        id: s.id,
-        name: s.name,
-        fqon: fqon
-    }
+//     const ctr = {
+//         id: s.id,
+//         name: s.name,
+//         fqon: fqon
+//     }
 
-    const state = getGestaltState();
-    Object.assign(state, { container: ctr }); // merge in state
+//     const state = getGestaltState();
+//     Object.assign(state, { container: ctr }); // merge in state
 
-    gestaltState.setState(state);
-}
+//     gestaltState.setState(state);
+// }
 
 exports.setCurrentOrg = (s) => {
     if (!s) throw Error("Org not specified")
