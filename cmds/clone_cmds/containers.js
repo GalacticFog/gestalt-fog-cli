@@ -16,7 +16,6 @@ exports.handler = cmd.handler(async function (argv) {
     const sourceEnv = await ui.selectEnvironment({}, state);
     console.log();
 
-    // gestalt.setCurrentEnvironment(sourceEnv);
     state.environment = {
         id: sourceEnv.id,
         name: sourceEnv.name,
@@ -43,7 +42,6 @@ exports.handler = cmd.handler(async function (argv) {
         return;
     }
 
-    // gestalt.setCurrentEnvironment(targetEnv);
     state.environment = {
         id: targetEnv.id,
         name: targetEnv.name,
