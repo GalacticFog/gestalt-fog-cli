@@ -2,6 +2,11 @@ const state = {};
 
 exports.handler = function (main) {
     return function (argv) {
+        if (argv.insecure) {
+            console.log('Insecure mode: Ignoring TLS to allow self-signed certificates');
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+        }
+
         state.argv = argv;
         run(main, argv).then(() => {
             // Post

@@ -33,6 +33,8 @@ exports.handler = cmd.handler(async function (argv) {
     } else if (argv.environment) {
         const state = await ui.resolveEnvironment();
         resources = await gestalt.fetchEnvironmentProviders(state);
+    } else {
+        resources = await gestalt.fetchOrgProviders(['root']);
     }
 
     for (let item of resources) {
