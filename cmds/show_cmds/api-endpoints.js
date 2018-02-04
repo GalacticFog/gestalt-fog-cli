@@ -9,6 +9,9 @@ exports.builder = {
     },
     org: {
         description: 'Display all api endpoints in the current org'
+    },
+    raw: {
+        description: 'Show in raw JSON format'
     }
 }
 
@@ -69,7 +72,11 @@ async function showApiEndpoints(argv) {
         ep.properties.workspace = wsName;
     });
 
-    ui.displayResource(options, eps);
+    if (argv.raw) {
+        console.log(JSON.stringify(eps, null, 2));
+    } else {
+        ui.displayResource(options, eps);
+    }
 }
 
 async function showOrgApiEndpoints(argv) {
@@ -118,7 +125,11 @@ async function showOrgApiEndpoints(argv) {
         ep.properties.workspace = '(empty)';
     });
 
-    ui.displayResource(options, eps);
+    if (argv.raw) {
+        console.log(JSON.stringify(eps, null, 2));
+    } else {
+        ui.displayResource(options, eps);
+    }
 }
 
 async function showAllApiEndpoints(argv) {
@@ -166,5 +177,9 @@ async function showAllApiEndpoints(argv) {
         //     ep.properties.workspace = '(empty)';
     }
 
-    ui.displayResource(options, eps);
+    if (argv.raw) {
+        console.log(JSON.stringify(eps, null, 2));
+    } else {
+        ui.displayResource(options, eps);
+    }
 }
