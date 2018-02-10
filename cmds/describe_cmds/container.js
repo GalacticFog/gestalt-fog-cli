@@ -9,39 +9,60 @@ exports.builder = {
     },
     org: {
         description: 'Describe containers from all environments in current org'
+    },
+    fqon: {
+        description: 'FQON of org containing container'
+    },
+    id: {
+        description: 'Container ID'
     }
 }
 exports.handler = cmd.handler(async function (argv) {
+    if (argv.fqon || argv.id) {
+        // Command mode
 
-    const containerName = argv.name
+        if (!argv.fqon) throw Error("missing argv.fqon");
+        if (!argv.id) throw Error("missing argv.id");
 
-    let containers = null;
-    if (argv.all) {
-        const fqons = await gestalt.fetchOrgFqons();
-        containers = await gestalt.fetchOrgContainers(fqons);
-    } else if (argv.org) {
-        const context = await ui.resolveWorkspace();
-        containers = await gestalt.fetchOrgContainers([context.org.fqon]);
+        const container = await gestalt.fetchContainer({
+            fqon: argv.fqon,
+            id: argv.id
+        });
+
+        doShowContainer(container, argv);
     } else {
-        const context = await ui.resolveEnvironment();
-        containers = await gestalt.fetchEnvironmentContainers(context);
-    }
+        // Interactive mode
 
-    if (containers.length == 0) {
-        console.log('No containers in current context.');
-        return;
-    }
+        const containerName = argv.name
 
-    const container = await ui.selectContainer({ name: containerName }, containers);
-    if (!container) {
-        console.error(`No container '${containerName}' found in the current envrionment.`);
-    } else if (argv.raw) {
-        console.log(JSON.stringify(container, null, 2));
-    } else {
-        showContainer(container);
+        let containers = null;
+        if (argv.all) {
+            const fqons = await gestalt.fetchOrgFqons();
+            containers = await gestalt.fetchOrgContainers(fqons);
+        } else if (argv.org) {
+            const context = await ui.resolveWorkspace();
+            containers = await gestalt.fetchOrgContainers([context.org.fqon]);
+        } else {
+            const context = await ui.resolveEnvironment();
+            containers = await gestalt.fetchEnvironmentContainers(context);
+        }
 
-        console.log(`Use '--raw' to see raw JSON output`);
-        console.log();
+        if (containers.length == 0) {
+            console.log('No containers in current context.');
+            return;
+        }
+
+        const container = await ui.selectContainer({ name: containerName }, containers);
+        if (!container) {
+            console.error(`No container '${containerName}' found in the current envrionment.`);
+        } else if (argv.raw) {
+            console.log(JSON.stringify(container, null, 2));
+        } else {
+            doShowContainer(container, argv);
+
+            console.log(`Use '--raw' to see raw JSON output`);
+            console.log();
+        }
     }
 });
 
@@ -63,4 +84,20 @@ function showContainer(c) {
     }
 
     ui.displayResource(options2, c.properties.instances);
+}
+
+
+function doShowContainer(container, argv) {
+    if (argv.raw) {
+        console.log(JSON.stringify(container, null, 2));
+    } else {
+        showContainer(container);
+
+        console.log(`Use '--raw' to see raw JSON output`);
+        console.log();
+        console.log('Run the following to see this container directly:')
+        console.log();
+        console.log(`    ${argv['$0']} ${argv._[0]} ${argv._[1]} --fqon ${container.org.properties.fqon} --id ${container.id}`);
+        console.log();
+    }
 }

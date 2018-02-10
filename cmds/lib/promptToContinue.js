@@ -11,8 +11,6 @@ exports.run = async (message = 'Proceed?', defaultChoice = false) => {
         },
     ];
 
-    Object.assign(questions, opts);
-
     return inquirer.prompt(questions).then(answers => {
         return answers.confirm;
     });

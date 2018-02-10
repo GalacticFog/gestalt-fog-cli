@@ -36,21 +36,22 @@ exports.run = (options, unsedCallback) => {
             value: item,
             display: {}  // this will become a flat map of keys, e.g. props:{fqon:"asdf"} --> 'props.fqon': 'asdf'
         };
-        options.fields.map(f => {
+
+        for (let f of options.fields) {
             // convert to flat map
             di.display[f] = eval(`item.${f}`) || "(empty)";
-        });
+        }
         return di;
     })
 
     // Calculate the width of each 'column', which is defined by field key
-    displayItems.map(di => {
+    for (let di of displayItems) {
         // find the max length of the field
-        options.fields.map(f => {
+        for (let f of options.fields) {
             if (!widths[f]) widths[f] = 0;
             widths[f] = Math.max(widths[f], String(di.display[f]).length)
-        });
-    })
+        }
+    }
 
     // Transform to array that Inquirer expects
     const choiceList = displayItems.map(di => {
@@ -108,9 +109,9 @@ exports.run = (options, unsedCallback) => {
     } else if (options.mode == 'checkbox') {
 
         if (options.defaultChecked) {
-            choiceList.map(item => {
+            for (let item of choiceList) {
                 item.checked = true;
-            });
+            }
         }
 
         prompt = {

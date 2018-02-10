@@ -41,7 +41,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     displayRunningContainers(selectedContainers);
 
-    const confirmed = await doConfirm();
+    const confirmed = await ui.promptToContinue(`Proceed to delete ${selectedContainers.length} container(s)?`, false);
     if (!confirmed) {
         console.log('Aborted.');
         return;
@@ -70,19 +70,4 @@ function displayRunningContainers(containers) {
     })
 
     ui.displayResource(options, containers);
-}
-
-function doConfirm() {
-    const questions = [
-        {
-            message: "Proceed?",
-            type: 'confirm',
-            name: 'confirm',
-            default: false // Don't proceed if no user input
-        },
-    ];
-
-    return inquirer.prompt(questions).then(answers => {
-        return answers.confirm;
-    });
 }

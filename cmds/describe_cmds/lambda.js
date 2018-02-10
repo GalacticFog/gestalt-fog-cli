@@ -10,6 +10,12 @@ exports.builder = {
     },
     org: {
         description: 'Describe from all lambdas in current org'
+    },
+    fqon: {
+        description: 'FQON of org containing lambda'
+    },
+    id: {
+        description: 'Lambda ID'
     }
 }
 exports.handler = cmd.handler(async function (argv) {
@@ -44,6 +50,24 @@ exports.handler = cmd.handler(async function (argv) {
         }
     }
 });
+
+async function selectFromAllLambdas(lambdaName) {
+    let fqons = await gestalt.fetchOrgFqons();
+    let res = await gestalt.fetchOrgLambdas(fqons);
+    return ui.selectLambda({ name: lambdaName }, res);
+}
+
+async function selectFromOrgLambdas(lambdaName) {
+    const context = await ui.resolveOrg();
+    const res = await gestalt.fetchOrgLambdas([context.org.fqon]);
+    return ui.selectLambda({ name: lambdaName }, res);
+}
+
+async function selectFromEnvLambdas(lambdaName) {
+    const context = await ui.resolveEnvironment();
+    const res = await gestalt.fetchEnvironmentLambdas(context);
+    return ui.selectLambda({ name: lambdaName }, res);
+}
 
 function doShowLambda(lambda, argv) {
     if (argv.raw) {
@@ -83,20 +107,3 @@ function showLambda(lambda) {
     }
 }
 
-async function selectFromAllLambdas(lambdaName) {
-    let fqons = await gestalt.fetchOrgFqons();
-    let res = await gestalt.fetchOrgLambdas(fqons);
-    return ui.selectLambda({ name: lambdaName }, res);
-}
-
-async function selectFromOrgLambdas(lambdaName) {
-    const context = await ui.resolveOrg();
-    const res = await gestalt.fetchOrgLambdas([context.org.fqon]);
-    return ui.selectLambda({ name: lambdaName }, res);
-}
-
-async function selectFromEnvLambdas(lambdaName) {
-    const context = await ui.resolveEnvironment();
-    const res = await gestalt.fetchEnvironmentLambdas(context);
-    return ui.selectLambda({ name: lambdaName }, res);
-}

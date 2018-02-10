@@ -9,6 +9,9 @@ exports.builder = {
     },
     org: {
         description: 'Display all containers in the current org'
+    },
+    raw: {
+        description: 'Display raw JSON output'
     }
 }
 exports.handler = cmd.handler(async function (argv) {
@@ -24,23 +27,27 @@ exports.handler = cmd.handler(async function (argv) {
 async function showContainers(argv) {
     const context = await ui.resolveEnvironment();
     const containers = await gestalt.fetchEnvironmentContainers(context);
-    displayContainers(containers);
+    displayContainers(containers, argv);
 }
 
 async function showAllContainers(argv) {
     const fqons = await gestalt.fetchOrgFqons();
     let containers = await gestalt.fetchOrgContainers(fqons);
-    displayContainers(containers);
+    displayContainers(containers, argv);
 }
 
 async function showOrgContainers(argv) {
     const context = await ui.resolveOrg();
     const fqon = context.org.fqon;
     const containers = await gestalt.fetchOrgContainers([fqon]);
-    displayContainers(containers);
+    displayContainers(containers, argv);
 }
 
-function displayContainers(containers) {
+function displayContainers(containers, argv) {
+    if (argv.raw) {
+        console.log(JSON.stringify(containers, null, 2));
+        return;
+    }
     const options = {
         message: "Containers",
         headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner', 'FQON', 'ENV'],
