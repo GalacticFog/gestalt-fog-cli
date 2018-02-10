@@ -35,7 +35,8 @@ exports.handler = cmd.handler(async function (argv) {
         console.log(`Creating package lambda from ${argv.url}`);
     }
 
-    const answers = await promptForInput();
+    const state = await ui.resolveEnvironment();
+    const answers = await promptForInput(state);
 
     debug(`answers: ${JSON.stringify(answers, null, 2)}`);
 
@@ -57,7 +58,7 @@ exports.handler = cmd.handler(async function (argv) {
         debug(`lambdaSpec: ${JSON.stringify(lambdaSpec, null, 2)}`);
 
         // Create
-        gestalt.createLambda(lambdaSpec).then(lambda => {
+        gestalt.createLambda(lambdaSpec, state).then(lambda => {
             debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
             console.log(`Lambda '${lambda.name}' created.`);
         });
@@ -65,8 +66,7 @@ exports.handler = cmd.handler(async function (argv) {
         console.log('Aborted.');
     }
 
-    async function promptForInput() {
-        const state = await ui.resolveEnvironment();
+    async function promptForInput(state) {
 
         //TODO: The following makes two API calls to provider.  Should reduce to 1, and do filtering here.
         const lambdaProvider = await ui.selectProvider({ type: 'Lambda', message: 'Select Provider' }, state);

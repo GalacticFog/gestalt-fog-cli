@@ -2,7 +2,18 @@ exports.run = async (opts, state) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
-    const res = await gestalt.fetchProviders(state, opts.type);
+    let res = await gestalt.fetchEnvironmentProviders(state, opts.type);
+
+    if (opts) {
+        if (opts.filter) {
+            res = res.filter(opts.filter);
+        }
+    }
+
+    // if (res.length == 1) {
+    //     console.log('only one...')
+    //     return new Promise(resolve => { resolve(res[0]) });
+    // }
 
     const options = {
         mode: opts.mode || 'autocomplete',

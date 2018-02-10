@@ -1,41 +1,51 @@
-// const gestalt = require('../lib/gestalt')
-// const ui = require('../lib/gestalt-ui')
-// const cmd = require('../lib/cmd-base');
-// exports.command = 'lambdas'
-// exports.desc = 'List lambdas'
-// exports.builder = {
-//     all: {
-//         description: 'Display all lambdas in all orgs'
-//     },
-//     org: {
-//         description: 'Display all lambdas in the current org'
-//     }
-// }
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
+const cmd = require('../lib/cmd-base');
+const fs = require('fs');
+exports.command = 'lambdas'
+exports.desc = 'List lambdas'
+exports.builder = {
+    dir: {
+        alias: 'd',
+        description: 'Directory to import Lambdas from'
+    },
+    // all: {
+    //     description: 'Display all lambdas in all orgs'
+    // },
+    // org: {
+    //     description: 'Display all lambdas in the current org'
+    // }
+}
 
-// exports.handler = cmd.handler(async function (argv) {
-//     if (argv.all) {
-//         showAllLambdas(argv);
-//     } else if (argv.org) {
-//         showOrgLambdas(argv)
-//     } else {
-//         showLambdas(argv);
-//     }
-// });
+exports.handler = cmd.handler(async function (argv) {
+    if (argv.dir) {
+        const state = await ui.resolveEnvironment();
+        const lambdaFiles = readLambdaFiles(argv.dir);
+        const selectedLambdas = selectLambdaItems(lambdaFiles);
+        const confirmed = await ui.promptToContinue('Proceed with import?');
+        if (confirmed) {
+            // Resolve lambda and executor providers
 
-// async function showLambdas(argv) {
-//     const state = await ui.resolveEnvironment();
-//     const resources = await gestalt.fetchEnvironmentLambdas(state);
-//     ui.displayResource(options, resources);
-// }
+            // Do Import
+            for (let item of selectedLambdas) {
+                console.log(`Importing ${item.lambda.name} (${item.file})`);
+                const res = await gestalt.createLambda(item.lambda, state);
+            }
+            console.log('Done.');
+        } else {
+            console.log('Aborted.');
+        }
+    }
+});
 
-// async function showAllLambdas(argv) {
-//     let fqons = await gestalt.fetchOrgFqons();
-//     let resources = await gestalt.fetchOrgLambdas(fqons);
-//     ui.displayResource(options, resources);
-// }
+function readLambdaFiles(dir) {
+}
 
-// async function showOrgLambdas(argv) {
-//     const state = await ui.resolveOrg();
-//     const resources = await gestalt.fetchOrgLambdas([state.org.fqon]);
-//     ui.displayResource(options, resources);
-// }
+async function selectLambdaItems(lambdaFiles) {
+    const options = {
+        message: "Select Lambda",
+        fields: ['lambda.name', 'file'],
+        sortBy: 'lambda.name',
+    }
+    return await ui.select(options, lambdaFiles);
+}

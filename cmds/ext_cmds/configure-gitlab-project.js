@@ -74,7 +74,7 @@ exports.handler = cmd.handler(async function (argv) {
         const options = {
             mode: 'autocomplete',
             message: "Gitlab Projects",
-            fields: ['name_with_namespace', 'description_truncated'],
+            fields: ['name_with_namespace', 'description_truncated', 'id'],
             sortBy: 'name_with_namespace',
             pageSize: 20,
             resources: result

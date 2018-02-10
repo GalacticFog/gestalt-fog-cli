@@ -18,9 +18,9 @@ exports.handler = cmd.handler(async function (argv) {
         r.fqon = r.properties.fqon; // for sorting
     })
 
-    if (argv.debug) {
+    if (argv.raw) {
         console.log(JSON.stringify(resources, null, 2));
+    } else {
+        ui.displayResource(options, resources);
     }
-
-    ui.displayResource(options, resources);
 });

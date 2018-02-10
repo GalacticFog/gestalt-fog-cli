@@ -5,6 +5,12 @@ const gestaltState = require('./gestalt-state');
 
 // Exports
 
+exports.resourceTypeIds = {
+    workspace: 'fa17bae4-1294-42cc-93cc-c4ead7dc0343',
+    environment: '',
+    org: ''
+}
+
 exports.getHost = () => {
     let host = getGestaltConfig()['gestalt_url'];
     host = host.trim();
@@ -45,8 +51,8 @@ exports.fetchOrgWorkspaces = (fqonList) => {
 }
 
 // TODO: Unsure if this gets all providers
-exports.fetchOrgProviders = (fqonList) => {
-    return fetchFromOrgs("providers", fqonList);
+exports.fetchOrgProviders = (fqonList, type) => {
+    return fetchFromOrgs("providers", fqonList, type);
 }
 
 exports.fetchUsers = () => {
@@ -119,12 +125,14 @@ async function fetchContainersFromOrg(fqon) {
     return containers;
 }
 
-function fetchFromOrgs(type, fqonList) {
+function fetchFromOrgs(type, fqonList, type2) {
     if (!fqonList) fqonList = [getGestaltState().org.fqon];
 
     let promises = fqonList.map(fqon => {
         console.log(`Fetching ${type} from ${fqon}...`);
-        const res = meta_GET(`/${fqon}/${type}?expand=true`)
+        let url = `/${fqon}/${type}?expand=true`;
+        if (type2) url += `&type=${type2}`;
+        const res = meta_GET(url);
         return res;
     });
 
@@ -134,13 +142,14 @@ function fetchFromOrgs(type, fqonList) {
 }
 
 // TODO: Unsure if this gets all providers
-exports.fetchEnvironmentProviders = (providedState) => {
+exports.fetchEnvironmentProviders = (providedState, type) => {
     const state = providedState || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
     if (!state.environment) throw Error("No Environment in current context");
     if (!state.environment.id) throw Error("No Environment ID in current context");
     let url = `/${state.org.fqon}/environments/${state.environment.id}/providers?expand=true`;
+    if (type) url += `&type=${type}`;
     return meta_GET(url).then(providers => {
         for (let c of providers) {
             c.environment = state.environment;
@@ -150,13 +159,14 @@ exports.fetchEnvironmentProviders = (providedState) => {
     });
 }
 
-exports.fetchWorkspaceProviders = (providedState) => {
+exports.fetchWorkspaceProviders = (providedState, type) => {
     const state = providedState || getGestaltState();
     if (!state.org) throw Error("No Org in current context");
     if (!state.org.fqon) throw Error("No FQON in current context");
     if (!state.workspace) throw Error("No Environment in current context");
     if (!state.workspace.id) throw Error("No Environment ID in current context");
     let url = `/${state.org.fqon}/workspaces/${state.workspace.id}/providers?expand=true`;
+    if (type) url += `&type=${type}`;
     return meta_GET(url).then(providers => {
         for (let c of providers) {
             // c.environment = state.environment;

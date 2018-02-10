@@ -3,6 +3,11 @@
 //TODO: Move to /lib dir and rename to selectResourceUI
 exports.run = (options, resources) => {
 
+    if (options.output == 'json') {
+        console.log(JSON.stringify(resources, null, 2));
+        return;
+    }
+
     // validate options
     if (options.headers.length != options.fields.length) throw Error('options headers and fields must have the same number of items');
 

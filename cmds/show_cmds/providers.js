@@ -13,6 +13,14 @@ exports.builder = {
     environment: {
         description: 'Fetch providers from environment'
     },
+    output: {
+        alias: 'o',
+        description: 'show raw json'
+    },
+    type: {
+        alias: 't',
+        description: 'provider types'
+    },
 }
 exports.handler = cmd.handler(async function (argv) {
     const options = {
@@ -20,19 +28,20 @@ exports.handler = cmd.handler(async function (argv) {
         headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'UID'/*'Created'*/],
         fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
         sortField: 'name',
+        output: argv.output
     }
 
     let resources = null;
 
     if (argv.org) {
         const state = await ui.resolveOrg();
-        resources = await gestalt.fetchOrgProviders([state.org.fqon]);
+        resources = await gestalt.fetchOrgProviders([state.org.fqon], argv.type);
     } else if (argv.workspace) {
         const state = await ui.resolveWorkspace();
-        resources = await gestalt.fetchWorkspaceProviders(state);
+        resources = await gestalt.fetchWorkspaceProviders(state, argv.type);
     } else if (argv.environment) {
         const state = await ui.resolveEnvironment();
-        resources = await gestalt.fetchEnvironmentProviders(state);
+        resources = await gestalt.fetchEnvironmentProviders(state, argv.type);
     } else {
         resources = await gestalt.fetchOrgProviders(['root']);
     }
@@ -45,6 +54,5 @@ exports.handler = cmd.handler(async function (argv) {
             }
         }
     }
-
     ui.displayResource(options, resources);
 });

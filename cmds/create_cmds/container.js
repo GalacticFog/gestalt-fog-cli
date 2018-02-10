@@ -34,7 +34,11 @@ exports.handler = cmd.handler(async function (argv) {
     } else {
 
         // Interactive mode
-        const answers = await promptForInput();
+        const template = argv.template ? loadObjectFromFile(argv.template) : {};
+
+        const state = await ui.resolveEnvironment();
+
+        const answers = await promptForInput(state, template);
 
         debug(`answers: ${JSON.stringify(answers, null, 2)}`);
 
@@ -46,7 +50,7 @@ exports.handler = cmd.handler(async function (argv) {
             debug(`containerSpec: ${JSON.stringify(containerSpec, null, 2)}`);
 
             // Create
-            const container = await gestalt.createContainer(containerSpec);
+            const container = await gestalt.createContainer(containerSpec, state);
             debug(`container: ${JSON.stringify(container, null, 2)}`);
             console.log(`Container '${container.name}' created.`);
         } else {
@@ -62,48 +66,65 @@ exports.handler = cmd.handler(async function (argv) {
         throw new Error(`File '${filePath}' not found`);
     }
 
-    async function promptForInput() {
-        const state = await ui.resolveEnvironment();
-        const provider = await ui.selectProvider({ type: 'CaaS', message: 'Select Provider', mode: 'list' }, state);
-        const template = {};
+    async function promptForInput(state, template) {
+
+        if (!template.properties) template.properties = {};
+
+        let filter = null;
+        if (template.properties.provider && template.properties.provider.name) {
+            console.log(template.properties.provider.name)
+            filter = (item) => {
+                return item.name == template.properties.provider.name;
+            }
+        }
+
+        const provider = await ui.selectProvider({ type: 'CaaS', message: 'Select Provider', mode: 'list', filter: filter }, state);
         if (provider.resource_type == 'CaaS::Kubernetes') {
-            template.network = 'default';
+            template.properties.network = 'default';
+        } else if (provider.resource_type == 'CaaS::Kubernetes') {
+            // Don't provide an option for host networking
+            template.properties.network = 'BRIDGE';
         }
 
         let questions = [
             {
-                message: "Name",
+                when: !template.name,
+                message: "Container Name",
                 type: 'input',
                 name: 'name',
                 validate: inputValidation.resourceName
             },
             {
-                message: "Description",
+                when: !template.description,
+                message: "Container Description",
                 type: 'input',
                 name: 'description',
                 validate: inputValidation.resourceDescription
             },
             {
-                message: "Image",
+                when: !template.properties.image,
+                message: "Container Image",
                 type: 'input',
                 name: 'properties.image',
                 validate: inputValidation.containerImage
             },
             {
+                when: !template.properties.force_pull,
                 message: "Force Pull Image",
                 type: 'confirm',
                 name: 'properties.force_pull',
                 default: true
             },
-            {   // For DCOS Only 
-                when: provider.resource_type == 'CaaS::DCOS',
-                message: "DC/OS Network Type",
-                type: 'list',
-                name: 'properties.network',
-                choices: ['BRIDGE', 'HOST'],
-                default: "BRIDGE"
-            },
+            // {   // For DCOS Only 
+            //     when: provider.resource_type == 'CaaS::DCOS',
+            //     message: "DC/OS Network Type",
+            //     type: 'list',
+            //     name: 'properties.network',
+            //     choices: ['BRIDGE', 'HOST'],
+            //     default: "BRIDGE"
+            // },
             {
+                when: !template.properties.cpus,
                 message: "CPU",
                 type: 'input',
                 name: 'properties.cpus',
@@ -111,6 +132,7 @@ exports.handler = cmd.handler(async function (argv) {
                 validate: inputValidation.cpu
             },
             {
+                when: !template.properties.memory,
                 message: "Memory (MB)",
                 type: 'input',
                 name: 'properties.memory',
@@ -118,6 +140,7 @@ exports.handler = cmd.handler(async function (argv) {
                 validate: inputValidation.memory
             },
             {
+                when: !template.properties.num_instances,
                 message: "Number of instances",
                 type: 'input',
                 name: 'properties.num_instances',
@@ -138,9 +161,9 @@ exports.handler = cmd.handler(async function (argv) {
             };
 
             // merge in defaults
-            answers.properties = Object.assign(template, answers.properties);
+            answers.properties = Object.assign(template.properties, answers.properties);
 
-            return answers;
+            return Object.assign(template, answers);
         });
     }
 });
