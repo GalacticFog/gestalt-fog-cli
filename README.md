@@ -57,9 +57,6 @@ mv fog-macos /usr/local/bin/fog
 
 # For Linux
 mv fog-linux /usr/local/bin/fog
-
-# For Windows
-move fog-win.exe \Somewhere\In\Path\fog.exe
 ```
 
 ## Set up Bash Completion
