@@ -1,6 +1,6 @@
 'use strict';
 const inquirer = require('inquirer');
-const gestaltState = require('./lib/gestalt-state');
+const gestaltContext = require('./lib/gestalt-context');
 const gestalt = require('./lib/gestalt');
 const chalk = require('chalk');
 
@@ -35,7 +35,7 @@ exports.handler = cmd.handler(async function (argv) {
     };
 
     { // Scope
-        const config = gestaltState.getConfig();
+        const config = gestaltContext.getConfig();
 
         let questions = [];
 
@@ -65,7 +65,7 @@ exports.handler = cmd.handler(async function (argv) {
         params.gestalt_url = 'https://' + params.gestalt_url;
     }
 
-    gestaltState.saveConfig(params);
+    gestaltContext.saveConfig(params);
 
     let creds = {
         username: params.username,
@@ -89,9 +89,9 @@ exports.handler = cmd.handler(async function (argv) {
 
 function doLogin(gestalt_url, creds) {
 
-    gestaltState.clearAuthToken();
-    gestaltState.clearState();
-    gestaltState.clearCachedFiles();
+    gestaltContext.clearAuthToken();
+    gestaltContext.clearContext();
+    gestaltContext.clearCachedFiles();
 
     console.log(`Logging in to ${chalk.bold(gestalt_url)}...`);
     gestalt.authenticate(creds, (err, res) => {
@@ -103,6 +103,6 @@ function doLogin(gestalt_url, creds) {
             console.error("Please check the Gestalt URL endpoint and credentials and try again.")
         }
         // Clear the current context
-        gestaltState.clearState();
+        gestaltContext.clearContext();
     });
 }

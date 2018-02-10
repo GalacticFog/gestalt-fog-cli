@@ -8,21 +8,21 @@ const CONFIG_DIR = os.homedir() + '/.fog'
 
 exports.getConfigDir = getConfigDir;
 
-exports.saveState = (s) => {
-    let state = this.getState();
-    Object.assign(state, s); // merge in state
-    const contents = `${JSON.stringify(state, null, 2)}\n`;
-    writeFile('state.json.cached', contents);
+exports.saveContext = (s) => {
+    let context = this.getContext();
+    Object.assign(context, s); // merge in context
+    const contents = `${JSON.stringify(context, null, 2)}\n`;
+    writeFile('context.json.cached', contents);
 }
 
-exports.setState = (s) => {
+exports.setContext = (s) => {
     const contents = `${JSON.stringify(s, null, 2)}\n`;
-    writeFile('state.json.cached', contents);
+    writeFile('context.json.cached', contents);
 }
 
-exports.clearState = () => {
+exports.clearContext = () => {
     const dir = getConfigDir();
-    const f = `${dir}/state.json.cached`;
+    const f = `${dir}/context.json.cached`;
     if (fs.existsSync(f)) {
         fs.unlinkSync(f)
     }
@@ -61,8 +61,8 @@ exports.clearAuthToken = () => {
 
 exports.getConfig = getConfig;
 
-exports.getState = () => {
-    return getJsonFromFile("state.json.cached");
+exports.getContext = () => {
+    return getJsonFromFile("context.json.cached");
 }
 
 exports.saveAuthToken = (contents) => {

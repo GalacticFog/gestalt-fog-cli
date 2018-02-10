@@ -6,9 +6,9 @@ exports.desc = 'List provider containers'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
 
-    const state = await ui.resolveOrg();
+    const context = await ui.resolveOrg();
 
-    const fqon = state.org.fqon;
+    const fqon = context.org.fqon;
 
     const providers = await gestalt.fetchOrgProviders([fqon]);
 

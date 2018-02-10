@@ -49,17 +49,17 @@ exports.displayContext = displayContext;
 
 function displayContext() {
     return new Promise((resolve, reject) => {
-        const state = gestalt.getState();
+        const context = gestalt.getContext();
         let s = `${chalk.bold('Context:')} ${chalk.green(gestalt.getHost())}`
         // let s = `${chalk.green(gestalt.getHost())}`
-        if (state.org) {
-            s += ` / ${chalk.green(state.org.fqon)}`;
-            if (state.workspace) {
-                let value = state.workspace.description || state.workspace.name
+        if (context.org) {
+            s += ` / ${chalk.green(context.org.fqon)}`;
+            if (context.workspace) {
+                let value = context.workspace.description || context.workspace.name
                 s += ` / ${chalk.green(value)}`;
             }
-            if (state.environment) {
-                let value = state.environment.description || state.environment.name
+            if (context.environment) {
+                let value = context.environment.description || context.environment.name
                 s += ` / ${chalk.green(value)}`;
             }
         }

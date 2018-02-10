@@ -5,7 +5,7 @@ exports.command = 'environment-entitlements'
 exports.desc = 'Show environment entitlements'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const state = await ui.resolveEnvironment();
-    const resources = await gestalt.fetchEnvironmentEntitlements(state);
+    const context = await ui.resolveEnvironment();
+    const resources = await gestalt.fetchEnvironmentEntitlements(context);
     ui.displayEntitlements(resources);
 });

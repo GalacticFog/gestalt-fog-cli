@@ -1,8 +1,8 @@
-exports.run = async (opts, state) => {
+exports.run = async (opts, context) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
-    let res = await gestalt.fetchEnvironmentProviders(state, opts.type);
+    let res = await gestalt.fetchEnvironmentProviders(context, opts.type);
 
     if (opts) {
         if (opts.filter) {

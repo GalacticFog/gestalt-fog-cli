@@ -5,7 +5,7 @@ exports.command = 'org-entitlements'
 exports.desc = 'Show org entitlements'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const state = await ui.resolveOrg();
-    const resources = await gestalt.fetchOrgEntitlements(state);
+    const context = await ui.resolveOrg();
+    const resources = await gestalt.fetchOrgEntitlements(context);
     ui.displayEntitlements(resources);
 });

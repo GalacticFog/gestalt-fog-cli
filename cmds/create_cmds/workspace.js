@@ -9,9 +9,9 @@ exports.desc = 'Create workspace'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
 
-    const state = await ui.resolveOrg();
+    const context = await ui.resolveOrg();
 
-    const parent = state.org;
+    const parent = context.org;
 
     debug(`parent: ${JSON.stringify(parent, null, 2)}`);
 

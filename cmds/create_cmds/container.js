@@ -36,9 +36,9 @@ exports.handler = cmd.handler(async function (argv) {
         // Interactive mode
         const template = argv.template ? loadObjectFromFile(argv.template) : {};
 
-        const state = await ui.resolveEnvironment();
+        const context = await ui.resolveEnvironment();
 
-        const answers = await promptForInput(state, template);
+        const answers = await promptForInput(context, template);
 
         debug(`answers: ${JSON.stringify(answers, null, 2)}`);
 
@@ -50,7 +50,7 @@ exports.handler = cmd.handler(async function (argv) {
             debug(`containerSpec: ${JSON.stringify(containerSpec, null, 2)}`);
 
             // Create
-            const container = await gestalt.createContainer(containerSpec, state);
+            const container = await gestalt.createContainer(containerSpec, context);
             debug(`container: ${JSON.stringify(container, null, 2)}`);
             console.log(`Container '${container.name}' created.`);
         } else {
@@ -66,7 +66,7 @@ exports.handler = cmd.handler(async function (argv) {
         throw new Error(`File '${filePath}' not found`);
     }
 
-    async function promptForInput(state, template) {
+    async function promptForInput(context, template) {
 
         if (!template.properties) template.properties = {};
 
@@ -78,7 +78,7 @@ exports.handler = cmd.handler(async function (argv) {
             }
         }
 
-        const provider = await ui.selectProvider({ type: 'CaaS', message: 'Select Provider', mode: 'list', filter: filter }, state);
+        const provider = await ui.selectProvider({ type: 'CaaS', message: 'Select Provider', mode: 'list', filter: filter }, context);
         if (provider.resource_type == 'CaaS::Kubernetes') {
             template.properties.network = 'default';
         } else if (provider.resource_type == 'CaaS::Kubernetes') {

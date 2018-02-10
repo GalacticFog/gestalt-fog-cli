@@ -1,10 +1,10 @@
-exports.run = async (selectOpts, state) => {
+exports.run = async (selectOpts, context) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
-    if (!state) state = gestalt.getState();
+    if (!context) context = gestalt.getContext();
 
-    let res = await gestalt.fetchWorkspaceEnvironments(state);
+    let res = await gestalt.fetchWorkspaceEnvironments(context);
 
     // Filter
     if (selectOpts) {
@@ -13,8 +13,8 @@ exports.run = async (selectOpts, state) => {
         }
     }
 
-    const fqon = state.org.fqon;
-    const ws = state.workspace;
+    const fqon = context.org.fqon;
+    const ws = context.workspace;
 
     // enhance payload
     for (let r of res) {

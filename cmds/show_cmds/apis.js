@@ -38,12 +38,12 @@ exports.handler = cmd.handler(async function (argv) {
         const apis = await gestalt.fetchOrgApis(fqons);
         displayApis(argv, apis);
     } else if (argv.org) {
-        const state = await ui.resolveOrg();
-        const apis = await gestalt.fetchOrgApis([state.org.fqon]);
+        const context = await ui.resolveOrg();
+        const apis = await gestalt.fetchOrgApis([context.org.fqon]);
         displayApis(argv, apis);
     } else {
-        const state = await ui.resolveEnvironment();
-        const apis = await gestalt.fetchEnvironmentApis(state);
+        const context = await ui.resolveEnvironment();
+        const apis = await gestalt.fetchEnvironmentApis(context);
         displayApis(argv, apis);
     }
 });

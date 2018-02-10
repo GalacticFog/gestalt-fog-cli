@@ -34,14 +34,14 @@ exports.handler = cmd.handler(async function (argv) {
     let resources = null;
 
     if (argv.org) {
-        const state = await ui.resolveOrg();
-        resources = await gestalt.fetchOrgProviders([state.org.fqon], argv.type);
+        const context = await ui.resolveOrg();
+        resources = await gestalt.fetchOrgProviders([context.org.fqon], argv.type);
     } else if (argv.workspace) {
-        const state = await ui.resolveWorkspace();
-        resources = await gestalt.fetchWorkspaceProviders(state, argv.type);
+        const context = await ui.resolveWorkspace();
+        resources = await gestalt.fetchWorkspaceProviders(context, argv.type);
     } else if (argv.environment) {
-        const state = await ui.resolveEnvironment();
-        resources = await gestalt.fetchEnvironmentProviders(state, argv.type);
+        const context = await ui.resolveEnvironment();
+        resources = await gestalt.fetchEnvironmentProviders(context, argv.type);
     } else {
         resources = await gestalt.fetchOrgProviders(['root']);
     }

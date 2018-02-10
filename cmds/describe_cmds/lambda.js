@@ -90,13 +90,13 @@ async function selectFromAllLambdas(lambdaName) {
 }
 
 async function selectFromOrgLambdas(lambdaName) {
-    const state = await ui.resolveOrg();
-    const res = await gestalt.fetchOrgLambdas([state.org.fqon]);
+    const context = await ui.resolveOrg();
+    const res = await gestalt.fetchOrgLambdas([context.org.fqon]);
     return ui.selectLambda({ name: lambdaName }, res);
 }
 
 async function selectFromEnvLambdas(lambdaName) {
-    const state = await ui.resolveEnvironment();
-    const res = await gestalt.fetchEnvironmentLambdas(state);
+    const context = await ui.resolveEnvironment();
+    const res = await gestalt.fetchEnvironmentLambdas(context);
     return ui.selectLambda({ name: lambdaName }, res);
 }

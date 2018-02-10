@@ -23,8 +23,8 @@
 // });
 
 // async function showLambdas(argv) {
-//     const state = await ui.resolveEnvironment();
-//     const resources = await gestalt.fetchEnvironmentLambdas(state);
+//     const context = await ui.resolveEnvironment();
+//     const resources = await gestalt.fetchEnvironmentLambdas(context);
 //     ui.displayResource(options, resources);
 // }
 
@@ -35,7 +35,7 @@
 // }
 
 // async function showOrgLambdas(argv) {
-//     const state = await ui.resolveOrg();
-//     const resources = await gestalt.fetchOrgLambdas([state.org.fqon]);
+//     const context = await ui.resolveOrg();
+//     const resources = await gestalt.fetchOrgLambdas([context.org.fqon]);
 //     ui.displayResource(options, resources);
 // }

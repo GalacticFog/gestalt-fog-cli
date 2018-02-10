@@ -19,7 +19,7 @@ exports.builder = {
 
 exports.handler = cmd.handler(async function (argv) {
     if (argv.dir) {
-        const state = await ui.resolveEnvironment();
+        const context = await ui.resolveEnvironment();
         const lambdaFiles = readLambdaFiles(argv.dir);
         const selectedLambdas = selectLambdaItems(lambdaFiles);
         const confirmed = await ui.promptToContinue('Proceed with import?');
@@ -29,7 +29,7 @@ exports.handler = cmd.handler(async function (argv) {
             // Do Import
             for (let item of selectedLambdas) {
                 console.log(`Importing ${item.lambda.name} (${item.file})`);
-                const res = await gestalt.createLambda(item.lambda, state);
+                const res = await gestalt.createLambda(item.lambda, context);
             }
             console.log('Done.');
         } else {

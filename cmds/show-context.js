@@ -9,5 +9,5 @@ exports.handler = cmd.handler(async function (argv) {
 
     selectHierarchy.displayContext();
 
-    console.log(JSON.stringify(gestalt.getState(), null, 2));
+    console.log(JSON.stringify(gestalt.getContext(), null, 2));
 });

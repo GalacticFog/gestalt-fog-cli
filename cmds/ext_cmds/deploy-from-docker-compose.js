@@ -35,13 +35,13 @@ exports.handler = cmd.handler(async function (argv) {
         };
     }
 
-    const state = gestalt.getState();
+    const context = gestalt.getContext();
 
     console.log("Containers will be created in the following location:");
     console.log();
-    console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
-    console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
-    console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
+    console.log('    Org:         ' + chalk.bold(`${context.org.description} (${context.org.fqon})`));
+    console.log('    Workspace:   ' + chalk.bold(`${context.workspace.description} (${context.workspace.name})`));
+    console.log('    Environment: ' + chalk.bold(`${context.environment.description} (${context.environment.name})`));
     console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
     console.log();
 
@@ -53,7 +53,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     const createdContainers = containers.map(item => {
         console.log(`Creating container ${item.name}`);
-        const container = gestalt.createContainer(item, state);
+        const container = gestalt.createContainer(item, context);
         return container;
     });
 

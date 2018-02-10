@@ -19,11 +19,11 @@ exports.handler = cmd.handler(async function (argv) {
         const fqons = await gestalt.fetchOrgFqons();
         containers = await gestalt.fetchOrgContainers(fqons);
     } else if (argv.org) {
-        const state = await ui.resolveOrg();
-        containers = await gestalt.fetchOrgContainers([state.org.fqon]);
+        const context = await ui.resolveOrg();
+        containers = await gestalt.fetchOrgContainers([context.org.fqon]);
     } else {
-        const state = await ui.resolveEnvironment();
-        containers = await gestalt.fetchEnvironmentContainers(state);
+        const context = await ui.resolveEnvironment();
+        containers = await gestalt.fetchEnvironmentContainers(context);
     }
 
     if (containers.length == 0) {

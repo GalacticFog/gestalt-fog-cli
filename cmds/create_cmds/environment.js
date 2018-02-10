@@ -8,7 +8,7 @@ exports.command = 'environment'
 exports.desc = 'Create environment'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const state = await ui.resolveWorkspace();
+    const context = await ui.resolveWorkspace();
     const answers = await promptForInput();
 
     debug(`answers: ${answers}`);
@@ -22,7 +22,7 @@ exports.handler = cmd.handler(async function (argv) {
             }
         };
 
-        const environment = await gestalt.createEnvironment(envSpec, state);
+        const environment = await gestalt.createEnvironment(envSpec, context);
 
         debug(`environment: ${environment}`);
 

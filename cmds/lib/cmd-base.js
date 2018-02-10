@@ -1,4 +1,4 @@
-const state = {};
+const context = {};
 
 exports.handler = function (main) {
     return function (argv) {
@@ -7,7 +7,7 @@ exports.handler = function (main) {
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
         }
 
-        state.argv = argv;
+        context.argv = argv;
         run(main, argv).then(() => {
             // Post
         });
@@ -47,8 +47,8 @@ function handleError(argv, err) {
 }
 
 function debug(str) {
-    if (!state.argv) console.error('WARNING: state.argv isn\'t initialized in cmd-base.js::debug()');
-    if (state.argv && state.argv.debug) {
+    if (!context.argv) console.error('WARNING: context.argv isn\'t initialized in cmd-base.js::debug()');
+    if (context.argv && context.argv.debug) {
         console.log(typeof str)
         if (typeof str == 'object') {
             console.log('[DEBUG] ' + JSON.stringify(str, null, 2));

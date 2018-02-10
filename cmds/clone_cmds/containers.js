@@ -7,22 +7,22 @@ exports.command = 'containers'
 exports.desc = 'Clone containers'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const state = await ui.resolveWorkspace();
+    const context = await ui.resolveWorkspace();
     console.log();
     console.log(chalk.bold('Clone containers from one environment to another'));
     console.log();
     console.log("Select source environment");
     console.log();
-    const sourceEnv = await ui.selectEnvironment({}, state);
+    const sourceEnv = await ui.selectEnvironment({}, context);
     console.log();
 
-    state.environment = {
+    context.environment = {
         id: sourceEnv.id,
         name: sourceEnv.name,
         description: sourceEnv.description
     }
 
-    const containers = await gestalt.fetchEnvironmentContainers(state);
+    const containers = await gestalt.fetchEnvironmentContainers(context);
 
     console.log("Select containers to clone (use arrows and spacebar to modify selection)");
     console.log();
@@ -33,7 +33,7 @@ exports.handler = cmd.handler(async function (argv) {
     console.log("Select target environment to clone containers to")
     console.log();
 
-    const targetEnv = await ui.selectEnvironment({}, state);
+    const targetEnv = await ui.selectEnvironment({}, context);
     console.log();
 
     // Ensure different environments were used
@@ -42,7 +42,7 @@ exports.handler = cmd.handler(async function (argv) {
         return;
     }
 
-    state.environment = {
+    context.environment = {
         id: targetEnv.id,
         name: targetEnv.name,
         description: targetEnv.description
@@ -50,9 +50,9 @@ exports.handler = cmd.handler(async function (argv) {
 
     console.log("Containers will be created in the following location:");
     console.log();
-    console.log('    Org:         ' + chalk.bold(`${state.org.description} (${state.org.fqon})`));
-    console.log('    Workspace:   ' + chalk.bold(`${state.workspace.description} (${state.workspace.name})`));
-    console.log('    Environment: ' + chalk.bold(`${state.environment.description} (${state.environment.name})`));
+    console.log('    Org:         ' + chalk.bold(`${context.org.description} (${context.org.fqon})`));
+    console.log('    Workspace:   ' + chalk.bold(`${context.workspace.description} (${context.workspace.name})`));
+    console.log('    Environment: ' + chalk.bold(`${context.environment.description} (${context.environment.name})`));
     // console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
     console.log();
 
@@ -66,7 +66,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     const createContainerPromises = selectedContainers.map(item => {
         const c = cloneContainerPayload(item);
-        return gestalt.createContainer(c, state);
+        return gestalt.createContainer(c, context);
     });
 
     const results = await Promise.all(createContainerPromises);

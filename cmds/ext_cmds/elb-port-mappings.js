@@ -12,7 +12,7 @@ exports.builder = {
 }
 exports.handler = cmd.handler(async function (argv) {
     const gestalt = require('../lib/gestalt');
-    const gestaltState = require('../lib/gestalt-state');
+    const gestaltContext = require('../lib/gestalt-context');
     const displayResource = require('../lib/displayResourceUI');
     const selectResource = require('../lib/selectResourceUI');
     const displayAmazon = require('../lib/displayAmazon');
@@ -239,7 +239,7 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     function loadClusterConfig(key) {
-        const f = gestaltState.getConfigDir() + `/cluster-${key}.json`;
+        const f = gestaltContext.getConfigDir() + `/cluster-${key}.json`;
         if (fs.existsSync(f)) {
             const contents = fs.readFileSync(f, 'utf8');
             return JSON.parse(contents);

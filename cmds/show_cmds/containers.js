@@ -22,8 +22,8 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 async function showContainers(argv) {
-    const state = await ui.resolveEnvironment();
-    const containers = await gestalt.fetchEnvironmentContainers(state);
+    const context = await ui.resolveEnvironment();
+    const containers = await gestalt.fetchEnvironmentContainers(context);
     displayContainers(containers);
 }
 
@@ -34,8 +34,8 @@ async function showAllContainers(argv) {
 }
 
 async function showOrgContainers(argv) {
-    const state = await ui.resolveOrg();
-    const fqon = state.org.fqon;
+    const context = await ui.resolveOrg();
+    const fqon = context.org.fqon;
     const containers = await gestalt.fetchOrgContainers([fqon]);
     displayContainers(containers);
 }

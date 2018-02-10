@@ -1,11 +1,11 @@
-const gestaltState = require('./gestalt-state');
+const gestaltContext = require('./gestalt-context');
 const gestaltServicesConfig = require('./gestalt-services-config');
 const childProcess = require('child_process');
 const os = require('os');
 const fs = require('fs');
 const request = require('request-promise-native');
 
-const CONFIG_DIR = gestaltState.getConfigDir();
+const CONFIG_DIR = gestaltContext.getConfigDir();
 
 // For interacting with Kubernetes cluster configured with webhook authentication to Gestalt.
 class GestaltKubeClient {
@@ -27,7 +27,7 @@ class GestaltKubeClient {
                 throw Error(`'${this.options.cluster}' cluster specified but '${kubeconfig}' was not found`, null);
             }
 
-            const token = gestaltState.getCachedAuthToken();
+            const token = gestaltContext.getCachedAuthToken();
             if (!token) {
                 throw Error(`No cached Gestalt auth token found, you may need to login first`, null);
             }
@@ -57,7 +57,7 @@ class GestaltKubeClient {
 
     accessPodLogs(namespace, pod, options) {
         return obtainKubeConfig(this.options.cluster).then(kubeconfig => {
-            const token = gestaltState.getCachedAuthToken();
+            const token = gestaltContext.getCachedAuthToken();
             if (!token) {
                 throw Error(`No cached Gestalt auth token found, you may need to login first`, null);
             }
@@ -94,7 +94,7 @@ class GestaltKubeClient {
     accessPodConsole(namespace, pod, options) {
         return obtainKubeConfig(this.options.cluster).then(kubeconfig => {
 
-            const token = gestaltState.getCachedAuthToken();
+            const token = gestaltContext.getCachedAuthToken();
             if (!token) {
                 throw Error(`No cached Gestalt auth token found, you may need to login first`, null);
             }
@@ -126,7 +126,7 @@ class GestaltKubeClient {
 
     getServicesAllNamespaces() {
         return obtainKubeConfig(this.options.cluster).then(kubeconfig => {
-            const token = gestaltState.getCachedAuthToken();
+            const token = gestaltContext.getCachedAuthToken();
             if (!token) {
                 throw Error(`No cached Gestalt auth token found, you may need to login first`, null);
             }

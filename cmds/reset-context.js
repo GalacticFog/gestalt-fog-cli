@@ -3,10 +3,10 @@ exports.desc = 'Reset context'
 exports.builder = {}
 exports.handler = function (argv) {
 
-    const gestaltState = require('./lib/gestalt-state');
+    const gestaltContext = require('./lib/gestalt-context');
 
-    gestaltState.clearState();
+    gestaltContext.clearContext();
 
     console.log("Current context: ");
-    console.log(gestaltState.getState());
+    console.log(gestaltContext.getContext());
 }

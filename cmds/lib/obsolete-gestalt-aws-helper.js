@@ -1,5 +1,5 @@
 // #!/usr/bin/env node
-// const gestaltState = require('./gestalt-state');
+// const gestaltContext = require('./gestalt-context');
 // const AmazonClient = require('./amazon');
 // const fs = require('fs');
 // const selectResource = require('./selectResourceUI');
@@ -47,7 +47,7 @@
 // }
 
 // function loadClusterConfig(key) {
-//     const f = gestaltState.getConfigDir() + `/cluster-${key}.json`;
+//     const f = gestaltContext.getConfigDir() + `/cluster-${key}.json`;
 //     if (fs.existsSync(f)) {
 //         const contents = fs.readFileSync(f, 'utf8');
 //         return JSON.parse(contents);

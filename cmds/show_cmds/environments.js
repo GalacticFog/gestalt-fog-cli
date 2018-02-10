@@ -31,8 +31,8 @@ exports.handler = cmd.handler(async function (argv) {
             sortField: 'description',
         }
 
-        const state = await ui.resolveOrg();
-        const resources = await gestalt.fetchOrgEnvironments([state.org.fqon]);
+        const context = await ui.resolveOrg();
+        const resources = await gestalt.fetchOrgEnvironments([context.org.fqon]);
         ui.displayResource(options, resources);
     } else {
         const options = {
@@ -42,8 +42,8 @@ exports.handler = cmd.handler(async function (argv) {
             sortField: 'description',
         }
 
-        const state = await ui.resolveWorkspace();
-        const resources = await gestalt.fetchWorkspaceEnvironments(state);
+        const context = await ui.resolveWorkspace();
+        const resources = await gestalt.fetchWorkspaceEnvironments(context);
         ui.displayResource(options, resources);
     }
 });

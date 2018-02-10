@@ -35,8 +35,8 @@ exports.handler = cmd.handler(async function (argv) {
         console.log(`Creating package lambda from ${argv.url}`);
     }
 
-    const state = await ui.resolveEnvironment();
-    const answers = await promptForInput(state);
+    const context = await ui.resolveEnvironment();
+    const answers = await promptForInput(context);
 
     debug(`answers: ${JSON.stringify(answers, null, 2)}`);
 
@@ -58,7 +58,7 @@ exports.handler = cmd.handler(async function (argv) {
         debug(`lambdaSpec: ${JSON.stringify(lambdaSpec, null, 2)}`);
 
         // Create
-        gestalt.createLambda(lambdaSpec, state).then(lambda => {
+        gestalt.createLambda(lambdaSpec, context).then(lambda => {
             debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
             console.log(`Lambda '${lambda.name}' created.`);
         });
@@ -66,13 +66,13 @@ exports.handler = cmd.handler(async function (argv) {
         console.log('Aborted.');
     }
 
-    async function promptForInput(state) {
+    async function promptForInput(context) {
 
         //TODO: The following makes two API calls to provider.  Should reduce to 1, and do filtering here.
-        const lambdaProvider = await ui.selectProvider({ type: 'Lambda', message: 'Select Provider' }, state);
+        const lambdaProvider = await ui.selectProvider({ type: 'Lambda', message: 'Select Provider' }, context);
         debug(lambdaProvider);
 
-        const executorProvider = await ui.selectProvider({ type: 'Executor', message: 'Select Runtime' }, state);
+        const executorProvider = await ui.selectProvider({ type: 'Executor', message: 'Select Runtime' }, context);
         debug(executorProvider);
 
         let questions = [

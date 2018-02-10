@@ -5,7 +5,7 @@ exports.command = 'workspace-entitlements'
 exports.desc = 'Show workspace entitlements'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const state = ui.resolveWorkspace();
-    const resources = await gestalt.fetchWorkspaceEntitlements(state);
+    const context = ui.resolveWorkspace();
+    const resources = await gestalt.fetchWorkspaceEntitlements(context);
     ui.displayEntitlements(resources);
 });

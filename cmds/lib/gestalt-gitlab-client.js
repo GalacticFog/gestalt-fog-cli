@@ -1,4 +1,4 @@
-const gestaltState = require('./gestalt-state');
+const gestaltContext = require('./gestalt-context');
 const os = require('os');
 const fs = require('fs');
 
@@ -187,7 +187,7 @@ function getProjectVariables(project, callback) {
 };
 
 function loadGitlabConfig() {
-    const f = gestaltState.getConfigDir() + `/gitlab-config.json`;
+    const f = gestaltContext.getConfigDir() + `/gitlab-config.json`;
     if (fs.existsSync(f)) {
         const contents = fs.readFileSync(f, 'utf8');
         return JSON.parse(contents);

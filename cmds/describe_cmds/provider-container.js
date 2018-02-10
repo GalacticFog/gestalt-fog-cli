@@ -70,8 +70,8 @@ exports.handler = cmd.handler(async function (argv) {
 
 
     async function selectProviderContainers() {
-        const state = await ui.resolveOrg();
-        const providerContainers = await getProviderContainers(state);
+        const context = await ui.resolveOrg();
+        const providerContainers = await getProviderContainers(context);
         let options = {
             mode: 'autocomplete',
             message: "Select Container(s)",
@@ -83,9 +83,9 @@ exports.handler = cmd.handler(async function (argv) {
         return selectResource.run(options);
     }
 
-    async function getProviderContainers(state) {
+    async function getProviderContainers(context) {
 
-        const fqon = state.org.fqon;
+        const fqon = context.org.fqon;
 
         const providers = await gestalt.fetchOrgProviders([fqon]);
 

@@ -17,7 +17,7 @@ exports.run = (options, unsedCallback) => {
 
     // -- Main --
 
-    const state = {}
+    const context = {}
     let resources = options.resources;
 
     // if (resources.length == 0) {

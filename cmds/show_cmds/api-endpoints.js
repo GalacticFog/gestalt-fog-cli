@@ -53,8 +53,8 @@ async function showApiEndpoints(argv) {
         sortField: 'description',
     }
 
-    const state = await ui.resolveEnvironment();
-    const resources = await gestalt.fetchEnvironmentApis(state);
+    const context = await ui.resolveEnvironment();
+    const resources = await gestalt.fetchEnvironmentApis(context);
     const apis = resources.map(item => {
         return {
             id: item.id,
@@ -62,8 +62,8 @@ async function showApiEndpoints(argv) {
         }
     });
 
-    const wsName = state.workspace.name;
-    const envName = state.environment.name;
+    const wsName = context.workspace.name;
+    const envName = context.environment.name;
 
     const eps = await gestalt.fetchApiEndpoints(apis);
     eps.map(ep => {
@@ -108,9 +108,9 @@ async function showOrgApiEndpoints(argv) {
         sortField: 'description',
     }
 
-    const state = await ui.resolveOrg();
+    const context = await ui.resolveOrg();
 
-    const resources = await gestalt.fetchOrgApis([state.org.fqon]);
+    const resources = await gestalt.fetchOrgApis([context.org.fqon]);
 
     const apis = resources.map(item => {
         return {

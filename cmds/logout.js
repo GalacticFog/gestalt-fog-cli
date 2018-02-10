@@ -5,13 +5,13 @@ exports.desc = 'Logout of Gestalt Platform Instance'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
 
-    const gestaltState = require('./lib/gestalt-state');
+    const gestaltContext = require('./lib/gestalt-context');
 
-    gestaltState.clearAuthToken();
+    gestaltContext.clearAuthToken();
 
-    gestaltState.clearState();
+    gestaltContext.clearContext();
 
-    gestaltState.clearCachedFiles();
+    gestaltContext.clearCachedFiles();
 
     console.log("Logged out.");
 });

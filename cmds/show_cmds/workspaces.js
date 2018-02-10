@@ -30,8 +30,8 @@ exports.handler = cmd.handler(async function (argv) {
             sortField: 'description',
         }
 
-        const state = await ui.resolveOrg();
-        const fqon = state.org.fqon;
+        const context = await ui.resolveOrg();
+        const fqon = context.org.fqon;
         const resources = await gestalt.fetchOrgWorkspaces([fqon]);
         ui.displayResource(options, resources);
     }
