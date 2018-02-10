@@ -39,7 +39,7 @@ exports.handler = cmd.handler(async function (argv) {
     const selectedContainers = await ui.selectContainer({ mode: 'checkbox', defaultChecked: false, fields: fields }, containers);
     console.log();
 
-    displayRunningContainers(selectedContainers);
+    ui.displayResources(selectedContainers);
 
     const confirmed = await ui.promptToContinue(`Proceed to delete ${selectedContainers.length} container(s)?`, false);
     if (!confirmed) {
@@ -55,19 +55,3 @@ exports.handler = cmd.handler(async function (argv) {
     await Promise.all(promises);
     console.log('Done.');
 });
-
-function displayRunningContainers(containers) {
-
-    const options = {
-        message: "Containers",
-        headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner', 'FQON', 'ENV'],
-        fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'org.properties.fqon', 'environment.name'],
-        sortField: 'description',
-    }
-
-    containers.map(item => {
-        item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`
-    })
-
-    ui.displayResource(options, containers);
-}

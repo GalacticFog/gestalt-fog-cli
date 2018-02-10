@@ -26,33 +26,6 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 async function showApiEndpoints(argv) {
-    const options = {
-        message: "API Endpoints",
-        headers: [
-            'Resource Patch',
-            'Type',
-            'Security',
-            'FQON',
-            'Workspace',
-            'Environment',
-            'Synchronous',
-            'Methods',
-            'Owner'
-        ],
-        fields: [
-            'properties.api_path',
-            'properties.implementation_type',
-            'properties.plugins.gestaltSecurity.enabled',
-            'org.properties.fqon',
-            'properties.workspace',
-            'properties.environment',
-            'properties.synchronous',
-            'properties.methods',
-            'owner.name'
-        ],
-        sortField: 'description',
-    }
-
     const context = await ui.resolveEnvironment();
     const resources = await gestalt.fetchEnvironmentApis(context);
     const apis = resources.map(item => {
@@ -72,46 +45,12 @@ async function showApiEndpoints(argv) {
         ep.properties.workspace = wsName;
     });
 
-    if (argv.raw) {
-        console.log(JSON.stringify(eps, null, 2));
-    } else {
-        ui.displayResource(options, eps);
-    }
+    ui.displayResources(eps, argv);
 }
 
 async function showOrgApiEndpoints(argv) {
-
-    const options = {
-        message: "API Endpoints",
-        headers: [
-            'Resource Path',
-            'Type',
-            'Security',
-            'FQON',
-            // 'Workspace',
-            // 'Environment',
-            'Synchronous',
-            'Methods',
-            'Owner'
-        ],
-        fields: [
-            'properties.api_path',
-            'properties.implementation_type',
-            'properties.plugins.gestaltSecurity.enabled',
-            'org.properties.fqon',
-            // 'properties.workspace',
-            // 'properties.environment',
-            'properties.synchronous',
-            'properties.methods',
-            'owner.name'
-        ],
-        sortField: 'description',
-    }
-
     const context = await ui.resolveOrg();
-
     const resources = await gestalt.fetchOrgApis([context.org.fqon]);
-
     const apis = resources.map(item => {
         return {
             id: item.id,
@@ -125,42 +64,10 @@ async function showOrgApiEndpoints(argv) {
         ep.properties.workspace = '(empty)';
     });
 
-    if (argv.raw) {
-        console.log(JSON.stringify(eps, null, 2));
-    } else {
-        ui.displayResource(options, eps);
-    }
+    ui.displayResources(eps, argv);
 }
 
 async function showAllApiEndpoints(argv) {
-
-    const options = {
-        message: "API Endpoints",
-        headers: [
-            'Resource Path',
-            'Type',
-            'Security',
-            'FQON',
-            // 'Workspace',
-            // 'Environment',
-            'Synchronous',
-            'Methods',
-            'Owner'
-        ],
-        fields: [
-            'properties.api_path',
-            'properties.implementation_type',
-            'properties.plugins.gestaltSecurity.enabled',
-            'org.properties.fqon',
-            // 'properties.workspace',
-            // 'properties.environment',
-            'properties.synchronous',
-            'properties.methods',
-            'owner.name'
-        ],
-        sortField: 'description',
-    }
-
     let fqons = await gestalt.fetchOrgFqons();
     let resources = await gestalt.fetchOrgApis(fqons);
     const apis = resources.map(item => {
@@ -177,9 +84,5 @@ async function showAllApiEndpoints(argv) {
         //     ep.properties.workspace = '(empty)';
     }
 
-    if (argv.raw) {
-        console.log(JSON.stringify(eps, null, 2));
-    } else {
-        ui.displayResource(options, eps);
-    }
+    ui.displayResources(eps, argv);
 }

@@ -84,3 +84,39 @@ fog [command] --help
 fog <tab, tab>
 fog [command] <tab, tab>
 ```
+
+## Example Commands
+```sh
+# Show commands
+
+fog show containers
+fog show containers --org
+fog show containers --all
+fog show containers --all --raw
+
+fog show lambdas
+fog show lambdas --org
+fog show lambdas --all
+fog show lambdas --raw
+
+# Describe single resource commands
+
+fog describe container
+
+fog describe lambda
+fog describe lambda --fqon engineering --id c01c2296-ce76-4d41-8530-53ceb257133a
+
+# Change current context
+
+fog switch org
+fog switch workspace
+fog switch environment
+
+
+# Container actions
+
+fog scale container
+fog restart containers
+fog clone containers
+
+```

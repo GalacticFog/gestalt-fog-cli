@@ -39,7 +39,7 @@ exports.handler = cmd.handler(async function (argv) {
     const selectedLambdas = await ui.selectLambda({ mode: 'checkbox', defaultChecked: false, fields: fields }, lambdas);
     console.log();
 
-    displayRunningLambdas(selectedLambdas);
+    ui.displayResources(selectedLambdas);
 
     const confirmed = await ui.promptToContinue(`Proceed to delete ${selectedLambdas.length} lambda(s)?`, false);
     if (!confirmed) {
@@ -55,15 +55,3 @@ exports.handler = cmd.handler(async function (argv) {
     await Promise.all(promises);
     console.log('Done.');
 });
-
-function displayRunningLambdas(lambdas) {
-
-    const options = {
-        message: "Lambdas",
-        headers: ['Lambda', 'Description', 'Owner', 'FQON'],
-        fields: ['name', 'description', 'owner.name', 'org.properties.fqon'],
-        sortField: 'description',
-    }
-
-    ui.displayResource(options, lambdas);
-}

@@ -15,43 +15,18 @@ exports.builder = {
     }
 }
 
-const options = {
-    message: "APIs",
-    headers: [
-        'Name',
-        'FQON',
-        'Owner',
-        'ID'
-    ],
-    fields: [
-        'name',
-        'org.properties.fqon',
-        'owner.name',
-        'id'
-    ],
-    sortField: 'description',
-}
-
 exports.handler = cmd.handler(async function (argv) {
     if (argv.all) {
         let fqons = await gestalt.fetchOrgFqons();
         const apis = await gestalt.fetchOrgApis(fqons);
-        displayApis(argv, apis);
+        ui.displayResources(apis, argv);
     } else if (argv.org) {
         const context = await ui.resolveOrg();
         const apis = await gestalt.fetchOrgApis([context.org.fqon]);
-        displayApis(argv, apis);
+        ui.displayResources(apis, argv);
     } else {
         const context = await ui.resolveEnvironment();
         const apis = await gestalt.fetchEnvironmentApis(context);
-        displayApis(argv, apis);
+        ui.displayResources(apis, argv);
     }
 });
-
-function displayApis(argv, apis) {
-    if (argv.raw) {
-        console.log(JSON.stringify(apis, null, 2));
-    } else {
-        ui.displayResource(options, apis);
-    }
-}

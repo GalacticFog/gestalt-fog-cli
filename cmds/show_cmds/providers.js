@@ -13,24 +13,12 @@ exports.builder = {
     environment: {
         description: 'Fetch providers from environment'
     },
-    output: {
-        alias: 'o',
-        description: 'show raw json'
-    },
     type: {
         alias: 't',
         description: 'provider types'
     },
 }
 exports.handler = cmd.handler(async function (argv) {
-    const options = {
-        message: "Providers",
-        headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'UID'/*'Created'*/],
-        fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
-        sortField: 'name',
-        output: argv.output
-    }
-
     let resources = null;
 
     if (argv.org) {
@@ -46,13 +34,5 @@ exports.handler = cmd.handler(async function (argv) {
         resources = await gestalt.fetchOrgProviders(['root']);
     }
 
-    for (let item of resources) {
-        item.resource_type = item.resource_type.replace(/Gestalt::Configuration::Provider::/, '')
-        if (item.description) {
-            if (item.description.length > 20) {
-                item.description = item.description.substring(0, 20) + '...';
-            }
-        }
-    }
-    ui.displayResource(options, resources);
+    ui.displayResources(resources, argv);
 });

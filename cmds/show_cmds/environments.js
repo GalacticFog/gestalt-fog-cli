@@ -13,37 +13,16 @@ exports.builder = {
 }
 exports.handler = cmd.handler(async function (argv) {
     if (argv.all) {
-        const options = {
-            message: "Environments",
-            headers: ['Description', 'Name', 'Org', 'Type', 'Workspace', 'Owner'],
-            fields: ['description', 'name', 'org.properties.fqon', 'properties.environment_type', 'properties.workspace.name', 'owner.name'],
-            sortField: 'description',
-        }
-
         let fqons = await gestalt.fetchOrgFqons();
         let resources = await gestalt.fetchOrgEnvironments(fqons);
-        ui.displayResource(options, resources);
+        ui.displayResources(resources, argv);
     } else if (argv.org) {
-        const options = {
-            message: "Environments",
-            headers: ['Environment', 'Name', 'Type', 'Org', 'Workspace', 'Owner'],
-            fields: ['description', 'name', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name'],
-            sortField: 'description',
-        }
-
         const context = await ui.resolveOrg();
         const resources = await gestalt.fetchOrgEnvironments([context.org.fqon]);
-        ui.displayResource(options, resources);
+        ui.displayResources(resources, argv);
     } else {
-        const options = {
-            message: "Environments",
-            headers: ['Environment', 'Name', 'Type', 'Org', 'Workspace', 'Owner'],
-            fields: ['description', 'name', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name'],
-            sortField: 'description',
-        }
-
         const context = await ui.resolveWorkspace();
         const resources = await gestalt.fetchWorkspaceEnvironments(context);
-        ui.displayResource(options, resources);
+        ui.displayResources(resources, argv);
     }
 });

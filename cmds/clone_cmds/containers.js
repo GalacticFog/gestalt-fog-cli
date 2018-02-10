@@ -56,9 +56,9 @@ exports.handler = cmd.handler(async function (argv) {
     // console.log('    Provider:    ' + chalk.bold(`${provider.description} (${provider.name})`));
     console.log();
 
-    displayRunningContainers(selectedContainers);
+    ui.displayResources(selectedContainers)
 
-    const confirmed = await doConfirm();
+    const confirmed = await ui.promptToContinue(`Proceed to clone ${selectedContainers.length} container(s)?`, false);
     if (!confirmed) {
         console.log('Aborted.');
         return;
@@ -71,7 +71,8 @@ exports.handler = cmd.handler(async function (argv) {
 
     const results = await Promise.all(createContainerPromises);
     const createdContainers = [].concat.apply([], results); // flatten array
-    displayRunningContainers(createdContainers);
+    ui.displayResources(createdContainers);
+
     console.log('Done.');
 });
 
@@ -104,36 +105,4 @@ function cloneContainerPayload(src) {
             user: op.user
         }
     }
-}
-
-function displayRunningContainers(containers) {
-
-    const options = {
-        message: "Containers",
-        headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner'],
-        fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name'],
-        sortField: 'description',
-    }
-
-    for (let item of containers) {
-        item.running_instances = `${item.properties.tasks_running || 0} / ${item.properties.num_instances}`
-    }
-
-    ui.displayResource(options, containers);
-}
-
-
-function doConfirm() {
-    const questions = [
-        {
-            message: "Proceed?",
-            type: 'confirm',
-            name: 'confirm',
-            default: false // Don't proceed if no user input
-        },
-    ];
-
-    return inquirer.prompt(questions).then(answers => {
-        return answers.confirm;
-    });
 }

@@ -4,22 +4,36 @@ const selectOrg = require('./selectOrg');
 const selectWorkspace = require('./selectWorkspace');
 const selectEnvironment = require('./selectEnvironment');
 const chalk = require('chalk');
+const displayContext = require('./displayContext').run;
 
 exports.resolveOrg = () => {
     return doResolveOrg()
         .then(org => {
             return { org: org }
         })
+        .then(context => doDisplayContext(context))
 }
 
 exports.resolveWorkspace = () => {
-    return this.resolveOrg()
+    return doResolveOrg().then(org => {
+        return { org: org }
+    })
         .then(context => doResolveWorkspace(context))
+        .then(context => doDisplayContext(context))
 }
 
 exports.resolveEnvironment = () => {
-    return this.resolveWorkspace()
+    return doResolveOrg().then(org => {
+        return { org: org }
+    })
+        .then(context => doResolveWorkspace(context))
         .then(context => doResolveEnvironment(context))
+        .then(context => doDisplayContext(context))
+}
+
+function doDisplayContext(context) {
+    displayContext(context);
+    return context;
 }
 
 // exports.chooseOrg = () => {

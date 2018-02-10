@@ -20,8 +20,11 @@ exports.promptToContinue = require('./promptToContinue').run;
 
 exports.displayResource = require('./displayResourceUI').run;
 
+exports.displayResources = require('./displayGestaltResource').run;
+
 exports.displayEntitlements = require('./displayEntitlements').run;
 
+exports.displayContext = require('./displayContext').run;
 
 const resolveHierarchy = require('./resolveHierarchy');
 
