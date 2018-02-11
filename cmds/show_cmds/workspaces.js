@@ -18,6 +18,6 @@ exports.handler = cmd.handler(async function (argv) {
         const context = await ui.resolveOrg();
         const fqon = context.org.fqon;
         const resources = await gestalt.fetchOrgWorkspaces([fqon]);
-        ui.displayResources(resources, argv);
+        ui.displayResources(resources, argv, context);
     }
 });

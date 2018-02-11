@@ -20,19 +20,19 @@ exports.builder = {
 }
 exports.handler = cmd.handler(async function (argv) {
     let resources = null;
+    let context = null;
 
     if (argv.org) {
-        const context = await ui.resolveOrg();
+        context = await ui.resolveOrg();
         resources = await gestalt.fetchOrgProviders([context.org.fqon], argv.type);
     } else if (argv.workspace) {
-        const context = await ui.resolveWorkspace();
+        context = await ui.resolveWorkspace();
         resources = await gestalt.fetchWorkspaceProviders(context, argv.type);
     } else if (argv.environment) {
-        const context = await ui.resolveEnvironment();
+        context = await ui.resolveEnvironment();
         resources = await gestalt.fetchEnvironmentProviders(context, argv.type);
     } else {
         resources = await gestalt.fetchOrgProviders(['root']);
     }
-
-    ui.displayResources(resources, argv);
+    ui.displayResources(resources, argv, context);
 });

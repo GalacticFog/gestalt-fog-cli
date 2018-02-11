@@ -16,14 +16,14 @@ exports.handler = cmd.handler(async function (argv) {
     if (argv.all) {
         let fqons = await gestalt.fetchOrgFqons();
         let resources = await gestalt.fetchOrgLambdas(fqons);
-        ui.displayResources(resources, argv);
+        ui.displayResources(resources, argv, {});
     } else if (argv.org) {
         const context = await ui.resolveOrg();
         const resources = await gestalt.fetchOrgLambdas([context.org.fqon]);
-        ui.displayResources(resources, argv);
+        ui.displayResources(resources, argv, context);
     } else {
         const context = await ui.resolveEnvironment();
         const resources = await gestalt.fetchEnvironmentLambdas(context);
-        ui.displayResources(resources, argv);
+        ui.displayResources(resources, argv, context);
     }
 });

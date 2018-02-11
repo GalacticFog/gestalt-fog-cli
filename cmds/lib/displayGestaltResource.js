@@ -1,7 +1,7 @@
 const gestalt = require('./gestalt');
+const displayContext = require('./displayContext');
 const displayResource = require('./displayResourceUI').run;
-
-fmap = {
+const fmap = {
     'Gestalt::Resource::Node::Lambda': displayLambdas,
     'Gestalt::Resource::Container': displayContainers,
     'Gestalt::Resource::Api': displayApis,
@@ -13,8 +13,7 @@ fmap = {
     'Gestalt::Resource::ApiEndpoint': displayApiEndpoints,
 }
 
-
-exports.run = (resources, options) => {
+exports.run = (resources, options, context) => {
 
     if (options && options.raw) {
         console.log(JSON.stringify(resources, null, 2));
@@ -30,16 +29,20 @@ exports.run = (resources, options) => {
             fn = fmap[resourceType];
         }
         if (fn) {
-            fn(resources, options);
+            fn(resources, options, context);
         } else {
             throw Error(`No display function for resource type '${resourceType}'`);
         }
     }
 }
 
-function displayLambdas(resources, opts) {
+function getContextMessage(message, context) {
+    return context ? `${displayContext.contextString(context)} / ${message}` : message;
+}
+
+function displayLambdas(resources, opts, context) {
     let options = {
-        message: "Lambdas",
+        message: getContextMessage('Lambdas', context),
         headers: ['Name', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID' /*, 'Provider'*/],
         fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id' /*, 'properties.provider.name'*/],
         sortField: 'description',
@@ -47,9 +50,9 @@ function displayLambdas(resources, opts) {
     displayResource(Object.assign(options, opts), resources);
 }
 
-function displayContainers(containers, opts) {
-    const options = {
-        message: "Containers",
+function displayContainers(containers, opts, context) {
+    let options = {
+        message: getContextMessage('Containers', context),
         headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner', 'FQON', 'ENV', 'Provider'],
         fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'org.properties.fqon', 'environment.name', 'properties.provider.name'],
         sortField: 'org.properties.fqon',
@@ -71,9 +74,9 @@ function displayContainers(containers, opts) {
 
 exports.displayContainerInstances = displayContainerInstances;
 
-function displayContainerInstances(resources, opts) {
+function displayContainerInstances(resources, opts, context) {
     const options = {
-        message: "Container Instances",
+        message: getContextMessage('Container / Container Instances', context),
         headers: ['Container Instances', 'Host', 'Addresses', 'Ports', 'Started'],
         fields: ['id', 'host', 'ipAddresses', 'ports', 'startedAt'],
         sortField: 'description',
@@ -82,9 +85,9 @@ function displayContainerInstances(resources, opts) {
     displayResource(Object.assign(options, opts), containers);
 }
 
-function displayApis(resources, opts) {
+function displayApis(resources, opts, context) {
     const options = {
-        message: "APIs",
+        message: getContextMessage('APIs', context),
         headers: [
             'Name',
             'FQON',
@@ -103,9 +106,9 @@ function displayApis(resources, opts) {
     displayResource(Object.assign(options, opts), resources);
 }
 
-function displayEnvironments(resources, opts) {
+function displayEnvironments(resources, opts, context) {
     const options = {
-        message: "Environments",
+        message: getContextMessage('Environments', context),
         headers: ['Description', 'Name', 'Org', 'Type', 'Workspace', 'Owner'],
         fields: ['description', 'name', 'org.properties.fqon', 'properties.environment_type', 'properties.workspace.name', 'owner.name'],
         sortField: 'description',
@@ -113,10 +116,10 @@ function displayEnvironments(resources, opts) {
     displayResource(Object.assign(options, opts), resources);
 }
 
-function displayWorkspaces(resources, opts) {
+function displayWorkspaces(resources, opts, context) {
     if (opts.all) {
         const options = {
-            message: "Workspaces",
+            message: getContextMessage('Workspaces', context),
             headers: ['Org', 'Description', 'Name', 'Owner'],
             fields: ['org.properties.fqon', 'description', 'name', 'owner.name'],
             sortField: 'org.properties.fqon',
@@ -124,7 +127,7 @@ function displayWorkspaces(resources, opts) {
         displayResource(Object.assign(options, opts), resources);
     } else {
         const options = {
-            message: "Workspaces",
+            message: getContextMessage('Workspaces', context),
             headers: ['Workspace', 'Name', 'Org', 'Owner'],
             fields: ['description', 'name', 'org.properties.fqon', 'owner.name'],
             sortField: 'description',
@@ -133,9 +136,9 @@ function displayWorkspaces(resources, opts) {
     }
 }
 
-function displayOrgs(resources, opts) {
+function displayOrgs(resources, opts, context) {
     const options = {
-        message: "Orgs",
+        message: getContextMessage('Orgs', context),
         headers: ['Name', 'FQON', 'Owner'],
         fields: ['description', 'fqon', 'owner.name'],
         sortField: 'fqon',
@@ -143,9 +146,9 @@ function displayOrgs(resources, opts) {
     displayResource(Object.assign(options, opts), resources);
 }
 
-function displayUsers(resources, opts) {
+function displayUsers(resources, opts, context) {
     const options = {
-        message: "Users",
+        message: getContextMessage('Users', context),
         headers: ['User', 'Description', 'Org', 'Owner', 'ID', 'Groups', 'Created'],
         fields: ['name', 'description', 'org.properties.fqon', 'owner.name', 'id', 'properties.groups', 'created.timestamp'],
         sortField: 'name',
@@ -153,9 +156,9 @@ function displayUsers(resources, opts) {
     displayResource(Object.assign(options, opts), resources);
 }
 
-function displayGroups(resources, opts) {
+function displayGroups(resources, opts, context) {
     const options = {
-        message: "Groups",
+        message: getContextMessage('Groups', context),
         headers: ['UID', 'Group', 'Description', 'Org', 'Owner' /*'Created'*/],
         fields: ['id', 'name', 'description', 'org.properties.fqon', 'owner.name' /*'created.timestamp'*/],
         sortField: 'name',
@@ -163,11 +166,11 @@ function displayGroups(resources, opts) {
     displayResource(Object.assign(options, opts), resources);
 }
 
-function displayApiEndpoints(resources, opts) {
+function displayApiEndpoints(resources, opts, context) {
     let options = null;
     if (opts.all) {
         options = {
-            message: "API Endpoints",
+            message: getContextMessage('API Endpoints', context),
             headers: [
                 'Resource Path',
                 'Type',
@@ -194,7 +197,7 @@ function displayApiEndpoints(resources, opts) {
         }
     } else if (opts.org) {
         options = {
-            message: "API Endpoints",
+            message: getContextMessage('API Endpoints', context),
             headers: [
                 'Resource Path',
                 'Type',
@@ -221,7 +224,7 @@ function displayApiEndpoints(resources, opts) {
         }
     } else {
         options = {
-            message: "API Endpoints",
+            message: getContextMessage('API Endpoints', context),
             headers: [
                 'Resource Patch',
                 'Type',
@@ -250,9 +253,9 @@ function displayApiEndpoints(resources, opts) {
     displayResource(Object.assign(options, opts), resources);
 }
 
-function displayProviders(resources, opts) {
+function displayProviders(resources, opts, context) {
     const options = {
-        message: "Providers",
+        message: getContextMessage('Providers', context),
         headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'UID'/*'Created'*/],
         fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
         sortField: 'name',

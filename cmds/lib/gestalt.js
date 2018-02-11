@@ -324,6 +324,10 @@ exports.createLambda = (lambda, providedContext) => {
     if (!context.org.fqon) throw Error("missing context.org.fqon");
     if (!context.environment) throw Error("missing context.environment");
     if (!context.environment.id) throw Error("missing context.environment.id");
+
+    delete lambda.resource_type;
+    delete lambda.resource_state;
+
     const res = meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/lambdas`, lambda);
     return res;
 }
@@ -430,6 +434,29 @@ exports.fetchLambda = (lambda) => {
     }
 
     const res = meta_GET(`/${fqon}/lambdas/${id}`)
+    return res;
+}
+
+
+exports.deleteLambda = (lambda) => {
+    if (!lambda) throw Error('missing lambda');
+    if (!lambda.id) throw Error('missing lambda.id');
+    if (!lambda.org) throw Error('missing lambda.org');
+    if (!lambda.org.properties) throw Error('missing lambda.org.properties');
+    if (!lambda.org.properties.fqon) throw Error('missing lambda.org.properties.fqon');
+
+    const fqon = lambda.org.properties.fqon;
+
+    // const context = providedContext || getGestaltContext();
+    // if (!context.org) throw Error("missing context.org");
+    // if (!context.org.fqon) throw Error("missing context.org.fqon");
+    // if (!container) throw Error("missing container");
+    // if (!container.id) throw Error("missing container.id");
+
+    delete lambda.resource_type;
+    delete lambda.resource_state;
+
+    const res = meta_DELETE(`/${fqon}/lambdas/${lambda.id}`);
     return res;
 }
 

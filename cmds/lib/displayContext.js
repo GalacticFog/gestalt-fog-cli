@@ -2,11 +2,15 @@ const gestalt = require('./gestalt');
 const chalk = require('chalk');
 
 exports.run = (context) => {
-    context = context || gestalt.getContext();
+    console.log(this.contextString(context));
+}
+
+exports.contextString = (context) => {
+    // context = context || gestalt.getContext();
     // let s = `${chalk.bold('Context:')} ${chalk.green(gestalt.getHost())}`
     // let s = `${chalk.green(gestalt.getHost())}`
     let s = `${chalk.bold.green(gestalt.getHost())}`
-    if (context.org) {
+    if (context && context.org) {
         s += ` / ${chalk.green(context.org.fqon)}`;
         if (context.workspace) {
             let value = context.workspace.description || context.workspace.name
@@ -17,7 +21,5 @@ exports.run = (context) => {
             s += ` / ${chalk.green(value)}`;
         }
     }
-    // s += ` ${chalk.bold(']')}`;
-    console.log(s);
-    // console.log();
+    return s;
 }

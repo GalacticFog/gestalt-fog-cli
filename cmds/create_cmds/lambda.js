@@ -11,6 +11,11 @@ exports.builder = {
     source: {},
     url: {}
 }
+
+// fog create lambda --name test --runtime python --public true --org engineering --env asdf --inline source.py
+// fog create lambda --from template.json --name test --inline source.py
+// fog create lambda --from mylambda.json
+
 exports.handler = cmd.handler(async function (argv) {
 
     if (argv.source && argv.url) {

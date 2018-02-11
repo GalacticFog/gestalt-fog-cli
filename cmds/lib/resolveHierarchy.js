@@ -32,7 +32,7 @@ exports.resolveEnvironment = () => {
 }
 
 function doDisplayContext(context) {
-    displayContext(context);
+    // displayContext(context);
     return context;
 }
 

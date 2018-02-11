@@ -45,7 +45,7 @@ async function showApiEndpoints(argv) {
         ep.properties.workspace = wsName;
     });
 
-    ui.displayResources(eps, argv);
+    ui.displayResources(eps, argv, context);
 }
 
 async function showOrgApiEndpoints(argv) {
@@ -64,7 +64,7 @@ async function showOrgApiEndpoints(argv) {
         ep.properties.workspace = '(empty)';
     });
 
-    ui.displayResources(eps, argv);
+    ui.displayResources(eps, argv, context);
 }
 
 async function showAllApiEndpoints(argv) {

@@ -24,7 +24,11 @@ exports.displayResources = require('./displayGestaltResource').run;
 
 exports.displayEntitlements = require('./displayEntitlements').run;
 
-exports.displayContext = require('./displayContext').run;
+const displayContext = require('./displayContext');
+
+exports.displayContext = displayContext.run;
+
+exports.getContextString = displayContext.contextString;
 
 const resolveHierarchy = require('./resolveHierarchy');
 

@@ -19,10 +19,10 @@ exports.handler = cmd.handler(async function (argv) {
     } else if (argv.org) {
         const context = await ui.resolveOrg();
         const resources = await gestalt.fetchOrgEnvironments([context.org.fqon]);
-        ui.displayResources(resources, argv);
+        ui.displayResources(resources, argv, context);
     } else {
         const context = await ui.resolveWorkspace();
         const resources = await gestalt.fetchWorkspaceEnvironments(context);
-        ui.displayResources(resources, argv);
+        ui.displayResources(resources, argv, context);
     }
 });
