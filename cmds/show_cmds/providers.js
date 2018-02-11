@@ -10,9 +10,6 @@ exports.builder = {
     workspace: {
         description: 'Fetch providers from workspace'
     },
-    environment: {
-        description: 'Fetch providers from environment'
-    },
     type: {
         alias: 't',
         description: 'provider types'
@@ -23,16 +20,14 @@ exports.handler = cmd.handler(async function (argv) {
     let context = null;
 
     if (argv.org) {
-        context = await ui.resolveOrg();
+        context = await ui.resolveOrg(false);
         resources = await gestalt.fetchOrgProviders([context.org.fqon], argv.type);
     } else if (argv.workspace) {
-        context = await ui.resolveWorkspace();
+        context = await ui.resolveWorkspace(false);
         resources = await gestalt.fetchWorkspaceProviders(context, argv.type);
-    } else if (argv.environment) {
-        context = await ui.resolveEnvironment();
-        resources = await gestalt.fetchEnvironmentProviders(context, argv.type);
     } else {
-        resources = await gestalt.fetchOrgProviders(['root']);
+        context = await ui.resolveEnvironment(false);
+        resources = await gestalt.fetchEnvironmentProviders(context, argv.type);
     }
     ui.displayResources(resources, argv, context);
 });

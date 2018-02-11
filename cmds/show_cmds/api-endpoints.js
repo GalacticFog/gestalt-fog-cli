@@ -26,7 +26,7 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 async function showApiEndpoints(argv) {
-    const context = await ui.resolveEnvironment();
+    const context = await ui.resolveEnvironment(false);
     const resources = await gestalt.fetchEnvironmentApis(context);
     const apis = resources.map(item => {
         return {
@@ -49,7 +49,7 @@ async function showApiEndpoints(argv) {
 }
 
 async function showOrgApiEndpoints(argv) {
-    const context = await ui.resolveOrg();
+    const context = await ui.resolveOrg(false);
     const resources = await gestalt.fetchOrgApis([context.org.fqon]);
     const apis = resources.map(item => {
         return {

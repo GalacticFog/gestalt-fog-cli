@@ -15,7 +15,7 @@ exports.handler = cmd.handler(async function (argv) {
         let resources = await gestalt.fetchOrgWorkspaces(fqons);
         ui.displayResources(resources, argv);
     } else {
-        const context = await ui.resolveOrg();
+        const context = await ui.resolveOrg(false);
         const fqon = context.org.fqon;
         const resources = await gestalt.fetchOrgWorkspaces([fqon]);
         ui.displayResources(resources, argv, context);

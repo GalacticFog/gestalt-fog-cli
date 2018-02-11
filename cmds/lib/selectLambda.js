@@ -10,8 +10,8 @@ exports.run = async (opts, res) => {
         })
     }
 
-    if (res.length == 0) return null;
-    if (res.length == 1) return res[0];
+    // if (res.length == 0) return null;
+    // if (res.length == 1) return res[0];
 
     let options = {
         mode: 'autocomplete',

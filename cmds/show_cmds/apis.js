@@ -21,11 +21,11 @@ exports.handler = cmd.handler(async function (argv) {
         const apis = await gestalt.fetchOrgApis(fqons);
         ui.displayResources(apis, argv);
     } else if (argv.org) {
-        const context = await ui.resolveOrg();
+        const context = await ui.resolveOrg(false);
         const apis = await gestalt.fetchOrgApis([context.org.fqon]);
         ui.displayResources(apis, argv, context);
     } else {
-        const context = await ui.resolveEnvironment();
+        const context = await ui.resolveEnvironment(false);
         const apis = await gestalt.fetchEnvironmentApis(context);
         ui.displayResources(apis, argv, context);
     }

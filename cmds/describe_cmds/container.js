@@ -36,14 +36,16 @@ exports.handler = cmd.handler(async function (argv) {
         const containerName = argv.name
 
         let containers = null;
+        let context = null;
+
         if (argv.all) {
             const fqons = await gestalt.fetchOrgFqons();
             containers = await gestalt.fetchOrgContainers(fqons);
         } else if (argv.org) {
-            const context = await ui.resolveWorkspace();
+            context = await ui.resolveWorkspace();
             containers = await gestalt.fetchOrgContainers([context.org.fqon]);
         } else {
-            const context = await ui.resolveEnvironment();
+            context = await ui.resolveEnvironment();
             containers = await gestalt.fetchEnvironmentContainers(context);
         }
 
@@ -58,6 +60,7 @@ exports.handler = cmd.handler(async function (argv) {
         } else if (argv.raw) {
             console.log(JSON.stringify(container, null, 2));
         } else {
+
             doShowContainer(container, argv);
 
             console.log(`Use '--raw' to see raw JSON output`);
@@ -67,23 +70,16 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 function showContainer(c) {
+    ui.displayResources([c]);
+
     const options = {
-        message: "Container",
-        headers: ['Description', 'Status', 'Name', 'Path', 'Image', 'Instances', 'Owner', 'Provider'],
-        fields: ['description', 'properties.status', 'name', 'path', 'properties.image', 'properties.num_instances', 'owner.name', 'properties.provider.name'],
-        sortField: 'description',
-    }
-
-    ui.displayResource(options, [c]);
-
-    const options2 = {
         message: "Instances",
         headers: ['Container Instances', 'Host', 'Addresses', 'Ports', 'Started'],
         fields: ['id', 'host', 'ipAddresses', 'ports', 'startedAt'],
         sortField: 'description',
     }
 
-    ui.displayResource(options2, c.properties.instances);
+    ui.displayResource(options, c.properties.instances);
 }
 
 

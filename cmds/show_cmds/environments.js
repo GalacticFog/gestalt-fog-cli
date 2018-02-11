@@ -17,11 +17,11 @@ exports.handler = cmd.handler(async function (argv) {
         let resources = await gestalt.fetchOrgEnvironments(fqons);
         ui.displayResources(resources, argv);
     } else if (argv.org) {
-        const context = await ui.resolveOrg();
+        const context = await ui.resolveOrg(false);
         const resources = await gestalt.fetchOrgEnvironments([context.org.fqon]);
         ui.displayResources(resources, argv, context);
     } else {
-        const context = await ui.resolveWorkspace();
+        const context = await ui.resolveWorkspace(false);
         const resources = await gestalt.fetchWorkspaceEnvironments(context);
         ui.displayResources(resources, argv, context);
     }

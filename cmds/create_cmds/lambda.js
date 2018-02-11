@@ -41,6 +41,7 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     const context = await ui.resolveEnvironment();
+
     const answers = await promptForInput(context);
 
     debug(`answers: ${JSON.stringify(answers, null, 2)}`);

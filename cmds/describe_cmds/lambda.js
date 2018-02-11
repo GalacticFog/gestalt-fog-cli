@@ -54,6 +54,8 @@ exports.handler = cmd.handler(async function (argv) {
 async function selectFromAllLambdas(lambdaName) {
     let fqons = await gestalt.fetchOrgFqons();
     let res = await gestalt.fetchOrgLambdas(fqons);
+    ui.displayContext();
+    console.log();
     return ui.selectLambda({ name: lambdaName }, res);
 }
 
@@ -86,13 +88,7 @@ function doShowLambda(lambda, argv) {
 
 function showLambda(lambda) {
 
-    const options = {
-        message: "Lambdas",
-        headers: ['Lambda', 'Runtime', 'Public', 'FQON', 'Type', 'Owner', 'ID'],
-        fields: ['name', 'properties.runtime', 'properties.public', 'org.properties.fqon', 'properties.code_type', 'owner.name', 'id'],
-        sortField: 'description',
-    }
-    ui.displayResource(options, [lambda]);
+    ui.displayResources([lambda]);
 
     // Display Code
     if (lambda.properties) {
