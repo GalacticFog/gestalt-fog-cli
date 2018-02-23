@@ -20,6 +20,10 @@ exports.getHost = () => {
     return host;
 }
 
+exports.getEnvironmentResourceTypes = () => {
+    return ['lambdas', 'apis', 'containers'];
+}
+
 exports.fetchOrgFqons = () => {
     return meta_GET('/orgs?expand=true').then(res => {
         return res.map(item => item.properties.fqon).sort();
@@ -197,6 +201,10 @@ function fetchEnvironmentContainers(providedContext) {
     });
 }
 
+exports.fetchEnvironmentResources = (type, providedContext) => {
+    return fetchFromEnvironment(type, providedContext);
+}
+
 exports.fetchEnvironmentLambdas = (providedContext) => {
     return fetchFromEnvironment('lambdas', providedContext);
 }
@@ -269,9 +277,25 @@ exports.fetchCurrentEnvironment = () => {
 }
 
 exports.fetchEnvironment = (fqon, uid) => {
+    // First argument could be a context object or an fqon
+    let context = fqon;
+    if (context.org && context.environment) {
+        fqon = context.org.fqon;
+        uid = context.environment.id;
+    }
     if (!fqon) throw Error("missing fqon");
     if (!uid) throw Error("mising uid");
     return meta_GET(`/${fqon}/environments/${uid}`)
+}
+
+exports.fetchWorkspace = (context) => {
+    if (context.org && context.workspace) {
+        fqon = context.org.fqon;
+        uid = context.workspace.id;
+    }
+    if (!fqon) throw Error("missing fqon");
+    if (!uid) throw Error("mising uid");
+    return meta_GET(`/${fqon}/workspaces/${uid}`)
 }
 
 exports.fetchContainer = (container) => {

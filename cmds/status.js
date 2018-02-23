@@ -12,9 +12,9 @@ exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
     // console.log();
     const config = gestaltContext.getConfig();
-    console.log(`Gestalt Instance:  ${config.gestalt_url}`);
-    console.log(`Current User:      ${config.username}`);
-    console.log('Current Context:   ' + ui.getContextString(gestalt.getContext()));
+    console.log(`Gestalt Endpoint:  ${config.gestalt_url}`);
+    console.log(`User:              ${config.username}`);
+    console.log('Context:           ' + ui.getContextString(gestalt.getContext()));
     if (argv.all) {
         console.log(JSON.stringify(gestalt.getContext(), null, 2));
     }

@@ -16,6 +16,10 @@ exports.selectContainerInstance = require('./selectContainerInstance').run;
 
 exports.select = require('./select').run;
 
+exports.selectnv = require('./selectnv').run;
+
+exports.selectOptions = require('./selectOptions').run;
+
 exports.promptToContinue = require('./promptToContinue').run;
 
 exports.displayResource = require('./displayResourceUI').run;
