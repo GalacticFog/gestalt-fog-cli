@@ -6,6 +6,11 @@ exports.resourceName = (input) => {
 exports.resourceDescription = (input) => {
     return true;
 }
+exports.resourcePath = (input) => {
+    if (!input.startsWith('/')) return 'Must start with \'/\'';
+    if (input.indexOf(' ') > -1) return "No Spaces";
+    return true;
+}
 exports.url = (input) => {
     if (!input) return "Required";
     if (input.indexOf(' ') > -1) return "No Spaces";

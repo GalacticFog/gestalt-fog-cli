@@ -238,12 +238,12 @@ exports.fetchApiEndpoints = (apiList) => {
     });
 }
 
-exports.fetchProviderContainers = (provider) => {
-    if (!provider.org) throw Error("No Org in current context");
-    if (!provider.org.properties) throw Error("No FQON in current context");
-    if (!provider.org.properties.fqon) throw Error("No FQON in current context");
-    const fqon = provider.org.properties.fqon; // default org
-    return meta_GET(`/${fqon}/providers/${provider.id}/containers`); // can't use '?expand=true' unless in environment
+exports.fetchProviderContainers = (providerSpec) => {
+    if (!providerSpec.org) throw Error("No Org in current context");
+    if (!providerSpec.org.properties) throw Error("No FQON in current context");
+    if (!providerSpec.org.properties.fqon) throw Error("No FQON in current context");
+    const fqon = providerSpec.org.properties.fqon; // default org
+    return meta_GET(`/${fqon}/providers/${providerSpec.id}/containers`); // can't use '?expand=true' unless in environment
 }
 
 
@@ -276,16 +276,16 @@ exports.fetchCurrentEnvironment = () => {
     return this.fetchEnvironment(context.org.fqon, context.environment.id);
 }
 
-exports.fetchEnvironment = (fqon, uid) => {
+exports.fetchEnvironment = (fqonOrContext, uid) => {
     // First argument could be a context object or an fqon
-    let context = fqon;
+    let context = fqonOrContext;
     if (context.org && context.environment) {
-        fqon = context.org.fqon;
+        fqonOrContext = context.org.fqon;
         uid = context.environment.id;
     }
-    if (!fqon) throw Error("missing fqon");
+    if (!fqonOrContext) throw Error("missing fqon");
     if (!uid) throw Error("mising uid");
-    return meta_GET(`/${fqon}/environments/${uid}`)
+    return meta_GET(`/${fqonOrContext}/environments/${uid}`)
 }
 
 exports.fetchWorkspace = (context) => {
@@ -298,20 +298,21 @@ exports.fetchWorkspace = (context) => {
     return meta_GET(`/${fqon}/workspaces/${uid}`)
 }
 
-exports.fetchContainer = (container) => {
-    const context = getGestaltContext();
+exports.fetchContainer = (spec, providedContext) => {
+    const context = providedContext || getGestaltContext();
+
     let fqon = null;
     let id = null;
 
-    if (container) {
-        if (!container.id) throw Error("No container.id");
-        if (!container.fqon) {
+    if (spec) {
+        if (!spec.id) throw Error("No container.id");
+        if (!spec.fqon) {
             if (!context.org.fqon) throw Error("No container.fqon or context.org.fqon");
             fqon = context.org.fqon;
         } else {
-            fqon = container.fqon;
+            fqon = spec.fqon;
         }
-        id = container.id;
+        id = spec.id;
     } else {
         if (!context.container) throw Error("No context.container");
         if (!context.container.id) throw Error("No context.container.id");
@@ -325,9 +326,9 @@ exports.fetchContainer = (container) => {
     return meta_GET(`/${fqon}/containers/${id}`)
 }
 
-exports.createContainer = (container, providedContext) => {
-    if (!container) throw Error('missing container');
-    if (!container.name) throw Error('missing container.name');
+exports.createContainer = (spec, providedContext) => {
+    if (!spec) throw Error('missing container');
+    if (!spec.name) throw Error('missing container.name');
     // TODO: Other required parameters
 
     const context = providedContext || getGestaltContext();
@@ -335,12 +336,12 @@ exports.createContainer = (container, providedContext) => {
     if (!context.org.fqon) throw Error("missing context.org.fqon");
     if (!context.environment) throw Error("missing context.environment");
     if (!context.environment.id) throw Error("missing context.environment.id");
-    return meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/containers`, container);
+    return meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/containers`, spec);
 }
 
-exports.createLambda = (lambda, providedContext) => {
-    if (!lambda) throw Error('missing lambda');
-    if (!lambda.name) throw Error('missing lambda.name');
+exports.createLambda = (spec, providedContext) => {
+    if (!spec) throw Error('missing spec');
+    if (!spec.name) throw Error('missing spec.name');
     // TODO: Other required parameters
 
     const context = providedContext || getGestaltContext();
@@ -349,12 +350,39 @@ exports.createLambda = (lambda, providedContext) => {
     if (!context.environment) throw Error("missing context.environment");
     if (!context.environment.id) throw Error("missing context.environment.id");
 
-    delete lambda.resource_type;
-    delete lambda.resource_state;
+    delete spec.resource_type;
+    delete spec.resource_state;
 
-    const res = meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/lambdas`, lambda);
+    const res = meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/lambdas`, spec);
     return res;
 }
+
+exports.createApi = (spec, providedContext) => {
+    if (!spec) throw Error('missing spec');
+    if (!spec.name) throw Error('missing spec.name');
+    // TODO: Other required parameters
+
+    const context = providedContext || getGestaltContext();
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
+    if (!context.environment) throw Error("missing context.environment");
+    if (!context.environment.id) throw Error("missing context.environment.id");
+    return meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/apis`, spec);
+}
+
+exports.createApiEndpoint = (spec, providedContext) => {
+    if (!spec) throw Error('missing spec');
+    if (!spec.name) throw Error('missing spec.name');
+    // TODO: Other required parameters
+
+    const context = providedContext || getGestaltContext();
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
+    if (!context.api) throw Error("missing context.api");
+    if (!context.api.id) throw Error("missing context.api.id");
+    return meta_POST(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints`, spec);
+}
+
 
 exports.createOrg = (org, parentFqon) => {
     if (!org) throw Error('missing org');

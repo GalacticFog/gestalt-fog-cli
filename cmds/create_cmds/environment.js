@@ -9,7 +9,35 @@ exports.desc = 'Create environment'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
     const context = await ui.resolveWorkspace();
-    const answers = await promptForInput();
+
+    const questions = [
+        {
+            message: "Name",
+            type: 'input',
+            name: 'name',
+            validate: inputValidation.resourceName
+        },
+        {
+            message: "Description",
+            type: 'input',
+            name: 'description',
+            validate: inputValidation.resourceDescription
+        },
+        {
+            message: "Type",
+            type: 'list',
+            name: 'environment_type',
+            choices: ['development', 'test', 'production']
+        },
+        {
+            message: "Proceed?",
+            type: 'confirm',
+            name: 'confirm',
+            default: false
+        },
+    ];
+
+    const answers = await inquirer.prompt(questions);
 
     debug(`answers: ${answers}`);
     if (answers.confirm) {
@@ -29,36 +57,5 @@ exports.handler = cmd.handler(async function (argv) {
         console.log('Environment created.');
     } else {
         console.log('Aborted.');
-    }
-
-    function promptForInput() {
-        const questions = [
-            {
-                message: "Name",
-                type: 'input',
-                name: 'name',
-                validate: inputValidation.resourceName
-            },
-            {
-                message: "Description",
-                type: 'input',
-                name: 'description',
-                validate: inputValidation.resourceDescription
-            },
-            {
-                message: "Type",
-                type: 'list',
-                name: 'environment_type',
-                choices: ['development', 'test', 'production']
-            },
-            {
-                message: "Proceed?",
-                type: 'confirm',
-                name: 'confirm',
-                default: false
-            },
-        ];
-
-        return inquirer.prompt(questions);
     }
 });

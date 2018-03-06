@@ -11,5 +11,11 @@ exports.run = async (opts, items) => {
 
     Object.assign(options, opts);
 
-    return selectResource.run(options).then(i => i.map(j => j.value));
+    return selectResource.run(options).then(i => {
+        if (Array.isArray(i)) {
+            return i.map(j => j.value)
+        } else {
+            return i.value;
+        }
+    });
 }

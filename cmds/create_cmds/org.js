@@ -15,24 +15,6 @@ exports.handler = cmd.handler(async function (argv) {
 
     debug(`parent: ${JSON.stringify(parent, null, 2)}`);
 
-    const answers = await promptForInput();
-
-    debug(`answers: ${answers}`);
-    if (answers.confirm) {
-        const orgSpec = {
-            name: answers.name,
-            description: answers.description
-        };
-
-        const org = await gestalt.createOrg(orgSpec, parent.fqon);
-        debug(`org: ${org}`);
-        console.log(`Org '${org.name}' created.`);
-    } else {
-        console.log('Aborted.');
-    }
-});
-
-function promptForInput() {
     const questions = [
         {
             message: "Name",
@@ -54,5 +36,19 @@ function promptForInput() {
         },
     ];
 
-    return inquirer.prompt(questions);
-}
+    const answers = await inquirer.prompt(questions);
+
+    debug(`answers: ${answers}`);
+    if (answers.confirm) {
+        const orgSpec = {
+            name: answers.name,
+            description: answers.description
+        };
+
+        const org = await gestalt.createOrg(orgSpec, parent.fqon);
+        debug(`org: ${org}`);
+        console.log(`Org '${org.name}' created.`);
+    } else {
+        console.log('Aborted.');
+    }
+});

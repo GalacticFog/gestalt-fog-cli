@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^2.3.0",
+    "chalk": "^2.3.1",
     "columnify": "^1.5.4",
     "glob": "^7.1.2",
     "inquirer": "^3.3.0",
@@ -17,7 +17,7 @@
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
     "yamljs": "^0.3.0",
-    "yargs": "^10.1.1"
+    "yargs": "^10.1.2"
   },
   "pkg": {
     "scripts": "cmds/**/*.js"

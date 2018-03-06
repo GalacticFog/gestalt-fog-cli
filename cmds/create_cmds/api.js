@@ -4,17 +4,21 @@ const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
-exports.command = 'workspace'
-exports.desc = 'Create workspace'
+exports.command = 'api'
+exports.desc = 'Create API'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
+    const context = await ui.resolveEnvironment();
 
-    const context = await ui.resolveOrg();
+    // Get global GWM provider
+    const res = await gestalt.fetchEnvironmentProviders(context, 'GatewayManager');
+    if (res.length != 1) throw Error(`Could not get Gateway Manager provider`);
+    const gwmProvider = res[0];
 
-    const parent = context.org;
+    // Get Kong provider
+    const kongProvider = await ui.selectProvider({ type: 'Kong', message: 'Select Kong Provider' }, context);
 
-    debug(`parent: ${JSON.stringify(parent, null, 2)}`);
-
+    // User input
     const questions = [
         {
             message: "Name",
@@ -39,17 +43,24 @@ exports.handler = cmd.handler(async function (argv) {
     const answers = await inquirer.prompt(questions);
 
     debug(`answers: ${answers}`);
-
     if (answers.confirm) {
 
-        const workspaceSpec = {
+        const apiSpec = {
             name: answers.name,
-            description: answers.description
+            description: answers.description,
+            properties: {
+                provider: {
+                    locations: [kongProvider.id],
+                    id: gwmProvider.id
+                }
+            }
         };
 
-        const workspace = await gestalt.createWorkspace(workspaceSpec, parent.fqon);
-        debug(`workspace: ${workspace}`);
-        console.log(`Workspace '${workspace.name}' created.`);
+        const api = await gestalt.createApi(apiSpec, context);
+
+        debug(`api: ${api}`);
+
+        console.log(`API '${api.name}' created.`);
     } else {
         console.log('Aborted.');
     }

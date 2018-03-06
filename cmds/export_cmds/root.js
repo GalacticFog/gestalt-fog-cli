@@ -17,21 +17,31 @@ exports.builder = {
 
 exports.handler = cmd.handler(async function (argv) {
 
+    let exportAll = argv.all
+
+    if (!exportAll) {
+        const options = [
+            { name: 'Export all resources', value: true },
+            { name: 'Select resources to export', value: false }
+        ];
+        exportAll = (await ui.select({ message: 'Choose what to export' }, options)).value;
+    }
+
     // Choose Resource Types
     let types = gestalt.getEnvironmentResourceTypes();
-    if (!argv.all) {
+    if (!exportAll) {
         types = await ui.selectOptions('Resources to export', types);
     }
 
     // Select orgs
     let fqons = await gestalt.fetchOrgFqons();
-    if (!argv.all) {
+    if (!exportAll) {
         fqons = await ui.selectOptions('Orgs', fqons);
     }
 
     // Select Workspaces
     let workspaces = await gestalt.fetchOrgWorkspaces(fqons);
-    if (!argv.all) {
+    if (!exportAll) {
         workspaces = workspaces.map(ws => {
             return {
                 name: `${ws.org.properties.fqon} / ${ws.name}`,
@@ -55,7 +65,7 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     // Select Environments
-    if (argv.all) {
+    if (exportAll) {
         environments = environments.map(e => e.value);
     } else {
         environments = await ui.selectnv({ message: 'Environments to export', mode: 'checkbox' }, environments);

@@ -12,7 +12,10 @@ exports.builder = {
 exports.handler = cmd.handler(async function (argv) {
     const context = await ui.resolveEnvironment();
     const environment = await gestalt.fetchEnvironment(context);
-    const types = await ui.selectOptions('Resources to export', gestalt.getEnvironmentResourceTypes());
+    let types = gestalt.getEnvironmentResourceTypes();
+    if (!argv.all) {
+        types = await ui.selectOptions('Resources to export', types);
+    }
     await doExport([], [environment], types, argv.path);
 
     // const resources = {};

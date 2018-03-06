@@ -14,6 +14,8 @@ exports.selectContainerPort = require('./selectContainerPort').run;
 
 exports.selectContainerInstance = require('./selectContainerInstance').run;
 
+exports.selectApi = require('./selectApi').run;
+
 exports.select = require('./select').run;
 
 exports.selectnv = require('./selectnv').run;
