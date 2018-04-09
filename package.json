@@ -1,12 +1,12 @@
 {
-  "name": "fog",
+  "name": "gestalt-fog-cli",
   "version": "0.2.0",
   "description": "",
   "main": "fog",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "team@galacticfog.com",
   "license": "ISC",
   "dependencies": {
     "chalk": "^2.3.1",
