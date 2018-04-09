@@ -13,24 +13,25 @@ Commands:
   fog create <resource>    Creates resources of specified type
   fog delete <resource>    Delete resources of specified type
   fog describe <resource>  Describes resources of specified type
+  fog export <resource>    Exports resources of specified type
   fog ext <command>        External commands
+  fog import <resource>    Imports resources of specified type
   fog login                Log in to Gestalt Platform Instance
   fog logout               Logout of Gestalt Platform Instance
   fog reset-context        Reset context
   fog restart <resource>   Restart resources of specified type
   fog scale <resource>     Scale resources of specified type
-  fog show-context         Show context
   fog show <resource>      Gets resources of specified type
   fog status               Show Status
   fog switch <resource>    Switch to resource of specified type
 
 Options:
-  --help     Show help                                                 [boolean]
   --version  Show version number                                       [boolean]
+  --help     Show help                                                 [boolean]
 
 ```
 
-## Run
+## Run from Source
 
 `fog` requires node and npm for running from source.
 
@@ -45,18 +46,13 @@ npm install
 Building from source bundles the nodejs engine with the `fog` code to provide a single binary with minimal external dependencies.
 
 ```sh
-cd gestalt-fog-cli
-npm install
+./build.sh
 
-# Build
-npm install pkg -g
-pkg .
+# for Linux
+cp ./target/linux/fog /usr/local/bin/fog
 
-# For MacOS
-mv fog-macos /usr/local/bin/fog
-
-# For Linux
-mv fog-linux /usr/local/bin/fog
+# for MacOS
+cp ./target/macos/fog /usr/local/bin/fog
 ```
 
 ## Set up Bash Completion
@@ -120,3 +116,74 @@ fog restart containers
 fog clone containers
 
 ```
+
+# Commands
+```
+# Create
+  fog create api-endpoint  Create API Endpoint
+  fog create api           Create API
+  fog create container     Create container
+  fog create environment   Create environment
+  fog create lambda        Create lambda
+  fog create org           Create org
+  fog create workspace     Create workspace
+
+# Delete
+  fog delete containers  Delete containers
+  fog delete lambdas     Delete lambdas  fog describe <resource>  Describes resources of specified type
+
+# Import / Export
+  fog export environment  Export environment
+  fog export root         Export root
+  fog import lambda
+
+# Login / Logout
+  fog login
+  fog logout
+
+# Container actions
+  fog clone containers
+  fog restart containers
+  fog scale container
+
+# Show commands
+  fog show api-endpoints             List API endpoints
+  fog show apis                      List APIs
+  fog show containers                List containers
+  fog show environment-entitlements  Show environment entitlements
+  fog show environments              List enviornments
+  fog show group-members             List group members
+  fog show groups                    List groups
+  fog show lambdas                   List lambdas
+  fog show org-entitlements          Show org entitlements
+  fog show orgs                      List orgs
+  fog show providers                 List providers
+  fog show users                     List users
+  fog show workspace-entitlements    Show workspace entitlements
+  fog show workspaces                List workspaces
+
+# Show status  
+  fog status               
+
+# Switch commands
+  fog switch environment  Change environment
+  fog switch org          Change org
+  fog switch workspace    Change workspace
+
+# Reset context
+  fog reset-context
+
+# Extension commands
+  fog ext configure-gitlab-project          Configure Gitlab project
+  fog ext configure                         Configure
+  fog ext container-volumes                 Container volumes
+  fog ext deploy-from-docker-compose        Deploy from Docker Compose file
+  fog ext elb-port-mappings                 ELB Port Mappings
+  fog ext kube-container-console            Container Console (Kubernetes)
+  fog ext kube-container-logs               Container logs (Kubernetes)
+  fog ext kubectl                           kubectl
+
+# Bash completion script
+  fog bash-completion      Show Bash Completion Script
+
+  ```

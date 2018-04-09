@@ -24,6 +24,8 @@ exports.builder = {
 // fog create lambda --from template.json --name test --inline source.py
 // fog create lambda --from mylambda.json
 
+// TODO - Create API endpoint
+
 function getDefaultProperties() {
     return {
         "public": true,
