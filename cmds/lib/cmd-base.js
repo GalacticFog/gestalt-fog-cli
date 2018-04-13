@@ -21,6 +21,7 @@ async function run(fn, argv) {
         await fn(argv);
     } catch (err) {
         handleError(argv, err);
+        process.exit(-1);
     }
 }
 

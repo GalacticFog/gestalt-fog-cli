@@ -95,8 +95,10 @@ function doLogin(gestalt_url, creds) {
 
     console.log(`Logging in to ${chalk.bold(gestalt_url)}...`);
     gestalt.authenticate(creds, (err, res) => {
+        let code = 1;
         if (!err) {
             console.log(`Authenticated. User ${res.username} logged in to ${gestalt_url}.`);
+            code = 0;
         } else {
             console.error("Login failed: " + err);
             console.error();
@@ -104,5 +106,6 @@ function doLogin(gestalt_url, creds) {
         }
         // Clear the current context
         gestaltContext.clearContext();
+        process.exit(code);
     });
 }
