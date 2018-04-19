@@ -38,7 +38,9 @@ exports.handler = cmd.handler(async function (argv) {
 
         // Default
         if (!argv.methods) {
-            argv.methods = 'GET'
+            argv.methods = ['GET']
+        } else {
+            argv.methods = argv.methods.toUpperCase().split(',');
         }
 
         const targetResource = await cmd.lookupEnvironmentResourcebyName(argv.container,
@@ -51,7 +53,7 @@ exports.handler = cmd.handler(async function (argv) {
             description: argv.description,
             properties: {
                 resource: argv.name,
-                methods: argv.methods.split(','),
+                methods: argv.methods,
                 plugins: {
                     "gestaltSecurity": {
                         "enabled": false,
