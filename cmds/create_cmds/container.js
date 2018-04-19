@@ -36,8 +36,9 @@ exports.handler = cmd.handler(async function (argv) {
         containerSpec.properties.provider = provider;
 
         const container = await gestalt.createContainer(containerSpec, context);
-        console.log(`container: ${JSON.stringify(container, null, 2)}`);
-        console.log(`Container '${container.name}' created from file ${argv.file}.`);
+        // console.log(`container: ${JSON.stringify(container, null, 2)}`);
+        // console.log(`Container '${container.name}' created from file ${argv.file}.`);
+        console.log(`Container '${container.name}' created.`);
     } else {
 
         // Interactive mode

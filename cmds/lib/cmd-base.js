@@ -61,14 +61,15 @@ function debug(str) {
     }
 }
 
-exports.resolveProvider = async function (argv, providedContext) {
+exports.resolveProvider = async function (argv, providedContext, optionalType) {
 
     const context = providedContext || gestalt.getContext();
 
     // Check if workspace property is required
     if (argv.provider) {
         // Look up ID by name
-        const providers = await gestalt.fetchEnvironmentProviders(context);
+        const providers = await gestalt.fetchEnvironmentProviders(context, optionalType);
+
         for (let p of providers) {
             if (p.name == argv.provider) {
                 // found it
@@ -104,6 +105,28 @@ exports.resolveEnvironment = async function (argv) {
     await requireWorkspaceArg(argv, context);
     await requireEnvironmentArg(argv, context);
     return context;
+}
+
+exports.resolveEnvironmentApi = async function (argv) {
+    const context = gestalt.getContext();
+    await requireOrgArg(argv, context);
+    await requireWorkspaceArg(argv, context);
+    await requireEnvironmentArg(argv, context);
+    await requireEnvironmentApiArg(argv, context);
+    return context;
+}
+
+exports.lookupEnvironmentResourcebyName = async function(name, type, context) {
+    const resources = await gestalt.fetchEnvironmentResources(type, context);
+    for (let res of resources) {
+        if (name == res.name) {
+            return {
+                id: res.id,
+                name: res.name
+            }
+        }
+    }
+    throw Error(`Environment '${type}' resource with name '${name}' not found`);
 }
 
 async function requireOrgArg(argv, context) {
@@ -167,5 +190,24 @@ async function requireEnvironmentArg(argv, context) {
         if (!context.environment || !context.environment.id) {
             throw Error(`Missing --environment property, not found in current context`);
         }
+    }
+}
+
+async function requireEnvironmentApiArg(argv, context) {
+    if (argv.api) {
+        context.api = {};
+        const resources = await gestalt.fetchEnvironmentApis(context);
+        for (let res of resources) {
+            if (res.name == argv.api) {
+                context.api = {
+                    id: res.id,
+                    name: res.name
+                };
+                break;
+            }
+        }
+        if (!context.api.id) throw Error(`Could not find api with name '${argv.api}'`);
+    } else {
+        throw Error(`Missing --api property`);
     }
 }

@@ -8,46 +8,26 @@ exports.command = 'api'
 exports.desc = 'Create API'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const context = await ui.resolveEnvironment();
 
-    // Get global GWM provider
-    const res = await gestalt.fetchEnvironmentProviders(context, 'GatewayManager');
-    if (res.length != 1) throw Error(`Could not get Gateway Manager provider`);
-    const gwmProvider = res[0];
+    if (argv.name) {
+        // Command line
 
-    // Get Kong provider
-    const kongProvider = await ui.selectProvider({ type: 'Kong', message: 'Select Kong Provider' }, context);
+        // Check for required args
+        for (let s of ['name', 'description']) {
+            if (!argv[s]) throw Error(`Missing --${s} property`);
+        }
 
-    // User input
-    const questions = [
-        {
-            message: "Name",
-            type: 'input',
-            name: 'name',
-            validate: inputValidation.resourceName
-        },
-        {
-            message: "Description",
-            type: 'input',
-            name: 'description',
-            validate: inputValidation.resourceDescription
-        },
-        {
-            message: "Proceed?",
-            type: 'confirm',
-            name: 'confirm',
-            default: false
-        },
-    ];
+        const context = await cmd.resolveEnvironment(argv);
 
-    const answers = await inquirer.prompt(questions);
+        // Get global GWM provider
+        const gwmProvider = await fetchGatewayProvider(context);
 
-    debug(`answers: ${answers}`);
-    if (answers.confirm) {
+        // Get Kong provider
+        const kongProvider = await cmd.resolveProvider(argv, context, 'Kong');
 
         const apiSpec = {
-            name: answers.name,
-            description: answers.description,
+            name: argv.name,
+            description: argv.description,
             properties: {
                 provider: {
                     locations: [kongProvider.id],
@@ -58,10 +38,70 @@ exports.handler = cmd.handler(async function (argv) {
 
         const api = await gestalt.createApi(apiSpec, context);
 
-        debug(`api: ${api}`);
-
         console.log(`API '${api.name}' created.`);
+
     } else {
-        console.log('Aborted.');
+
+        const context = await ui.resolveEnvironment();
+
+        // Get global GWM provider
+        const gwmProvider = await fetchGatewayProvider(context);
+
+        // Get Kong provider
+        const kongProvider = await ui.selectProvider({ type: 'Kong', message: 'Select Kong Provider' }, context);
+
+        // User input
+        const questions = [
+            {
+                message: "Name",
+                type: 'input',
+                name: 'name',
+                validate: inputValidation.resourceName
+            },
+            {
+                message: "Description",
+                type: 'input',
+                name: 'description',
+                validate: inputValidation.resourceDescription
+            },
+            {
+                message: "Proceed?",
+                type: 'confirm',
+                name: 'confirm',
+                default: false
+            },
+        ];
+
+        const answers = await inquirer.prompt(questions);
+
+        debug(`answers: ${answers}`);
+        if (answers.confirm) {
+
+            const apiSpec = {
+                name: answers.name,
+                description: answers.description,
+                properties: {
+                    provider: {
+                        locations: [kongProvider.id],
+                        id: gwmProvider.id
+                    }
+                }
+            };
+
+            const api = await gestalt.createApi(apiSpec, context);
+
+            debug(`api: ${api}`);
+
+            console.log(`API '${api.name}' created.`);
+        } else {
+            console.log('Aborted.');
+        }
     }
 });
+
+async function fetchGatewayProvider(context) {
+    const res = await gestalt.fetchEnvironmentProviders(context, 'GatewayManager');
+    if (res.length != 1) throw Error(`Could not get Gateway Manager provider`);
+    const gwmProvider = res[0];
+    return gwmProvider;
+}
