@@ -32,19 +32,10 @@ exports.handler = cmd.handler(async function (argv) {
             workspaceSpec[s] = argv[s];
         }
 
-        // Check if org property is required
-        let org = argv.org;
-        if (!org) {
-            const context = gestalt.getContext();
-            if (!context.org || !context.org.fqon) {
-                throw Error(`Missing --org property, not found in current context`);
-            } else {
-                console.log(`Using '${context.org.fqon}' org.`)
-            }
-        }
+        const context = await cmd.resolveOrg(argv);
 
         // Create workspace
-        const workspace = await gestalt.createWorkspace(workspaceSpec, org);
+        const workspace = await gestalt.createWorkspace(workspaceSpec, context.org.fqon);
         console.log(`Workspace '${workspace.name}' created.`);
     } else {
 

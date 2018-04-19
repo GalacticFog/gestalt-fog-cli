@@ -28,9 +28,16 @@ exports.handler = cmd.handler(async function (argv) {
             console.log(`Mixing in template: ${template}`);
             containerSpec = Object.assign(template, containerSpec);
         }
-        const container = await gestalt.createContainer(containerSpec);
+
+        const context = await cmd.resolveEnvironment(argv);
+
+        const provider = await cmd.resolveProvider(argv, context);
+
+        containerSpec.properties.provider = provider;
+
+        const container = await gestalt.createContainer(containerSpec, context);
         console.log(`container: ${JSON.stringify(container, null, 2)}`);
-        console.log(`Container '${container.name}' created from file ${arg.file}.`);
+        console.log(`Container '${container.name}' created from file ${argv.file}.`);
     } else {
 
         // Interactive mode

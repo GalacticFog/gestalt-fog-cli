@@ -33,18 +33,9 @@ exports.handler = cmd.handler(async function (argv) {
         }
 
         // Check if org property is required
-        let parentOrg = argv.org;
-        if (!parentOrg) {
-            const context = gestalt.getContext();
-            if (!context.org || !context.org.fqon) {
-                throw Error(`Missing --org property, not found in current context`);
-            } else {
-                console.log(`Using '${context.org.fqon}' org.`)
-            }
-        }
-
+        const context = cmd.resolveOrg(argv);
         // Create Org
-        const org = await gestalt.createOrg(orgSpec, parentOrg);
+        const org = await gestalt.createOrg(orgSpec, context.org.fqon);
         console.log(`Org '${org.name}' created.`);
     } else {
 

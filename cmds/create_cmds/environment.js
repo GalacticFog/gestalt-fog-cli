@@ -46,40 +46,7 @@ exports.handler = cmd.handler(async function (argv) {
             }
         };
 
-        const context = gestalt.getContext();
-
-        // Check if org property is required
-        if (argv.org) {
-            context.org = { fqon: argv.org }
-        } else {
-            if (!context.org || !context.org.fqon) {
-                throw Error(`Missing --org property, not found in current context`);
-            }
-        }
-        console.log(`Using '${context.org.fqon}' org.`)
-
-        // Check if workspace property is required
-        if (argv.workspace) {
-            context.workspace = {};
-
-            // Look up ID by name
-            const orgWorkspaces = await gestalt.fetchOrgWorkspaces([context.org.fqon]);
-            for (let ws of orgWorkspaces) {
-                if (ws.name == argv.workspace) {
-                    // found it
-                    context.workspace = {
-                        id: ws.id,
-                        name: ws.name
-                    };
-                    break;
-                }
-            }
-            if (!context.workspace.id) throw Error(`Could not find workspace with name '${argv.workspace}'`);
-        } else {
-            if (!context.workspace || !context.workspace.id) {
-                throw Error(`Missing --workspace property, not found in current context`);
-            }
-        }
+        const context = await cmd.resolveWorkspace(argv);
 
         // Create environment
         const environment = await gestalt.createEnvironment(envSpec, context);
