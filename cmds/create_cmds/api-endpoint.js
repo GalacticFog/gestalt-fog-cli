@@ -36,6 +36,11 @@ exports.handler = cmd.handler(async function (argv) {
             throw Error(`Missing --container or --lambda property`);
         }
 
+        // Default
+        if (!argv.methods) {
+            argv.methods = 'GET'
+        }
+
         const targetResource = await cmd.lookupEnvironmentResourcebyName(argv.container,
             specProperties.implementation_type + 's', context);
 
@@ -46,7 +51,7 @@ exports.handler = cmd.handler(async function (argv) {
             description: argv.description,
             properties: {
                 resource: argv.name,
-                methods: argv.methods,
+                methods: argv.methods.split(','),
                 plugins: {
                     "gestaltSecurity": {
                         "enabled": false,
@@ -62,6 +67,7 @@ exports.handler = cmd.handler(async function (argv) {
             }
         };
 
+        // Merge in 
         spec.properties = Object.assign(spec.properties, specProperties);
 
         const apiendpoint = await gestalt.createApiEndpoint(spec, context);
