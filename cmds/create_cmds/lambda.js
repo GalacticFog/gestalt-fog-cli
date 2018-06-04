@@ -8,18 +8,34 @@ const debug = cmd.debug;
 exports.command = 'lambda'
 exports.desc = 'Create lambda'
 exports.builder = {
-    source: {
-        description: 'Source code for in-line lambda'
-    },
     url: {
         description: 'URL for package lambda'
     },
     file: {
         alias: 'f',
         description: 'Lambda definition'
+    },
+    name: {
+        description: 'Lambda name'
+    },
+    description: {
+        description: 'Lambda description'
+    },
+    code: {
+        description: 'Source code for in-line lambda'
+    },
+    'package-url': {
+        description: 'Package URL for package lambda'
+    },
+    handler: {
+        description: 'Handler'
+    },
+    runtime: {
+        description: 'Lambda runtime'
     }
 }
 
+// fog create lambda --org sandbox --workspace admin-sandbox --environment dev --code demo-setup.js --name demo-setup --description 'asdf' --handler 'run'
 // fog create lambda --name test --runtime python --public true --org engineering --env asdf --inline source.py
 // fog create lambda --from template.json --name test --inline source.py
 // fog create lambda --from mylambda.json
@@ -41,60 +57,130 @@ function getDefaultProperties() {
     }
 }
 
-exports.handler = cmd.handler(async function (argv) {
-
-    if (argv.source && argv.url) {
-        console.log("Error: Only one of --source or --url can be specified");
-        return;
+function getCodeFromSource(source) {
+    if (!fs.existsSync(source)) {
+        throw Error(`File '${source}' doesn't exist`);
     }
 
-    let code = null;
+    const contents = fs.readFileSync(source, 'utf8');
+    const buf = Buffer.from(contents, 'utf8');
+    const code = buf.toString('base64');
+    return code;
+}
 
-    if (argv.source) {
-        if (!fs.existsSync(argv.source)) {
-            console.log(`Error: ${argv.source} doesn't exist, aborted.`);
+async function doCreateLambda(argv, spec) {
+
+    // Resolve environment context from command line args
+    const context = await cmd.resolveEnvironment(argv);
+
+    // Resolve provider by name
+    const provider = await cmd.resolveProvider(argv, context);
+
+    // Build provider spec
+    spec.properties.provider = {
+        id: provider.id,
+        locations: []
+    };
+
+    debug(`lambda: ${JSON.stringify(spec, null, 2)}`);
+
+    // Create lambda
+    const lambda = await gestalt.createLambda(spec, context);
+    debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
+    console.log(`Lambda '${lambda.name}' created.`);
+}
+
+exports.handler = cmd.handler(async function (argv) {
+    if (argv.file) {
+        console.log(`Loading resource spec from file ${argv.file}`);
+        let spec = cmd.loadObjectFromFile(argv.file);
+        await doCreateLambda(argv, spec);
+
+    } else if (argv.name) {
+        // Command line mode
+
+        // Check for required args
+        cmd.requireArgs(argv, ['name', 'description', 'handler', 'runtime']);
+
+        // Build lambda spec
+        const spec = {
+            name: argv.name,
+            description: argv.description || '',
+            properties: getDefaultProperties()
+        };
+
+        // Load code
+        if (argv.code && argv['packge-url']) {
+            console.log("Error: Only one of --code or --package-url can be specified");
+            return;
+        } else if (argv.code) {
+            spec.properties.code = getCodeFromSource(argv.code);
+            spec.properties.code_type = 'code';
+        } else if (argv['package-url']) {
+            spec.properties.code_type = 'package';
+            spec.properties.package_url = argv['package-url'];
+            if (argv.compressed) {
+                spec.properties.compressed = argv.compressed;
+            } else {
+                // infer by .zip extension
+                spec.properties.compressed = String(spec.properties.package_url).endsWith('.zip') ? 'true' : 'false';
+            }
+        } else {
+            throw Error(`Missing --code or --package-url property`);
+        }
+
+        spec.properties.handler = argv.handler;
+        spec.properties.runtime = argv.runtime;
+
+        await doCreateLambda(argv, spec);
+
+    } else {
+        // Interactive mdoe
+
+        if (argv.code && argv['packge-url']) {
+            console.log("Error: Only one of --code or --package-url can be specified");
             return;
         }
 
-        const contents = fs.readFileSync(argv.source, 'utf8');
-        const buf = Buffer.from(contents, 'utf8');
-        code = buf.toString('base64');
+        let code = null;
 
-        console.log(`Creating inline code lambda from ${argv.source}`);
-    } else if (argv.url) {
-        console.log(`Creating package lambda from ${argv.url}`);
-    }
-
-    const context = await ui.resolveEnvironment();
-
-    const answers = await promptForInput(context, argv);
-
-    debug(`answers: ${JSON.stringify(answers, null, 2)}`);
-
-    if (answers.confirm) {
-
-        const lambdaSpec = Object.assign({}, answers);
-        delete lambdaSpec.confirm;
-
-        if (code) {
-            lambdaSpec.properties.code = code;
-            lambdaSpec.properties.code_type = 'code';
-        } else {
-            lambdaSpec.properties.code_type = 'package';
-            if (argv.url) {
-                lambdaSpec.properties.package_url = argv.url;
-            }
+        if (argv.code) {
+            code = getCodeFromSource(argv.code);
+            console.log(`Creating inline code lambda from ${argv.code}`);
+        } else if (argv['package-url']) {
+            console.log(`Creating package lambda from ${argv['package-url']}`);
         }
 
-        debug(`lambdaSpec: ${JSON.stringify(lambdaSpec, null, 2)}`);
+        const context = await ui.resolveEnvironment();
 
-        // Create
-        gestalt.createLambda(lambdaSpec, context).then(lambda => {
+        const answers = await promptForInput(context, argv);
+
+        debug(`answers: ${JSON.stringify(answers, null, 2)}`);
+
+        if (answers.confirm) {
+
+            const lambdaSpec = Object.assign({}, answers);
+            delete lambdaSpec.confirm;
+
+            if (code) {
+                lambdaSpec.properties.code = code;
+                lambdaSpec.properties.code_type = 'code';
+            } else {
+                lambdaSpec.properties.code_type = 'package';
+                if (argv.url) {
+                    lambdaSpec.properties.package_url = argv['package-url'];
+                }
+            }
+
+            debug(`lambdaSpec: ${JSON.stringify(lambdaSpec, null, 2)}`);
+
+            // Create
+            const lambda = await gestalt.createLambda(lambdaSpec, context);
             debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
             console.log(`Lambda '${lambda.name}' created.`);
-        });
-    } else {
-        console.log('Aborted.');
+        } else {
+            console.log('Aborted.');
+        }
     }
 });
 

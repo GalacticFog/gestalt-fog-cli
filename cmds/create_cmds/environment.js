@@ -34,9 +34,7 @@ exports.handler = cmd.handler(async function (argv) {
         // Command line
 
         // Check for required args
-        for (let s of ['name', 'description', 'type']) {
-            if (!argv[s]) throw Error(`Missing --${s} property`);
-        }
+        cmd.requireArgs(argv, ['name', 'description', 'type']);
 
         const envSpec = {
             name: argv.name,

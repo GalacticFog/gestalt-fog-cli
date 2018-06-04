@@ -81,41 +81,6 @@ fog <tab, tab>
 fog [command] <tab, tab>
 ```
 
-## Example Commands
-```sh
-# Show commands
-
-fog show containers
-fog show containers --org
-fog show containers --all
-fog show containers --all --raw
-
-fog show lambdas
-fog show lambdas --org
-fog show lambdas --all
-fog show lambdas --raw
-
-# Describe single resource commands
-
-fog describe container
-
-fog describe lambda
-fog describe lambda --fqon engineering --id c01c2296-ce76-4d41-8530-53ceb257133a
-
-# Change current context
-
-fog switch org
-fog switch workspace
-fog switch environment
-
-
-# Container actions
-
-fog scale container
-fog restart containers
-fog clone containers
-
-```
 
 # Commands
 ```
@@ -186,4 +151,96 @@ fog clone containers
 # Bash completion script
   fog bash-completion      Show Bash Completion Script
 
-  ```
+```
+
+## Command Examples (Non-Interactive Commands)
+
+### Create Org
+```sh
+fog create org --name 'example' --description 'Example Organization' --org root
+```
+
+### Create Workspace
+```sh
+fog create workspace --org 'example' --name 'example' --description 'Example Workspace'
+```
+
+### Create Environment
+
+```sh
+fog create environment --org 'example' --workspace 'example' --name 'dev' --description 'Development' --type development
+```
+
+### Create API
+```sh
+fog create api --org 'example' --workspace 'example' --environment 'dev' --provider 'default-kong' --name 'test-api' --description 'Test API'
+```
+
+### Create Container from Template File
+```sh
+fog create container -f container_template.json --org example --workspace example --environment dev --provider default-kubernetes
+```
+
+### Create API Endpoint for Container
+```sh
+fog create api-endpoint --name '/one' --description 'asdf' --org 'example' --workspace 'example' --environment 'dev' --api 'test-api' --provider 'default-kong' --container 'test' --port-name 'web' --methods 'GET,POST'
+```
+
+### Create Lambda from Template File
+```sh
+```
+
+### Create API Endpoint for Lambda
+```sh
+```
+
+### Show Containers in Current Environment
+```sh
+fog show containers
+```
+### Show Containers in the Current Org
+```sh
+fog show containers --org
+```
+### Show All Containers 
+```sh
+fog show containers --all
+```
+
+### Show Lambdas
+```sh
+fog show lambdas
+```
+
+fog show lambdas --org
+fog show lambdas --all
+fog show lambdas --raw
+
+
+
+## Command Examples (Interactive)
+```sh
+# Show commands
+
+
+# Describe single resource commands
+
+fog describe container
+
+fog describe lambda
+fog describe lambda --fqon engineering --id c01c2296-ce76-4d41-8530-53ceb257133a
+
+# Change current context
+
+fog switch org
+fog switch workspace
+fog switch environment
+
+
+# Container actions
+
+fog scale container
+fog restart containers
+fog clone containers
+
+```

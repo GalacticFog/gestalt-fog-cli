@@ -6,15 +6,28 @@ const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
 exports.command = 'api-endpoint'
 exports.desc = 'Create API Endpoint'
-exports.builder = {}
+exports.builder = {
+    template: {
+        alias: 't',
+        description: 'template file'
+    },
+    file: {
+        alias: 'f',
+        description: 'container definition file'
+    }
+}
 exports.handler = cmd.handler(async function (argv) {
-    if (argv.name) {
+    if (argv.file) {
+        console.log(`Loading resource spec from file ${argv.file}`);
+        let spec = cmd.loadObjectFromFile(argv.file);
+
+        doCreateApiEndpoint(argv, spec);
+
+    } else if (argv.name) {
         // Command line
 
         // Check for required args
-        for (let s of ['name', 'description']) {
-            if (!argv[s]) throw Error(`Missing --${s} property`);
-        }
+        cmd.requireArgs(argv, ['name', 'description']);
 
         const context = await cmd.resolveEnvironmentApi(argv);
 
@@ -177,32 +190,30 @@ exports.handler = cmd.handler(async function (argv) {
     }
 });
 
+async function doCreateApiEndpoint(argv, spec) {
+    if (argv.template) {
+        const template = cmd.loadObjectFromFile(argv.template);
+        console.log(`Mixing in template: ${template}`);
+        spec = Object.assign(template, spec);
+    }
 
-// {
-//     "name": "/test1",
-//     "description": "",
-//     "properties": {
-//         "resource": "/test1",
-//         "methods": [
-//             "GET"
-//         ],
-//         "plugins": {
-//             "rateLimit": {
-//                 "enabled": false,
-//                 "perMinute": 60
-//             },
-//             "gestaltSecurity": {
-//                 "enabled": false,
-//                 "users": [
+    // Resolve environment context from command line args
+    // const context = await cmd.resolveEnvironment(argv);
+    const context = await cmd.resolveEnvironmentApi(argv);
 
-//                 ],
-//                 "groups": [
+    if (argv.container) {
+        if (!argv['port-name']) {
+            throw Error('missing --port-name parameter');
+        }
+        // resolve container name
+        const target = await cmd.resolveEnvironmentContainer(argv);
+        spec.properties = Object.assign(spec.properties, {
+            'implementation_id': target.container.id,
+            "implementation_type": "container",
+            "container_port_name": argv['port-name']
+        })
+    }
 
-//                 ]
-//             }
-//         },
-//         "synchronous": true,
-//         "implementation_id": "9467c42b-d5cf-4bd0-86f7-9f4defa1d929",
-//         "implementation_type": "lambda"
-//     }
-// }
+    const resource = await gestalt.createApiEndpoint(spec, context);
+    console.log(`Resource '${resource.name}' created.`);
+}

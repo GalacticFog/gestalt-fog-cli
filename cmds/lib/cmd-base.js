@@ -1,4 +1,5 @@
 const gestalt = require('./gestalt')
+const fs = require('fs');
 
 const context = {};
 
@@ -61,6 +62,15 @@ function debug(str) {
     }
 }
 
+exports.loadObjectFromFile = (filePath) => {
+    if (fs.existsSync(filePath)) {
+        const contents = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(contents);
+    }
+    throw new Error(`File '${filePath}' not found`);
+}
+
+
 exports.resolveProvider = async function (argv, providedContext, optionalType) {
 
     const context = providedContext || gestalt.getContext();
@@ -113,6 +123,15 @@ exports.resolveEnvironmentApi = async function (argv) {
     await requireWorkspaceArg(argv, context);
     await requireEnvironmentArg(argv, context);
     await requireEnvironmentApiArg(argv, context);
+    return context;
+}
+
+exports.resolveEnvironmentContainer = async function (argv) {
+    const context = gestalt.getContext();
+    await requireOrgArg(argv, context);
+    await requireWorkspaceArg(argv, context);
+    await requireEnvironmentArg(argv, context);
+    await requireEnvironmentContainerArg(argv, context);
     return context;
 }
 
@@ -209,5 +228,30 @@ async function requireEnvironmentApiArg(argv, context) {
         if (!context.api.id) throw Error(`Could not find api with name '${argv.api}'`);
     } else {
         throw Error(`Missing --api property`);
+    }
+}
+
+async function requireEnvironmentContainerArg(argv, context) {
+    if (argv.container) {
+        context.container = {};
+        const resources = await gestalt.fetchEnvironmentContainers(context);
+        for (let res of resources) {
+            if (res.name == argv.container) {
+                context.container = {
+                    id: res.id,
+                    name: res.name
+                };
+                break;
+            }
+        }
+        if (!context.container.id) throw Error(`Could not find container with name '${argv.container}'`);
+    } else {
+        throw Error(`Missing --container property`);
+    }
+}
+
+exports.requireArgs = (argv, requiredArgs) => {
+    for (let s of requiredArgs) {
+        if (!argv[s]) throw Error(`Missing --${s} property`);
     }
 }

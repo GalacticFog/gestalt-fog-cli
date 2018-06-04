@@ -80,6 +80,7 @@ function removeNonportableInfo(res) {
         delete res.properties.status;
         delete res.properties.tasks_healthy;
         delete res.properties.tasks_unhealthy;
+        delete res.properties.tasks_running;
         delete res.properties.tasks_staged;
         delete res.properties.external_id;
         if (res.properties.port_mappings) {

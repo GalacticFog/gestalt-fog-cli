@@ -376,6 +376,9 @@ exports.createApiEndpoint = (spec, providedContext) => {
     // TODO: Other required parameters
 
     const context = providedContext || getGestaltContext();
+
+    console.log(context)
+
     if (!context.org) throw Error("missing context.org");
     if (!context.org.fqon) throw Error("missing context.org.fqon");
     if (!context.api) throw Error("missing context.api");
@@ -383,6 +386,20 @@ exports.createApiEndpoint = (spec, providedContext) => {
     return meta_POST(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints`, spec);
 }
 
+exports.createOrgProvider = (provider, parentFqon) => {
+    if (!provider) throw Error('missing provider');
+    if (!provider.name) throw Error('missing provider.name');
+
+    const context = parentFqon ? { org: { fqon: parentFqon } } : getGestaltContext();
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
+    const res = meta_POST(`/${context.org.fqon}/providers`, provider);
+    return res;
+}
+
+// TODO createWorkspaceProvider
+// TODO createEnvironmentProvider
+// TODO createProvider --> createOrgProvider, createWorkspaceProvider, createEnvironmentProvider
 
 exports.createOrg = (org, parentFqon) => {
     if (!org) throw Error('missing org');
