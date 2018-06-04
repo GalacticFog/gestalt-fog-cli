@@ -3,7 +3,8 @@ const io = require('../lib/gestalt-io');
 
 exports.doExport = doExport;
 
-async function doExport(selectedWorkspaces, selectedEnvironments, types, outputPath = '.') {
+async function doExport(selectedWorkspaces, selectedEnvironments, types, outputPath, exportOptions) {
+    console.log(exportOptions)
     // Export selected workspaces
     console.log();
     console.log('Exporting Workspaces...');
@@ -26,7 +27,7 @@ async function doExport(selectedWorkspaces, selectedEnvironments, types, outputP
         }
 
         const path = outputPath + '/' + gestalt.getHost() + `/${env.org.properties.fqon}/${env.properties.workspace.name}`;
-        io.exportEnvironment(path, env, resources);
+        io.exportEnvironment(path, env, resources, exportOptions);
     }
 
     console.log();

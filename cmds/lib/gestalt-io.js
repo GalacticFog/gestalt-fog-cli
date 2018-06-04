@@ -16,7 +16,7 @@ exports.exportWorkspace = (path, ws) => {
     this.exportResource(path, ws);
 }
 
-exports.exportEnvironment = (path, env, resources) => {
+exports.exportEnvironment = (path, env, resources, exportOptions) => {
     path = path || '.';
     path = path + '/' + env.name;
     mkdirs(path);
@@ -26,11 +26,11 @@ exports.exportEnvironment = (path, env, resources) => {
 
     // Export each selected resource type
     for (let type of Object.keys(resources)) {
-        this.exportResources(path, resources[type], type);
+        this.exportResources(path, resources[type], type, exportOptions);
     }
 }
 
-exports.exportResources = (path, arr, type) => {
+exports.exportResources = (path, arr, type, exportOptions) => {
     if (!arr || arr.length == 0) {
         return;
     }
@@ -56,7 +56,39 @@ exports.exportResources = (path, arr, type) => {
 
     // Export files
     for (let item of items) {
+        if (exportOptions.portable) {
+            removeNonportableInfo(item.resource);
+        }
+
         writeFile(item.file, item.resource);
+    }
+}
+
+function removeNonportableInfo(res) {
+    delete res.resource_type;
+    delete res.resource_state;
+    delete res.id;
+    delete res.org;
+    delete res.owner;
+    delete res.created;
+    delete res.modified;
+    if (res.properties) {
+        delete res.properties.instances;
+        delete res.properties.parent;
+        delete res.properties.provider;
+        delete res.properties.age;
+        delete res.properties.status;
+        delete res.properties.tasks_healthy;
+        delete res.properties.tasks_unhealthy;
+        delete res.properties.tasks_staged;
+        delete res.properties.external_id;
+        if (res.properties.port_mappings) {
+            for (let pm of res.properties.port_mappings) {
+                if (pm.service_address) {
+                    delete pm.service_address.host;
+                }
+            }
+        }
     }
 }
 
@@ -67,12 +99,6 @@ exports.loadResourceFromFile = (file) => {
     }
     throw Error(`'${file}' not found`);
 }
-
-// function mkdir(dir) {
-//     if (!fs.existsSync(dir)) {
-//         fs.mkdirSync(dir);
-//     }
-// }
 
 function writeFile(file, resource) {
     let status = '[New]        ';

@@ -7,6 +7,9 @@ const doExport = require('./exportHelper').doExport;
 exports.command = 'environment'
 exports.desc = 'Export environment'
 exports.builder = {
+    portable: {
+        default: false
+    }
 }
 
 exports.handler = cmd.handler(async function (argv) {
@@ -16,13 +19,5 @@ exports.handler = cmd.handler(async function (argv) {
     if (!argv.all) {
         types = await ui.selectOptions('Resources to export', types);
     }
-    await doExport([], [environment], types, argv.path);
-
-    // const resources = {};
-    // for (let type of types) {
-    //     const res = await gestalt.fetchEnvironmentResources(type, context);
-    //     resources[type] = res;
-    // }
-
-    // io.exportEnvironment(null, environment, resources);
+    await doExport([], [environment], types, argv.path || '.', { portable: argv.portable });
 });
