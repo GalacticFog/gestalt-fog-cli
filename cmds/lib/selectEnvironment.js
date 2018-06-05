@@ -2,15 +2,14 @@ exports.run = async (selectOpts, context) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
+    if (!selectOpts) selectOpts = {};
     if (!context) context = gestalt.getContext();
 
     let res = await gestalt.fetchWorkspaceEnvironments(context);
 
     // Filter
-    if (selectOpts) {
-        if (selectOpts.filter) {
-            res = res.filter(selectOpts.filter);
-        }
+    if (selectOpts.filter) {
+        res = res.filter(selectOpts.filter);
     }
 
     const fqon = context.org.fqon;

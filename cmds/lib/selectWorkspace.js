@@ -2,17 +2,15 @@ exports.run = async (selectOpts, context) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
+    if (!selectOpts) selectOpts = {};
     if (!context) context = gestalt.getContext();
 
     const res = await gestalt.fetchOrgWorkspaces([context.org.fqon]);
 
     // Filter
-    if (selectOpts) {
-        if (selectOpts.filter) {
-            res = res.filter(selectOpts.filter);
-        }
+    if (selectOpts.filter) {
+        res = res.filter(selectOpts.filter);
     }
-
 
     const options = {
         mode: 'autocomplete',

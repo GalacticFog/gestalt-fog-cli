@@ -1,4 +1,5 @@
 exports.run = async (opts) => {
+    opts = opts || {};
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
