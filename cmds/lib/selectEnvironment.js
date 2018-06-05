@@ -26,9 +26,14 @@ exports.run = async (selectOpts, context) => {
     const options = {
         mode: 'autocomplete',
         message: "Select Environment",
-        fields: ['description', 'name', 'path', 'owner_name'],
-        sortBy: 'description',
+        fields: ['name', 'description', 'path', 'owner_name'],
+        sortBy: 'name',
         resources: res
+    }
+
+    if (selectOpts.includeNoSelection) {
+        // Add the 'null' selection
+        options.resources = [null].concat(options.resources);
     }
 
     return selectResource.run(options);

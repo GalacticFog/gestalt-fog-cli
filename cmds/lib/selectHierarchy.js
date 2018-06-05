@@ -157,10 +157,22 @@ function chooseEnvironment(resolve) {
 
 
 async function chooseOrgWorkspaceEnvironment(options) {
-    const org = await selectOrg.run();
+    if (!options) options = {};
+    if (!options.org) options.org = {};
+    if (!options.workspace) options.workspace = {};
+    if (!options.environment) options.environment = {};
+
+    // Special case for 'includeNoSelection' param
+    if (options.includeNoSelection) {
+        options.org.includeNoSelection = true;
+        options.workspace.includeNoSelection = true;
+        options.environment.includeNoSelection = true;
+    }
+
+    const org = await selectOrg.run(options.org);
     if (!org) {
-        console.log("No selection, exiting.");
-        return;
+        // console.log("No selection, exiting.");
+        return {};
     }
 
     console.log();
@@ -169,10 +181,12 @@ async function chooseOrgWorkspaceEnvironment(options) {
 
     gestalt.setCurrentOrg(org);
 
-    const workspace = await selectWorkspace.run();
+    const workspace = await selectWorkspace.run(options.workspace);
     if (!workspace) {
-        console.log("No selection, exiting.");
-        return;
+        // console.log("No selection, exiting.");
+        return {
+            org: org
+        };
     }
 
     console.log();
@@ -181,13 +195,13 @@ async function chooseOrgWorkspaceEnvironment(options) {
 
     gestalt.setCurrentWorkspace(workspace);
 
-    if (!options) options = {};
-    if (!options.environment) options.environment = {};
-
     const environment = await selectEnvironment.run(options.environment);
     if (!environment) {
-        console.log("No selection, exiting.");
-        return;
+        // console.log("No selection, exiting.");
+        return {
+            org: org,
+            workspace: workspace
+        };
     }
 
     console.log();

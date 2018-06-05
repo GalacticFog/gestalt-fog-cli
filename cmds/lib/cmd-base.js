@@ -109,8 +109,8 @@ exports.resolveWorkspace = async function (argv) {
     return context;
 }
 
-exports.resolveEnvironment = async function (argv) {
-    const context = gestalt.getContext();
+exports.resolveEnvironment = async function (argv, optionalContext) {
+    const context = optionalContext || gestalt.getContext();
     await requireOrgArg(argv, context);
     await requireWorkspaceArg(argv, context);
     await requireEnvironmentArg(argv, context);

@@ -38,8 +38,16 @@ exports.run = (options, unsedCallback) => {
         };
 
         for (let f of options.fields) {
-            // convert to flat map
-            di.display[f] = eval(`item.${f}`) || "(empty)";
+            if (item == null) {
+                if (f == options.fields[0]) {
+                    di.display[f] = '(Select None)';
+                } else {
+                    di.display[f] = '';
+                }
+            } else {
+                // convert to flat map
+                di.display[f] = eval(`item.${f}`) || "(empty)";
+            }
         }
         return di;
     })
@@ -64,7 +72,7 @@ exports.run = (options, unsedCallback) => {
     // if list is empty, offer none
     if (choiceList.length == 0) {
         choiceList.push({
-            name: "-- None --",
+            name: "-- No Options Available --",
             value: null
         });
     }
@@ -162,6 +170,8 @@ exports.run = (options, unsedCallback) => {
 
 function sortBy(arr, key) {
     return arr.sort((a, b) => {
+        if (a == null) return 1;
+        if (b == null) return -1;
         if (a[key] < b[key]) { return -1; }
         if (a[key] > b[key]) { return 1; }
         return 0;

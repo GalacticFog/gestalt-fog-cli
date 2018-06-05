@@ -17,13 +17,18 @@ exports.run = async (selectOpts, context) => {
     const options = {
         mode: 'autocomplete',
         message: "Select Workspace",
-        fields: ['description', 'name', 'fqon', 'owner.name'],
-        sortBy: 'description',
+        fields: ['name', 'description', 'fqon', 'owner.name'],
+        sortBy: 'name',
         resources: res.map(r => {
             // r.fqon = r.org.properties.fqon;
             // r.name = `${r.name}`;
             return r;
         })
+    }
+
+    if (selectOpts.includeNoSelection) {
+        // Add the 'null' selection
+        options.resources = [null].concat(options.resources);
     }
 
     return selectResource.run(options);
