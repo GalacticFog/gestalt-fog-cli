@@ -179,12 +179,7 @@ exports.handler = cmd.handler(async function (argv) {
                 }
             }
 
-            debug(spec);
-
-
             const apiendpoint = await gestalt.createApiEndpoint(spec, Object.assign(context, { api: { id: targetApi.id } }));
-
-            debug(`apiendpoint: ${apiendpoint}`);
 
             console.log(`API Endpoint '${apiendpoint.name}' created.`);
         } else {
@@ -228,5 +223,5 @@ async function doCreateApiEndpoint(argv, spec) {
     }
 
     const resource = await gestalt.createApiEndpoint(spec, context);
-    console.log(`Resource '${resource.name}' created.`);
+    console.log(`API endpoint '${resource.name}' created.`);
 }

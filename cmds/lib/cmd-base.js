@@ -1,4 +1,5 @@
 const gestalt = require('./gestalt')
+const gestaltContext = require('./gestalt-context')
 const fs = require('fs');
 
 const context = {};
@@ -9,6 +10,9 @@ exports.handler = function (main) {
             console.log('Insecure mode: Ignoring TLS to allow self-signed certificates');
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
         }
+
+        // TODO use global properly
+        if (argv.debug) global.debug = true;
 
         context.argv = argv;
         run(main, argv).then(() => {
@@ -71,18 +75,34 @@ exports.loadObjectFromFile = (filePath) => {
 }
 
 
-exports.resolveProvider = async function (argv, providedContext, optionalType) {
+exports.resolveProvider = async function (argv, providedContext, optionalType, param = 'provider') {
 
     const context = providedContext || gestalt.getContext();
+    const name = argv[param];
 
     // Check if workspace property is required
-    if (argv.provider) {
-        // Look up ID by name
+    if (name) {
+
+        const cache = gestaltContext.getResourceIdCache('provider');
+
+        // first, look in cache
+        if (cache[name]) {
+            console.log(`Using cached id for provider ${name}`);
+            return {
+                id: cache[name],
+                name: name
+            };
+        }
+
+        // Not found in cache, look up ID by name
         const providers = await gestalt.fetchEnvironmentProviders(context, optionalType);
 
         for (let p of providers) {
-            if (p.name == argv.provider) {
-                // found it
+            if (p.name == name) {
+                // found it, write to cache
+                cache[p.name] = p.id;
+                gestaltContext.saveResourceIdCache('provider', cache);
+
                 return {
                     id: p.id,
                     name: p.name
@@ -90,9 +110,9 @@ exports.resolveProvider = async function (argv, providedContext, optionalType) {
                 break;
             }
         }
-        throw Error(`Could not find provider with name '${argv.provider}'`);
+        throw Error(`Could not find provider with name '${name}'`);
     } else {
-        throw Error(`Missing --provider property`);
+        throw Error(`Missing --${param} property`);
     }
 }
 
@@ -144,7 +164,7 @@ exports.resolveEnvironmentLambda = async function (argv) {
     return context;
 }
 
-exports.lookupEnvironmentResourcebyName = async function(name, type, context) {
+exports.lookupEnvironmentResourcebyName = async function (name, type, context) {
     const resources = await gestalt.fetchEnvironmentResources(type, context);
     for (let res of resources) {
         if (name == res.name) {

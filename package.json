@@ -1,6 +1,6 @@
 {
   "name": "gestalt-fog-cli",
-  "version": "0.3-snapshot-2",
+  "version": "0.3-snapshot-3",
   "description": "",
   "main": "fog",
   "scripts": {

@@ -8,6 +8,30 @@ const CONFIG_DIR = os.homedir() + '/.fog'
 
 exports.getConfigDir = getConfigDir;
 
+// Resource ID cache functions 
+
+exports.saveResourceIdCache = (type, cache) => {
+    const initialCache = getJsonFromFile("resource-ids.json.cached");
+    initialCache[type] = cache;
+    const contents = `${JSON.stringify(initialCache, null, 2)}\n`;
+    writeFile('resource-ids.json.cached', contents);
+}
+
+exports.clearResourceIdCache = () => {
+    const dir = getConfigDir();
+    const f = `${dir}/resource-ids.json.cached`;
+    if (fs.existsSync(f)) {
+        fs.unlinkSync(f)
+    }
+}
+
+exports.getResourceIdCache = (type) => {
+    const initialCache = getJsonFromFile("resource-ids.json.cached");
+    return initialCache[type] || {};
+}
+
+// Context functions
+
 exports.saveContext = (s) => {
     let context = this.getContext();
     Object.assign(context, s); // merge in context
@@ -28,6 +52,10 @@ exports.clearContext = () => {
     }
 }
 
+exports.getContext = () => {
+    return getJsonFromFile("context.json.cached");
+}
+
 exports.clearCachedFiles = () => {
     let files = glob.sync(`${CONFIG_DIR}/*.cached`);
     files.map(f => {
@@ -40,6 +68,8 @@ exports.clearCachedFiles = () => {
         fs.unlinkSync(f);
     });
 }
+
+// Auth token functions
 
 exports.getCachedAuthToken = () => {
     const dir = getConfigDir();
@@ -59,15 +89,14 @@ exports.clearAuthToken = () => {
     }
 }
 
-exports.getConfig = getConfig;
-
-exports.getContext = () => {
-    return getJsonFromFile("context.json.cached");
-}
-
 exports.saveAuthToken = (contents) => {
     writeFile('auth.json.cached', contents);
 }
+
+
+// Configuration
+
+exports.getConfig = getConfig;
 
 exports.loadConfigFile = (filename) => {
     const f = this.getConfigDir() + `/${filename}`;
@@ -92,6 +121,8 @@ function saveConfigToFile(file, config) {
     }
     fs.writeFileSync(`${CONFIG_DIR}/${file}`, contents);
 }
+
+// File functions
 
 exports.fileExists = fileExists;
 exports.writeFile = writeFile;
