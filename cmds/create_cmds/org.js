@@ -33,7 +33,7 @@ exports.handler = cmd.handler(async function (argv) {
         }
 
         // Check if org property is required
-        const context = cmd.resolveOrg(argv);
+        const context = await cmd.resolveOrg(argv);
         // Create Org
         const org = await gestalt.createOrg(orgSpec, context.org.fqon);
         console.log(`Org '${org.name}' created.`);
