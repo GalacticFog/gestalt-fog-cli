@@ -12,6 +12,10 @@ exports.builder = {
     },
     path: {
         description: 'Export path (default is current directory)'
+    },
+    portable: {
+        description: 'Remove environment-specific information',
+        default: false
     }
 }
 
@@ -71,5 +75,5 @@ exports.handler = cmd.handler(async function (argv) {
         environments = await ui.selectnv({ message: 'Environments to export', mode: 'checkbox' }, environments);
     }
 
-    await doExport(workspaces, environments, types, argv.path);
+    await doExport(workspaces, environments, types, argv.path, { portable: argv.portable });
 });

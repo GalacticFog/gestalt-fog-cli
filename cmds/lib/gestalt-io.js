@@ -34,6 +34,9 @@ exports.exportResources = (path, arr, type, exportOptions) => {
     if (!arr || arr.length == 0) {
         return;
     }
+    
+    if (!exportOptions) exportOptions = {}; 
+
     path = path || '.';
     const dir = path + '/' + type;
 

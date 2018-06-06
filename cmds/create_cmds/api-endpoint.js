@@ -179,6 +179,9 @@ exports.handler = cmd.handler(async function (argv) {
                 }
             }
 
+            debug(spec);
+
+
             const apiendpoint = await gestalt.createApiEndpoint(spec, Object.assign(context, { api: { id: targetApi.id } }));
 
             debug(`apiendpoint: ${apiendpoint}`);
@@ -201,6 +204,10 @@ async function doCreateApiEndpoint(argv, spec) {
     // const context = await cmd.resolveEnvironment(argv);
     const context = await cmd.resolveEnvironmentApi(argv);
 
+    if (argv.container && argv.lambda) {
+        throw Error('Can only specify one of --container and --lambda');
+    }
+
     if (argv.container) {
         if (!argv['port-name']) {
             throw Error('missing --port-name parameter');
@@ -211,6 +218,12 @@ async function doCreateApiEndpoint(argv, spec) {
             'implementation_id': target.container.id,
             "implementation_type": "container",
             "container_port_name": argv['port-name']
+        })
+    } else if (argv.lambda) {
+        const target = await cmd.resolveEnvironmentLambda(argv);
+        spec.properties = Object.assign(spec.properties, {
+            'implementation_id': target.lambda.id,
+            "implementation_type": "lambda"
         })
     }
 

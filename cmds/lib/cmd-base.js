@@ -135,6 +135,15 @@ exports.resolveEnvironmentContainer = async function (argv) {
     return context;
 }
 
+exports.resolveEnvironmentLambda = async function (argv) {
+    const context = gestalt.getContext();
+    await requireOrgArg(argv, context);
+    await requireWorkspaceArg(argv, context);
+    await requireEnvironmentArg(argv, context);
+    await requireEnvironmentLambdaArg(argv, context);
+    return context;
+}
+
 exports.lookupEnvironmentResourcebyName = async function(name, type, context) {
     const resources = await gestalt.fetchEnvironmentResources(type, context);
     for (let res of resources) {
@@ -247,6 +256,25 @@ async function requireEnvironmentContainerArg(argv, context) {
         if (!context.container.id) throw Error(`Could not find container with name '${argv.container}'`);
     } else {
         throw Error(`Missing --container property`);
+    }
+}
+
+async function requireEnvironmentLambdaArg(argv, context) {
+    if (argv.lambda) {
+        context.lambda = {};
+        const resources = await gestalt.fetchEnvironmentLambdas(context);
+        for (let res of resources) {
+            if (res.name == argv.lambda) {
+                context.lambda = {
+                    id: res.id,
+                    name: res.name
+                };
+                break;
+            }
+        }
+        if (!context.lambda.id) throw Error(`Could not find lambda with name '${argv.lambda}'`);
+    } else {
+        throw Error(`Missing --lambda property`);
     }
 }
 

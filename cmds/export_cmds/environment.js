@@ -8,6 +8,7 @@ exports.command = 'environment'
 exports.desc = 'Export environment'
 exports.builder = {
     portable: {
+        description: 'Remove environment-specific information',
         default: false
     }
 }
