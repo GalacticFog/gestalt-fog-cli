@@ -716,6 +716,9 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
     });
 }
 
+exports.metaPost = (urlPath, payloadString) => {
+    return meta_POST(`/migrate?version=${version}`, JSON.parse(payloadString));
+}
 
 // Authenticated HTTP calls
 
@@ -736,6 +739,7 @@ async function http_GET(url, opts) {
 }
 
 async function http_POST(url, body, opts) {
+    console.log(JSON.stringify(body, null, 2));
     const token = getCachedAuthToken();
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
     options.json = body;

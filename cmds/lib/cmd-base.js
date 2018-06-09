@@ -186,7 +186,7 @@ async function requireOrgArg(argv, context) {
             throw Error(`Missing --org property, not found in current context`);
         }
     }
-    console.log(`Using '${context.org.fqon}' org.`)
+    // console.log(`Using '${context.org.fqon}' org.`)
 }
 
 async function requireWorkspaceArg(argv, context) {

@@ -187,3 +187,23 @@ function getConfig() {
 //     }
 //     return {};
 // }
+
+exports.getBrowserUrl = (optionalContext) => {
+    const config = this.getConfig();
+    const context = optionalContext || this.getContext();
+    let url = '';
+    if (context.org && context.org.fqon) {
+        if (context.workspace && context.workspace.id) {
+            if (context.environment && context.environment.id) {
+                url = `/${context.org.fqon}/hierarchy/${context.workspace.id}/environment/${context.environment.id}`
+            } else {
+                url = `/${context.org.fqon}/hierarchy/${context.workspace.id}/environments`
+            }
+        } else {
+            url = `/${context.org.fqon}/hierarchy`
+        }
+    } else {
+        url = '/root/hierarchy';
+    }
+    return `${config.gestalt_url}${url}`;
+}

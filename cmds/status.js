@@ -1,7 +1,6 @@
 'use strict';
 const inquirer = require('inquirer');
 const gestaltContext = require('./lib/gestalt-context');
-const gestalt = require('./lib/gestalt');
 const ui = require('./lib/gestalt-ui');
 const chalk = require('chalk');
 
@@ -12,12 +11,14 @@ exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
     // console.log();
     const config = gestaltContext.getConfig();
+    const context = gestaltContext.getContext();
     console.log(`Gestalt Endpoint:  ${config.gestalt_url}`);
     console.log(`User:              ${config.username}`);
-    console.log('Context:           ' + ui.getContextString(gestalt.getContext()));
+    console.log('Context:           ' + ui.getContextString(context));
+    console.log(`Browser URL:       ${gestaltContext.getBrowserUrl()}`);
+
     if (argv.all) {
         console.log(JSON.stringify(gestalt.getContext(), null, 2));
     }
     console.log();
 });
-

@@ -1,10 +1,10 @@
-const cmd = require('./lib/cmd-base');
-const gestalt = require('./lib/gestalt')
-const ui = require('./lib/gestalt-ui')
-const selectHierarchy = require('./lib/selectHierarchy');
-const gestaltContext = require('./lib/gestalt-context');
+const cmd = require('../lib/cmd-base');
+const gestalt = require('../lib/gestalt')
+const ui = require('../lib/gestalt-ui')
+const selectHierarchy = require('../lib/selectHierarchy');
+const gestaltContext = require('../lib/gestalt-context');
 
-exports.command = 'set-context'
+exports.command = 'set'
 exports.desc = 'Set context'
 exports.builder = {
     reset: {

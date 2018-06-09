@@ -34,11 +34,11 @@ exports.handler = cmd.handler(async function (argv) {
         // Command line
 
         // Check for required args
-        cmd.requireArgs(argv, ['name', 'description', 'type']);
+        cmd.requireArgs(argv, ['name', 'type']);
 
         const envSpec = {
             name: argv.name,
-            description: argv.description,
+            description: argv.description || argv.name,
             properties: {
                 environment_type: argv.type
             }
