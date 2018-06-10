@@ -30,7 +30,7 @@ exports.handler = cmd.handler(async function (argv) {
     // Resolve environment context from command line args
     if (argv.provider) {
         const provider = await cmd.resolveProvider(argv, context);
-        spec.V7.lambda.properties.id = provider.id;
+        spec.V7.lambda.properties.provider.id = provider.id;
     }
 
     const res = await gestalt.metaPost(path, spec);
