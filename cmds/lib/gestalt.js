@@ -744,7 +744,10 @@ async function http_POST(url, body, opts) {
     options.json = body;
     options.method = 'POST';
     options.uri = url;
-    if (global.debug) console.error(`  ${options.method} ${options.uri}`);
+    if (global.debug) {
+        console.error(`  ${options.method} ${options.uri}`);
+        console.error(JSON.stringify(body, null, 2));
+    }
     const res = await request(options);
     return res;
 }
@@ -755,7 +758,10 @@ async function http_PUT(url, body, opts) {
     options.json = body;
     options.method = 'PUT';
     options.uri = url;
-    if (global.debug) console.error(`  ${options.method} ${options.uri}`);
+    if (global.debug) {
+        console.error(`  ${options.method} ${options.uri}`);
+        console.error(JSON.stringify(body, null, 2));
+    }
     const res = await request(options);
     return res;
 }
@@ -766,10 +772,18 @@ async function http_DELETE(url, body, opts) {
     options.json = body;
     options.method = 'DELETE';
     options.uri = url;
-    if (global.debug) console.error(`  ${options.method} ${options.uri}`);
+    if (global.debug) {
+        console.error(`  ${options.method} ${options.uri}`);
+        console.error(JSON.stringify(body, null, 2));
+    }
     const res = await request(options);
     return res;
 }
+
+exports.metaGet = meta_GET;
+exports.metaPut = meta_PUT;
+exports.metaPost = meta_POST;
+exports.metaDelete = meta_DELETE;
 
 
 // Functions
