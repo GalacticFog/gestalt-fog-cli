@@ -2,6 +2,7 @@
 require('yargs')
   // .completion()
   .commandDir('cmds')
+  .commandDir('cmds/default_cmds')
   .demandCommand()
   .help()
   // .version('SNAPSHOT')
