@@ -1,7 +1,7 @@
 exports.command = 'describe <resource>'
 exports.desc = 'Describes resources of specified type'
 exports.builder = function (yargs) {
-  return yargs.commandDir('describe_cmds')
+  return yargs.commandDir('describe_cmds').commandDir('default_cmds');
 }
 exports.handler = function (argv) {}
 
