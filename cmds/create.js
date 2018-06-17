@@ -4,4 +4,3 @@ exports.builder = function (yargs) {
   return yargs.commandDir('create_cmds')
 }
 exports.handler = function (argv) {}
-

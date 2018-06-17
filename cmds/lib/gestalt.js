@@ -2,6 +2,7 @@
 const request = require('request-promise-native');
 const querystring = require('querystring');
 const gestaltContext = require('./gestalt-context');
+const debug = require('./debug').debug;
 
 // Exports
 
@@ -733,7 +734,7 @@ async function http_GET(url, opts) {
     options.method = 'GET';
     options.uri = url;
     // console.log(`GET ${url}`)
-    if (global.debug) console.error(`  ${options.method} ${options.uri}`);
+    debug(`${options.method} ${options.uri}`);
     const res = await request(options);
     return JSON.parse(res);
 }
@@ -744,10 +745,8 @@ async function http_POST(url, body, opts) {
     options.json = body;
     options.method = 'POST';
     options.uri = url;
-    if (global.debug) {
-        console.error(`  ${options.method} ${options.uri}`);
-        console.error(JSON.stringify(body, null, 2));
-    }
+    debug(`${options.method} ${options.uri}`);
+    debug(body);
     const res = await request(options);
     return res;
 }
@@ -758,10 +757,8 @@ async function http_PUT(url, body, opts) {
     options.json = body;
     options.method = 'PUT';
     options.uri = url;
-    if (global.debug) {
-        console.error(`  ${options.method} ${options.uri}`);
-        console.error(JSON.stringify(body, null, 2));
-    }
+    debug(`${options.method} ${options.uri}`);
+    debug(body);
     const res = await request(options);
     return res;
 }
@@ -772,10 +769,8 @@ async function http_DELETE(url, body, opts) {
     options.json = body;
     options.method = 'DELETE';
     options.uri = url;
-    if (global.debug) {
-        console.error(`  ${options.method} ${options.uri}`);
-        console.error(JSON.stringify(body, null, 2));
-    }
+    debug(`${options.method} ${options.uri}`);
+    debug(body);
     const res = await request(options);
     return res;
 }
