@@ -9,16 +9,23 @@
   "author": "team@galacticfog.com",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^2.3.1",
+    "aws-sdk": "^2.259.1",
+    "chalk": "^2.4.1",
+    "child_process": "^1.0.2",
     "columnify": "^1.5.4",
+    "fs": "0.0.1-security",
     "get-stdin": "^6.0.0",
     "glob": "^7.1.2",
-    "inquirer": "^3.3.0",
-    "inquirer-autocomplete-prompt": "^0.11.1",
-    "request": "^2.83.0",
+    "inquirer": "^6.0.0",
+    "inquirer-autocomplete-prompt": "^0.12.2",
+    "os": "^0.1.1",
+    "path": "^0.12.7",
+    "querystring": "^0.2.0",
+    "request": "^2.87.0",
     "request-promise-native": "^1.0.5",
+    "url": "^0.11.0",
     "yamljs": "^0.3.0",
-    "yargs": "^10.1.2"
+    "yargs": "^11.0.0"
   },
   "pkg": {
     "scripts": "cmds/**/*.js"
