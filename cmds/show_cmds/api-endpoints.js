@@ -17,11 +17,11 @@ exports.builder = {
 
 exports.handler = cmd.handler(async function (argv) {
     if (argv.all) {
-        showAllApiEndpoints(argv);
+        await showAllApiEndpoints(argv);
     } else if (argv.org) {
-        showOrgApiEndpoints(argv)
+        await showOrgApiEndpoints(argv)
     } else {
-        showApiEndpoints(argv);
+        await showApiEndpoints(argv);
     }
 });
 

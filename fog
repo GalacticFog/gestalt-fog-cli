@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+'use strict';
 require('yargs')
   // .completion()
   .commandDir('cmds')

@@ -16,11 +16,11 @@ exports.builder = {
 }
 exports.handler = cmd.handler(async function (argv) {
     if (argv.all) {
-        showAllContainers(argv);
+        await showAllContainers(argv);
     } else if (argv.org) {
-        showOrgContainers(argv);
+        await showOrgContainers(argv);
     } else {
-        showContainers(argv);
+        await showContainers(argv);
     }
 });
 
