@@ -1,5 +1,5 @@
+const getStdin = require('get-stdin');
 const inquirer = require('inquirer');
-const fs = require('fs');
 const gestalt = require('../lib/gestalt')
 const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
@@ -20,39 +20,9 @@ exports.builder = {
 
 exports.handler = cmd.handler(async function (argv) {
     if (argv.file) {
-        // TODO - Make this standard for other resource types
-        // if (argv.file == '-') {
-
-        //     function processData() {
-        //         let containerSpec = JSON.parse(data)
-        //         await doCreateContainer(argv, containerSpec);
-        //     }
-
-        //     let data = '';
-        //     process.stdin.setEncoding('utf-8');
-
-        //     process.stdin.on('readable', function () {
-        //         var chunk;
-        //         while (chunk = process.stdin.read()) {
-        //             data += chunk;
-        //         }
-        //     });
-
-        //     process.stdin.on('end', function () {
-        //         // There will be a trailing \n from the user hitting enter. Get rid of it.
-        //         data = data.replace(/\n$/, '');
-        //         processData();
-        //     });
-
-
-        // } else {
-            console.log(`Loading container spec from file ${argv.file}`);
-            let containerSpec = cmd.loadObjectFromFile(argv.file);
-
-            await doCreateContainer(argv, containerSpec);
-        // }
+        const containerSpec = getSpecFromFile(argv.file);
+        await doCreateContainer(argv, containerSpec);
     } else {
-
         // Interactive mode
         const template = argv.template ? cmd.loadObjectFromFile(argv.template) : {};
 
@@ -61,6 +31,7 @@ exports.handler = cmd.handler(async function (argv) {
         const answers = await promptForInput(context, template);
 
         // debug(`answers: ${JSON.stringify(answers, null, 2)}`);
+        debug(answers);
 
         if (answers.confirm) {
             const containerSpec = Object.assign({}, answers);
@@ -79,6 +50,15 @@ exports.handler = cmd.handler(async function (argv) {
     }
 });
 
+async function getSpecFromFile(file) {
+    if (file == '-') {
+        const data = await getStdin();
+        return JSON.parse(data);
+    } else {
+        console.log(`Loading container spec from file ${file}`);
+        return cmd.loadObjectFromFile(file);
+    }
+}
 
 async function doCreateContainer(argv, containerSpec) {
     // load from file
