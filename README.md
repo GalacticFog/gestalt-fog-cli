@@ -43,7 +43,7 @@ npm install
 
 ## Binary Installation from Source
 
-Building from source bundles the nodejs engine with the `fog` code to provide a single binary with minimal external dependencies.
+Building from source bundles the nodejs engine with the `fog` code to provide a single binary with minimal external dependencies.  Please note that you will need the [pkg tool](https://www.npmjs.com/package/pkg) installed to run the build.sh properly `npm install -g pkg`
 
 ```sh
 ./build.sh
