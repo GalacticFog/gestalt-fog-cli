@@ -1,8 +1,8 @@
 const gestalt = require('./gestalt')
 const gestaltContext = require('./gestalt-context')
 const fs = require('fs');
-
-const context = {};
+const chalk = require('chalk');
+const debug = require('./debug').debug;
 
 exports.handler = function (main) {
     return function (argv) {
@@ -11,10 +11,9 @@ exports.handler = function (main) {
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
         }
 
-        // TODO use global properly
-        if (argv.debug) global.debug = true;
+        global.fog = global.fog || {};
+        if (argv.debug) global.fog.debug = true;
 
-        context.argv = argv;
         run(main, argv).then(() => {
             // Post
         });
@@ -33,37 +32,11 @@ async function run(fn, argv) {
 }
 
 function handleError(argv, err) {
-    if (argv.debug) {
-        console.log(err)
-    } else {
-        try {
-            const json = JSON.parse(err);
-            if (json) {
-                if (json.message) {
-                    console.error(json.message);
-                } else {
-                    console.error(`Error: ${err}`);
-                }
-            } else {
-                console.error(`Error: ${err}`);
-            }
-        } catch (err2) {
-            // Failed to parse
-            console.error(`Error: ${err}`);
-        }
-    }
-}
+    // Write error to screen
+    console.error(chalk.red(`Error: ${err}`));
 
-function debug(str) {
-    if (!context.argv) console.error('WARNING: context.argv isn\'t initialized in cmd-base.js::debug()');
-    if (context.argv && context.argv.debug) {
-        console.log(typeof str)
-        if (typeof str == 'object') {
-            console.log('[DEBUG] ' + JSON.stringify(str, null, 2));
-        } else {
-            console.log('[DEBUG] ' + str);
-        }
-    }
+    // Debug output
+    debug(err);
 }
 
 exports.loadObjectFromFile = (filePath) => {

@@ -17,9 +17,14 @@ exports.handler = cmd.handler(async function (argv) {
     const provider = await cmd.resolveProvider(argv, context);
     const laserProvider = await cmd.resolveProvider(argv, context, null, 'laser-provider');
 
+    await createKafkaSamples(argv, context, provider, laserProvider);
+});
+
+async function createKafkaSamples(argv, context, provider, laserProvider) {
     // Create kafka container
     let spec = cmd.loadObjectFromFile(`${argv.dir}/kafka-container.json`);
     const kafkaHost = `${spec.name}.${context.environment.id}.svc.cluster.local`;
+    // const kafkaHost = `${spec.name}`;
     spec.properties.env['ADVERTISED_HOST'] = kafkaHost;
     await doCreateContainer(context, provider, spec);
 
@@ -46,9 +51,22 @@ exports.handler = cmd.handler(async function (argv) {
 
     // createApiEndpointFromFile(argv, context, laserProvider, 'sms-hello-lambda.json');
 
+    const streamProvider = await cmd.resolveProvider(argv, context, null, 'stream-provider');
 
+    spec = cmd.loadObjectFromFile(`${argv.dir}/fizzbuzz-stream-processor-lambda.json`);
+    const processerLambda = await doCreateLambda(context, laserProvider, spec);
 
-});
+    spec = cmd.loadObjectFromFile(`${argv.dir}/sample-input-datafeed.json`);
+    spec.properties.data.endpoint = kafkaHost + ':9092'
+    const inStream = await doCreateDatafeed(context, spec);
+
+    spec = cmd.loadObjectFromFile(`${argv.dir}/sample-output-datafeed.json`);
+    spec.properties.data.endpoint = kafkaHost + ':9092'
+    const outStream = await doCreateDatafeed(context, spec);
+
+    spec = cmd.loadObjectFromFile(`${argv.dir}/sample-streaming-lambda-streamspec.json`);
+    await doCreateStreamspec(context, streamProvider, processerLambda, inStream, outStream, spec);
+}
 
 async function createLambdaFromFile(argv, context, provider, file) {
     let spec = cmd.loadObjectFromFile(`${argv.dir}/${file}`);
@@ -60,8 +78,7 @@ async function doCreateContainer(context, provider, spec) {
     spec.properties.provider = provider;
 
     const container = await gestalt.createContainer(spec, context);
-    // console.log(`container: ${JSON.stringify(container, null, 2)}`);
-    // console.log(`Container '${container.name}' created from file ${argv.file}.`);
+    debug(`container: ${JSON.stringify(container, null, 2)}`);
     console.log(`Container '${container.name}' created.`);
     return container;
 }
@@ -78,4 +95,27 @@ async function doCreateLambda(context, provider, spec) {
     debug(`lambda: ${JSON.stringify(lambda, null, 2)}`);
     console.log(`Lambda '${lambda.name}' created.`);
     return lambda;
+}
+
+async function doCreateDatafeed(context, spec) {
+    const datafeed = await gestalt.createDatafeed(spec, context);
+    debug(`Datafeed: ${JSON.stringify(datafeed, null, 2)}`);
+    console.log(`Datafeed '${datafeed.name}' created.`);
+    return datafeed;
+}
+
+async function doCreateStreamspec(context, streamProvider, processerLambda, inStream, outStream, spec) {
+
+    spec.properties.provider = streamProvider.id;
+
+    spec.properties.processor.lambdaId = processerLambda.id;
+
+    spec.properties.processor.inputStreamConfig.feedID = inStream.id;
+
+    spec.properties.processor.outputStreamConfig.feedID = outStream.id;
+
+    const streamspec = await gestalt.createStreamspec(spec, context);
+    debug(`Datafeed: ${JSON.stringify(streamspec, null, 2)}`);
+    console.log(`Datafeed '${streamspec.name}' created.`);
+    return streamspec;
 }

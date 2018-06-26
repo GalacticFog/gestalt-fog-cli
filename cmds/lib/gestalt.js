@@ -2,6 +2,7 @@
 const request = require('request-promise-native');
 const querystring = require('querystring');
 const gestaltContext = require('./gestalt-context');
+const debug = require('./debug').debug;
 
 // Exports
 
@@ -327,19 +328,27 @@ exports.fetchContainer = (spec, providedContext) => {
 }
 
 exports.createContainer = (spec, providedContext) => {
-    if (!spec) throw Error('missing container');
-    if (!spec.name) throw Error('missing container.name');
-    // TODO: Other required parameters
-
-    const context = providedContext || getGestaltContext();
-    if (!context.org) throw Error("missing context.org");
-    if (!context.org.fqon) throw Error("missing context.org.fqon");
-    if (!context.environment) throw Error("missing context.environment");
-    if (!context.environment.id) throw Error("missing context.environment.id");
-    return meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/containers`, spec);
+    return createEnvironmentResource('containers', spec, providedContext);
 }
 
 exports.createLambda = (spec, providedContext) => {
+    return createEnvironmentResource('lambdas', spec, providedContext);
+}
+
+exports.createApi = (spec, providedContext) => {
+    return createEnvironmentResource('apis', spec, providedContext);
+}
+
+exports.createDatafeed = (spec, providedContext) => {
+    return createEnvironmentResource('datafeeds', spec, providedContext);
+}
+
+exports.createStreamspec = (spec, providedContext) => {
+    return createEnvironmentResource('streamspecs', spec, providedContext);
+}
+
+function createEnvironmentResource(group, spec, providedContext) {
+    if (!group) throw Error('missing group');
     if (!spec) throw Error('missing spec');
     if (!spec.name) throw Error('missing spec.name');
     // TODO: Other required parameters
@@ -353,21 +362,8 @@ exports.createLambda = (spec, providedContext) => {
     delete spec.resource_type;
     delete spec.resource_state;
 
-    const res = meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/lambdas`, spec);
+    const res = meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/${group}`, spec);
     return res;
-}
-
-exports.createApi = (spec, providedContext) => {
-    if (!spec) throw Error('missing spec');
-    if (!spec.name) throw Error('missing spec.name');
-    // TODO: Other required parameters
-
-    const context = providedContext || getGestaltContext();
-    if (!context.org) throw Error("missing context.org");
-    if (!context.org.fqon) throw Error("missing context.org.fqon");
-    if (!context.environment) throw Error("missing context.environment");
-    if (!context.environment.id) throw Error("missing context.environment.id");
-    return meta_POST(`/${context.org.fqon}/environments/${context.environment.id}/apis`, spec);
 }
 
 exports.createApiEndpoint = (spec, providedContext) => {
@@ -733,7 +729,7 @@ async function http_GET(url, opts) {
     options.method = 'GET';
     options.uri = url;
     // console.log(`GET ${url}`)
-    if (global.debug) console.error(`  ${options.method} ${options.uri}`);
+    debug(`${options.method} ${options.uri}`);
     const res = await request(options);
     return JSON.parse(res);
 }
@@ -744,10 +740,8 @@ async function http_POST(url, body, opts) {
     options.json = body;
     options.method = 'POST';
     options.uri = url;
-    if (global.debug) {
-        console.error(`  ${options.method} ${options.uri}`);
-        console.error(JSON.stringify(body, null, 2));
-    }
+    debug(`${options.method} ${options.uri}`);
+    debug(body);
     const res = await request(options);
     return res;
 }
@@ -758,10 +752,8 @@ async function http_PUT(url, body, opts) {
     options.json = body;
     options.method = 'PUT';
     options.uri = url;
-    if (global.debug) {
-        console.error(`  ${options.method} ${options.uri}`);
-        console.error(JSON.stringify(body, null, 2));
-    }
+    debug(`${options.method} ${options.uri}`);
+    debug(body);
     const res = await request(options);
     return res;
 }
@@ -772,10 +764,8 @@ async function http_DELETE(url, body, opts) {
     options.json = body;
     options.method = 'DELETE';
     options.uri = url;
-    if (global.debug) {
-        console.error(`  ${options.method} ${options.uri}`);
-        console.error(JSON.stringify(body, null, 2));
-    }
+    debug(`${options.method} ${options.uri}`);
+    debug(body);
     const res = await request(options);
     return res;
 }
