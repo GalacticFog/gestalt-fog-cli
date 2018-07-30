@@ -183,10 +183,10 @@ const lookupEnvironmentResourcebyName = async function (name, type, context) {
  * @param {*} path An absolute context path specifiying a target org, workspace, or environment
  */
 const resolveContextPath = async (path) => {
-  if (!path.startsWith('/')) throw Error('Path must start with "/"');
-
-  const [orgName, workspaceName, environmentName] = path.split('/');
+  const [unused, orgName, workspaceName, environmentName] = path.split('/');
   debug('Context path: ', path);
+
+  if (unused) throw Error("Path must start with '/'");
 
   const context = {}; // Start with empty context, then populate it
   if (orgName) {
