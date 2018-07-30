@@ -173,23 +173,92 @@ const lookupEnvironmentResourcebyName = async function (name, type, context) {
   throw Error(`Environment '${type}' resource with name '${name}' not found`);
 };
 
-const resolveContextPath = async (path) => {
-  const [ org, ws, env ] = path.split('/');
 
-  const context = {};
-  if (org) {
-    await resolveOrg(context, org);
-    if (ws) {
-      await resolveWorkspace(context, ws);
-      if (env) {
-        await resolveEnvironment(context, env);
+/**
+ * Resolves a context object given a context path.
+ * Supports the following path structures:
+ * - "/<fqon>"
+ * - "/<fqon>/<workspace name>"
+ * - "/<fqon>/<workspace name>/<environment name>"
+ * @param {*} path An absolute context path specifiying a target org, workspace, or environment
+ */
+const resolveContextPath = async (path) => {
+  if (!path.startsWith('/')) throw Error('Path must start with "/"');
+
+  const [orgName, workspaceName, environmentName] = path.split('/');
+  debug('Context path: ', path);
+
+  const context = {}; // Start with empty context, then populate it
+  if (orgName) {
+    await resolveOrgContextByName(context, orgName);
+    if (workspaceName) {
+      await resolveWorkspaceContextByName(context, workspaceName);
+      if (environmentName) {
+        await resolveEnvironmentContextByName(context, environmentName);
       }
     }
   }
+
   debug(context);
 
   return context;
 };
+
+const resolveOrgContextByName = async (context, name) => {
+  let found = false;
+  const orgs = await gestalt.fetchOrgFqons();
+  for (let org of orgs) {
+    if (org == name) {
+      // found it
+      context.org = {
+        fqon: org
+      };
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) throw Error(`Could not find org with fqon '${name}'`);
+};
+
+const resolveWorkspaceContextByName = async (context, name) => {
+  let found = false;
+  const orgWorkspaces = await gestalt.fetchOrgWorkspaces([context.org.fqon]);
+  for (let ws of orgWorkspaces) {
+    if (ws.name == name) {
+      // found it
+      context.workspace = {
+        id: ws.id,
+        name: ws.name
+      };
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) throw Error(`Could not find workspace with name '${name}'`);
+};
+
+
+const resolveEnvironmentContextByName = async (context, name) => {
+  let found = false;
+  const envs = await gestalt.fetchWorkspaceEnvironments(context);
+
+  for (let env of envs) {
+    if (env.name == name) {
+      // found it
+      context.environment = {
+        id: env.id,
+        name: env.name
+      };
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) throw Error(`Could not find environment with name '${name}'`);
+};
+
 
 const requireOrgArg = async (argv, context) => {
   // Check if org property is required
