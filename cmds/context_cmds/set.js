@@ -19,17 +19,24 @@ exports.builder = {
     environment: {
         description: "Sets the environment"
     },
+    path: {
+        description: "Sets the whole context path (Org, Workspace, Environment)"
+    }
 }
 exports.handler = cmd.handler(async function (argv) {
     if (argv.reset) {
         // Reset context
         
         gestaltContext.clearContext();
+    } else if (argv.path) {
+        const context = await cmd.resolveContextPath(argv.path);
+        gestaltContext.setContext(context);
     } else if (!argv.org && !argv.workspace && !argv.environment) {
         // No arguments, allow choosing interatively
 
         const context = await selectHierarchy.chooseContext({ includeNoSelection: true });
         gestaltContext.setContext(context);
+
     } else {
         // Any or all of --org, --workspace, --environment were specified.  Adjust context accordingly.
         // Take into account the current context when one or more parameters are omitted, for example
