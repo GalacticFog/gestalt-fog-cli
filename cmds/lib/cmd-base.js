@@ -155,6 +155,26 @@ exports.lookupEnvironmentResourcebyName = async function (name, type, context) {
     throw Error(`Environment '${type}' resource with name '${name}' not found`);
 }
 
+exports.resolveContextPath = async function (path) {
+    path = path.split('/');
+    const org = path[0];
+    const ws = path[1];
+    const env = path[2];
+
+    const context = {};
+    if (org) {
+        await resolveOrg(context, org);
+        if (ws) {
+            await resolveWorkspace(context, ws);
+            if (env) {
+                await resolveEnvironment(context, env);
+            }
+        }
+    }
+    debug(context);
+    return context;
+}
+
 async function requireOrgArg(argv, context) {
     // Check if org property is required
     if (argv.org) {
