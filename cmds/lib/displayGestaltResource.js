@@ -109,8 +109,8 @@ function displayApis(resources, opts, context) {
 function displayEnvironments(resources, opts, context) {
     const options = {
         message: getContextMessage('Environments', context),
-        headers: ['Description', 'Name', 'Org', 'Type', 'Workspace', 'Owner'],
-        fields: ['description', 'name', 'org.properties.fqon', 'properties.environment_type', 'properties.workspace.name', 'owner.name'],
+        headers: ['Description', 'Name', 'Org', 'Type', 'Workspace', 'Owner', 'ID'],
+        fields: ['description', 'name', 'org.properties.fqon', 'properties.environment_type', 'properties.workspace.name', 'owner.name', 'id'],
         sortField: 'description',
     }
     displayResource(Object.assign(options, opts), resources);
@@ -120,8 +120,8 @@ function displayWorkspaces(resources, opts, context) {
     if (opts.all) {
         const options = {
             message: getContextMessage('Workspaces', context),
-            headers: ['Org', 'Description', 'Name', 'Owner'],
-            fields: ['org.properties.fqon', 'description', 'name', 'owner.name'],
+            headers: ['Org', 'Description', 'Name', 'Owner', 'ID'],
+            fields: ['org.properties.fqon', 'description', 'name', 'owner.name', 'id'],
             sortField: 'org.properties.fqon',
         }
         displayResource(Object.assign(options, opts), resources);
