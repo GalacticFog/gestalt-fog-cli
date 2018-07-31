@@ -5,7 +5,25 @@ const yaml = require('js-yaml');
 const chalk = require('chalk');
 const { debug } = require('./debug');
 
-const handler = (main) => {
+function requireArgs(argv, requiredArgs) {
+  for (let s of requiredArgs) {
+    if (!argv[s]) throw Error(`Missing --${s} property`);
+  }
+}
+
+function requireOrgArg(argv, context) {
+  // Check if org property is required
+  if (argv.org) {
+    context.org = { fqon: argv.org };
+  } else {
+    if (!context.org || !context.org.fqon) {
+      throw Error('Missing --org property, not found in current context');
+    }
+  }
+  // console.log(`Using '${context.org.fqon}' org.`)
+}
+
+function handler(main) {
   return function (argv) {
     if (argv.insecure) {
       console.log('Insecure mode: Ignoring TLS to allow self-signed certificates');
@@ -19,37 +37,26 @@ const handler = (main) => {
       // Post
     });
   };
-};
+}
 
-const run = async (fn, argv) => {
-  try {
-    await fn(argv);
-  } catch (err) {
-    handleError(argv, err);
-
-    //eslint-disable-next-line no-process-exit
-    process.exit(-1);
-  }
-};
-
-const handleError = (argv, err) => {
+function handleError(argv, err) {
   // Write error to screen
   console.error(chalk.red(`Error: ${err}`));
 
   // Debug output
   debug(err);
-};
+}
 
-const loadObjectFromFile = (filePath) => {
+function loadObjectFromFile(filePath) {
   if (fs.existsSync(filePath)) {
     const contents = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(contents);
   }
 
   throw new Error(`File '${filePath}' not found`);
-};
+}
 
-const loadYAMLFromFile = (filePath) => {
+function loadYAMLFromFile(filePath) {
   if (fs.existsSync(filePath)) {
     try {
       return yaml.safeLoad(fs.readFileSync(filePath, 'utf8'));
@@ -60,9 +67,100 @@ const loadYAMLFromFile = (filePath) => {
   }
 
   throw new Error(`File '${filePath}' not found`);
-};
+}
 
-const resolveProvider = async (argv, providedContext, optionalType, param = 'provider') => {
+async function run(fn, argv) {
+  try {
+    await fn(argv);
+  } catch (err) {
+    handleError(argv, err);
+
+    //eslint-disable-next-line no-process-exit
+    process.exit(-1);
+  }
+}
+
+async function resolveOrgContextByName(context, name) {
+  const orgs = await gestalt.fetchOrgFqons();
+  const fqon = orgs.find(i => i === name);
+
+  if (fqon) {
+    return {
+      ...context,
+      org: { fqon },
+    };
+  }
+
+  throw Error(`Could not find org with fqon '${name}'`);
+}
+
+async function resolveWorkspaceContextByName(context, name) {
+  const { org } = context;
+  const orgWorkspaces = await gestalt.fetchOrgWorkspaces([org.fqon]);
+  const workspace = orgWorkspaces.find(i => i.name === name);
+
+  if (workspace) {
+    return {
+      ...context,
+      workspace: {
+        id: workspace.id,
+        name: workspace.name
+      }
+    };
+  }
+
+  throw Error(`Could not find workspace with name '${name}'`);
+}
+
+async function resolveEnvironmentContextByName(context, name) {
+  const envs = await gestalt.fetchWorkspaceEnvironments(context);
+  const env = envs.find(i => i.name === name);
+
+  if (env) {
+    return {
+      ...context,
+      environment: {
+        id: env.id,
+        name: envs.name
+      }
+    };
+  }
+
+  throw Error(`Could not find environment with name '${name}'`);
+}
+
+/**
+ * Resolves a context object given a context path.
+ * Supports the following path structures:
+ * - "/<fqon>"
+ * - "/<fqon>/<workspace name>"
+ * - "/<fqon>/<workspace name>/<environment name>"
+ * @param {*} path An absolute context path specifiying a target org, workspace, or environment
+ */
+async function resolveContextPath(path) {
+  const [unused, orgName, workspaceName, environmentName] = path.split('/');
+  debug('Context path: ', path);
+
+  if (unused) throw Error("Path must start with '/'");
+
+  let context = {};
+
+  if (orgName) {
+    context = await resolveOrgContextByName(context, orgName);
+    if (workspaceName) {
+      context = await resolveWorkspaceContextByName(context, workspaceName);
+      if (environmentName) {
+        context = await resolveEnvironmentContextByName(context, environmentName);
+      }
+    }
+  }
+
+  debug(context);
+
+  return context;
+}
+
+async function resolveProvider(argv, providedContext, optionalType, param = 'provider') {
   const context = providedContext || gestalt.getContext();
   const name = argv[param];
 
@@ -106,31 +204,33 @@ const resolveProvider = async (argv, providedContext, optionalType, param = 'pro
   } else {
     throw Error(`Missing --${param} property`);
   }
-};
+}
 
-const resolveOrg = async (argv) => {
+async function resolveOrg (argv) {
   const context = gestalt.getContext();
   await requireOrgArg(argv, context);
-  return context;
-};
 
-const resolveWorkspace = async (argv) => {
+  return context;
+}
+
+async function resolveWorkspace(argv) {
   const context = gestalt.getContext();
   await requireOrgArg(argv, context);
   await requireWorkspaceArg(argv, context);
-  return context;
-};
 
-const resolveEnvironment = async function (argv, optionalContext = {}) {
+  return context;
+}
+
+async function resolveEnvironment(argv, optionalContext = {}) {
   const context = optionalContext || gestalt.getContext();
   await requireOrgArg(argv, context);
   await requireWorkspaceArg(argv, context);
   await requireEnvironmentArg(argv, context);
 
   return context;
-};
+}
 
-const resolveEnvironmentApi = async function (argv) {
+async function resolveEnvironmentApi(argv) {
   const context = gestalt.getContext();
   await requireOrgArg(argv, context);
   await requireWorkspaceArg(argv, context);
@@ -138,9 +238,9 @@ const resolveEnvironmentApi = async function (argv) {
   await requireEnvironmentApiArg(argv, context);
 
   return context;
-};
+}
 
-const resolveEnvironmentContainer = async function (argv) {
+async function resolveEnvironmentContainer(argv) {
   const context = gestalt.getContext();
   await requireOrgArg(argv, context);
   await requireWorkspaceArg(argv, context);
@@ -148,18 +248,19 @@ const resolveEnvironmentContainer = async function (argv) {
   await requireEnvironmentContainerArg(argv, context);
 
   return context;
-};
+}
 
-const resolveEnvironmentLambda = async function (argv) {
+async function resolveEnvironmentLambda(argv) {
   const context = gestalt.getContext();
   await requireOrgArg(argv, context);
   await requireWorkspaceArg(argv, context);
   await requireEnvironmentArg(argv, context);
   await requireEnvironmentLambdaArg(argv, context);
-  return context;
-};
 
-const lookupEnvironmentResourcebyName = async function (name, type, context) {
+  return context;
+}
+
+async function lookupEnvironmentResourcebyName(name, type, context) {
   const resources = await gestalt.fetchEnvironmentResources(type, context);
   for (let res of resources) {
     if (name == res.name) {
@@ -171,108 +272,9 @@ const lookupEnvironmentResourcebyName = async function (name, type, context) {
   }
 
   throw Error(`Environment '${type}' resource with name '${name}' not found`);
-};
+}
 
-
-/**
- * Resolves a context object given a context path.
- * Supports the following path structures:
- * - "/<fqon>"
- * - "/<fqon>/<workspace name>"
- * - "/<fqon>/<workspace name>/<environment name>"
- * @param {*} path An absolute context path specifiying a target org, workspace, or environment
- */
-const resolveContextPath = async (path) => {
-  const [unused, orgName, workspaceName, environmentName] = path.split('/');
-  debug('Context path: ', path);
-
-  if (unused) throw Error("Path must start with '/'");
-
-  const context = {}; // Start with empty context, then populate it
-  if (orgName) {
-    await resolveOrgContextByName(context, orgName);
-    if (workspaceName) {
-      await resolveWorkspaceContextByName(context, workspaceName);
-      if (environmentName) {
-        await resolveEnvironmentContextByName(context, environmentName);
-      }
-    }
-  }
-
-  debug(context);
-
-  return context;
-};
-
-const resolveOrgContextByName = async (context, name) => {
-  let found = false;
-  const orgs = await gestalt.fetchOrgFqons();
-  for (let org of orgs) {
-    if (org == name) {
-      // found it
-      context.org = {
-        fqon: org
-      };
-      found = true;
-      break;
-    }
-  }
-
-  if (!found) throw Error(`Could not find org with fqon '${name}'`);
-};
-
-const resolveWorkspaceContextByName = async (context, name) => {
-  let found = false;
-  const orgWorkspaces = await gestalt.fetchOrgWorkspaces([context.org.fqon]);
-  for (let ws of orgWorkspaces) {
-    if (ws.name == name) {
-      // found it
-      context.workspace = {
-        id: ws.id,
-        name: ws.name
-      };
-      found = true;
-      break;
-    }
-  }
-
-  if (!found) throw Error(`Could not find workspace with name '${name}'`);
-};
-
-
-const resolveEnvironmentContextByName = async (context, name) => {
-  let found = false;
-  const envs = await gestalt.fetchWorkspaceEnvironments(context);
-
-  for (let env of envs) {
-    if (env.name == name) {
-      // found it
-      context.environment = {
-        id: env.id,
-        name: env.name
-      };
-      found = true;
-      break;
-    }
-  }
-
-  if (!found) throw Error(`Could not find environment with name '${name}'`);
-};
-
-
-const requireOrgArg = async (argv, context) => {
-  // Check if org property is required
-  if (argv.org) {
-    context.org = { fqon: argv.org };
-  } else {
-    if (!context.org || !context.org.fqon) {
-      throw Error('Missing --org property, not found in current context');
-    }
-  }
-  // console.log(`Using '${context.org.fqon}' org.`)
-};
-
-const requireWorkspaceArg = async (argv, context) => {
+async function requireWorkspaceArg(argv, context) {
   // Check if workspace property is required
   if (argv.workspace) {
     context.workspace = {};
@@ -295,9 +297,9 @@ const requireWorkspaceArg = async (argv, context) => {
       throw Error('Missing --workspace property, not found in current context');
     }
   }
-};
+}
 
-const requireEnvironmentArg = async (argv, context) => {
+async function requireEnvironmentArg(argv, context) {
   // Check if environment property is required
   if (argv.environment) {
     context.environment = {};
@@ -320,9 +322,9 @@ const requireEnvironmentArg = async (argv, context) => {
       throw Error('Missing --environment property, not found in current context');
     }
   }
-};
+}
 
-const requireEnvironmentApiArg = async (argv, context) => {
+async function requireEnvironmentApiArg(argv, context) {
   if (argv.api) {
     context.api = {};
     const resources = await gestalt.fetchEnvironmentApis(context);
@@ -339,9 +341,9 @@ const requireEnvironmentApiArg = async (argv, context) => {
   } else {
     throw Error('Missing --api property');
   }
-};
+}
 
-const requireEnvironmentContainerArg = async (argv, context) => {
+async function requireEnvironmentContainerArg(argv, context) {
   if (argv.container) {
     context.container = {};
     const resources = await gestalt.fetchEnvironmentContainers(context);
@@ -358,9 +360,9 @@ const requireEnvironmentContainerArg = async (argv, context) => {
   } else {
     throw Error('Missing --container property');
   }
-};
+}
 
-const requireEnvironmentLambdaArg = async (argv, context) => {
+async function requireEnvironmentLambdaArg(argv, context) {
   if (argv.lambda) {
     context.lambda = {};
     const resources = await gestalt.fetchEnvironmentLambdas(context);
@@ -377,13 +379,8 @@ const requireEnvironmentLambdaArg = async (argv, context) => {
   } else {
     throw Error('Missing --lambda property');
   }
-};
+}
 
-const requireArgs = (argv, requiredArgs) => {
-  for (let s of requiredArgs) {
-    if (!argv[s]) throw Error(`Missing --${s} property`);
-  }
-};
 
 module.exports = {
   debug,
