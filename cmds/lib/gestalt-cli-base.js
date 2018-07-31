@@ -1,7 +1,7 @@
 const chalk = require('chalk')
 const { debug } = require('./debug')
 
-exports.initialize = (exp, main, directives) => {
+exports.initialize = (exp, main, directives = []) => {
     const handlers = [];
     processCommandDirectives(exp, directives, handlers);
     exp.handler = createHandler(main, handlers);
@@ -37,7 +37,8 @@ async function run(fn, argv, handlers) {
         }
 
         // Next call main handler
-        await fn(argv, gestalt);
+        await fn(argv);
+
     } catch (err) {
         // Write error to screen
         console.error(chalk.red(err));

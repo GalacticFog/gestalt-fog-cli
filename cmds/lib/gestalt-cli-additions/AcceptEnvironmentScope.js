@@ -34,7 +34,7 @@ function setEnvironmentScope(command) {
 function setEnvironmentScopeHandlers(handlers) {
     const handler = (argv) => {
 
-        debug(`This command accepts environment scope.`)
+        // debug(`This command accepts environment scope.`)
 
     };
 
