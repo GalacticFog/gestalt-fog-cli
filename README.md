@@ -10,7 +10,7 @@ fog <command>
 Commands:
   fog bash-completion      Show Bash Completion Script
   fog clone <resource>     Clone resources of specified type
-  fog create <resource>    Creates resources of specified type
+  fog create <resource>    Creates resources of specified type (APIs, Containers, Lambdas, Streams, etc)
   fog delete <resource>    Delete resources of specified type
   fog describe <resource>  Describes resources of specified type
   fog export <resource>    Exports resources of specified type
