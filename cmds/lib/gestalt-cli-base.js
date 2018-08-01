@@ -1,10 +1,10 @@
 const chalk = require('chalk')
 const { debug } = require('./debug')
 
-exports.initialize = (exp, main, directives) => {
+exports.initialize = (targetCommand, main, options = {}) => {
     const handlers = [];
-    processCommandDirectives(exp, directives, handlers);
-    exp.handler = createHandler(main, handlers);
+    processOptions(options, targetCommand, handlers);
+    targetCommand.handler = createHandler(main, handlers);
 }
 
 // Creates a handler that yargs framework expects (non-async function)
@@ -37,27 +37,79 @@ async function run(fn, argv, handlers) {
         }
 
         // Next call main handler
-        await fn(argv, gestalt);
+        await fn(argv);
+
     } catch (err) {
         // Write error to screen
         console.error(chalk.red(err));
 
         // Debug output
         debug(JSON.stringify(err));
+        if (global.fog.debug) {
+            throw err;
+        }
 
         process.exit(-1);
     }
 }
 
-function processCommandDirectives(command, directives, handlers) {
+function processOptions(options, targetCommand, handlers) {
 
-    const map = require('./gestalt-cli-additions');
-
-    for (let o of directives) {
-        if (o in map) {
-            map[o](command, handlers);
-        } else {
-            throw Error(`Invalid command directive: ${o}`);
-        }
+    switch (options['enviornment']) {
+        case 'required':
+            applyRequiredEnvironmentScope(targetCommand, handlers);
+            break;
+        case 'optional':
+            applyOptionalEnvironmentScope(targetCommand, handlers)
+            break;
+        default:
+            throw Error(`Unknown option: ${options['enviornment']}`)
     }
 }
+
+function applyOptionalEnvironmentScope(command, handlers) {
+    setEnvironmentScope(command);
+}
+
+function applyRequiredEnvironmentScope(command, handlers) {
+
+    setEnvironmentScope(command);
+    setEnvironmentScopeHandlers(handlers);
+
+    // Supporting functions
+
+    function setEnvironmentScopeHandlers(handlers) {
+        const handler = async (argv) => {
+
+            debug(`This command requires environment scope.`)
+
+            const context = gestaltContext.getContext();
+
+            await util.requireOrgArg(argv, context);
+            await util.requireEnvironmentArg(argv, context);
+            await util.requireEnvironmentArg(argv, context);
+
+        };
+
+        handlers.push(handler);
+    }
+}
+
+function setEnvironmentScope(command) {
+    const options = {
+        org: {
+            description: "Sets the org"
+        },
+        workspace: {
+            description: "Sets the workspace"
+        },
+        environment: {
+            description: "Sets the environment"
+        },
+        context: {
+            description: "Sets the scope"
+        }
+    }
+    command.builder = Object.assign(command.builder, options)
+}
+
