@@ -5,8 +5,6 @@
 
 module.exports = applyAcceptEnvironmentScope;
 
-const util = require('../cmd-utils');
-
 function applyAcceptEnvironmentScope(command, handlers) {
 
     setEnvironmentScope(command);

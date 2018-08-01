@@ -5,7 +5,7 @@
 
 module.exports = applyRequireEnvironmentScope;
 
-const util = require('../cmd-utils');
+const util = require('../context-resolver');
 
 const { cli, ui, out, debug, gestaltContext } = require('../gestalt-cli');
 

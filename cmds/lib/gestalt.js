@@ -202,6 +202,19 @@ function fetchEnvironmentContainers(providedContext) {
     });
 }
 
+exports.fetchProviders = (context) => {
+    if (context.org) {
+        if (context.workspace) {
+            if (context.environment) {
+                return this.fetchEnvironmentProviders(context);
+            }
+            return this.fetchWorkspaceProviders(context);
+        }
+        return this.fetchOrgProviders([context.org.fqon]);
+    }
+    throw Error(`Context doesn't contain org info`);
+}
+
 exports.fetchEnvironmentResources = (type, providedContext) => {
     return fetchFromEnvironment(type, providedContext);
 }

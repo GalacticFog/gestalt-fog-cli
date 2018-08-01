@@ -45,6 +45,9 @@ async function run(fn, argv, handlers) {
 
         // Debug output
         debug(JSON.stringify(err));
+        if (global.fog.debug) {
+            throw err;
+        }
 
         process.exit(-1);
     }
