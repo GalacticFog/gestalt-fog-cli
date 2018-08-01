@@ -202,6 +202,19 @@ function fetchEnvironmentContainers(providedContext) {
     });
 }
 
+exports.fetchProviders = (context) => {
+    if (context.org) {
+        if (context.workspace) {
+            if (context.environment) {
+                return this.fetchEnvironmentProviders(context);
+            }
+            return this.fetchWorkspaceProviders(context);
+        }
+        return this.fetchOrgProviders([context.org.fqon]);
+    }
+    throw Error(`Context doesn't contain org info`);
+}
+
 exports.fetchEnvironmentResources = (type, providedContext) => {
     return fetchFromEnvironment(type, providedContext);
 }
@@ -393,6 +406,55 @@ exports.createOrgProvider = (provider, parentFqon) => {
 // TODO createWorkspaceProvider
 // TODO createEnvironmentProvider
 // TODO createProvider --> createOrgProvider, createWorkspaceProvider, createEnvironmentProvider
+
+
+exports.createResource = (spec, context) => {
+    const url = resolveResourceUrl(spec.resource_type, context);
+    const res = meta_POST(url, spec);
+    return res;
+}
+
+function resolveResourceUrl(resourceType, context) {
+
+    let urlBase = resolveContextUrl(context);
+
+    const fmap = {
+        'Gestalt::Resource::Node::Lambda': 'lambdas',
+        'Gestalt::Resource::Container': 'containers',
+        'Gestalt::Resource::Api': 'apis',
+        'Gestalt::Resource::Environment': 'environments',
+        'Gestalt::Resource::Workspace': 'workspaces',
+        'Gestalt::Resource::Organization': 'orgs',
+        'Gestalt::Resource::User': 'users',
+        'Gestalt::Resource::Group': 'groups',
+        // TODO: 'Gestalt::Resource::ApiEndpoint': displayApiEndpoints,
+    }
+
+    let type = fmap[resourceType];
+    if (!type) {
+        if (resourceType.indexOf("Gestalt::Configuration::Provider::") == 0) {
+            type = 'providers'
+        } else {
+            throw Error(`Can't form URL path for resource type '${resourceType}'`);
+        }
+    }
+
+    return urlBase + '/' + type;
+}
+
+function resolveContextUrl(context) {
+    if (!context) throw Error("missing context");
+
+    if (context.org && context.org.fqon) {
+        if (context.environment && context.environment.id) {
+            return `/${context.org.fqon}/environments/${context.environment.id}`
+        } else if (context.workspace && context.workspace.id) {
+            return `/${context.org.fqon}/workspaces/${context.workspace.id}`
+        } 
+        return `/${context.org.fqon}`
+    }
+    throw Error(`Can't form URL path from context: ${JSON.stringify(context)}`);
+}
 
 exports.createOrg = (org, parentFqon) => {
     if (!org) throw Error('missing org');
