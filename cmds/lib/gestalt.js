@@ -407,6 +407,55 @@ exports.createOrgProvider = (provider, parentFqon) => {
 // TODO createEnvironmentProvider
 // TODO createProvider --> createOrgProvider, createWorkspaceProvider, createEnvironmentProvider
 
+
+exports.createResource = (spec, context) => {
+    const url = resolveResourceUrl(spec.resource_type, context);
+    const res = meta_POST(url, spec);
+    return res;
+}
+
+function resolveResourceUrl(resourceType, context) {
+
+    let urlBase = resolveContextUrl(context);
+
+    const fmap = {
+        'Gestalt::Resource::Node::Lambda': 'lambdas',
+        'Gestalt::Resource::Container': 'containers',
+        'Gestalt::Resource::Api': 'apis',
+        'Gestalt::Resource::Environment': 'environments',
+        'Gestalt::Resource::Workspace': 'workspaces',
+        'Gestalt::Resource::Organization': 'orgs',
+        'Gestalt::Resource::User': 'users',
+        'Gestalt::Resource::Group': 'groups',
+        // TODO: 'Gestalt::Resource::ApiEndpoint': displayApiEndpoints,
+    }
+
+    let type = fmap[resourceType];
+    if (!type) {
+        if (resourceType.indexOf("Gestalt::Configuration::Provider::") == 0) {
+            type = 'providers'
+        } else {
+            throw Error(`Can't form URL path for resource type '${resourceType}'`);
+        }
+    }
+
+    return urlBase + '/' + type;
+}
+
+function resolveContextUrl(context) {
+    if (!context) throw Error("missing context");
+
+    if (context.org && context.org.fqon) {
+        if (context.environment && context.environment.id) {
+            return `/${context.org.fqon}/environments/${context.environment.id}`
+        } else if (context.workspace && context.workspace.id) {
+            return `/${context.org.fqon}/workspaces/${context.workspace.id}`
+        } 
+        return `/${context.org.fqon}`
+    }
+    throw Error(`Can't form URL path from context: ${JSON.stringify(context)}`);
+}
+
 exports.createOrg = (org, parentFqon) => {
     if (!org) throw Error('missing org');
     if (!org.name) throw Error('missing org.name');
