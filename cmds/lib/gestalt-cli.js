@@ -9,4 +9,7 @@ exports.out = (any, ...optionalParams) => {
 
 exports.cli = require('./gestalt-cli-base')
 exports.ui = require('./gestalt-ui');
+exports.gestalt = require('./gestalt');
 exports.gestaltContext = require('./gestalt-context');
+exports.util = require('./util');
+exports.getLogger = require('./logging');
