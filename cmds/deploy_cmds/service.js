@@ -4,11 +4,12 @@ const { serviceSchema, lambdaSchema, endpointSchema } = require('../lib/schemas'
 const { asyncForEach } = require('../lib/helpers');
 
 const command = 'service';
-const desc = 'Create an API Service';
+const desc = 'Create a Service';
 const builder = {
   file: {
     alias: 'f',
     description: 'service definition file',
+    required: true,
   },
 };
 
