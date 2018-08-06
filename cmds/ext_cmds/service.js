@@ -12,7 +12,7 @@ const builder = {
   },
 };
 
-const handler = cmd.handler(async (argv) => {
+const handler = async (argv) => {
   if (argv.file) {
     console.log(`Loading service spec from file ${argv.file}`);
 
@@ -118,11 +118,11 @@ const handler = cmd.handler(async (argv) => {
   }
 
   throw Error('A Service Definition file must be provided');
-});
+};
 
 module.exports = {
   command,
   desc,
   builder,
-  handler,
+  handler: cmd.handler(handler),
 };
