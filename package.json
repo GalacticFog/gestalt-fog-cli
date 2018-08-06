@@ -1,15 +1,14 @@
 {
   "name": "gestalt-fog-cli",
-  "version": "0.4",
-  "description": "",
-  "main": "fog",
+  "version": "1.0.0",
+  "description": "Galactic Fog Gestalt Platfporm CLI",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
-    "node": ">=8.7.0"
+    "node": ">=8.11.3"
   },
-  "author": "team@galacticfog.com",
+  "author": "engineering@galacticfog.com",
   "license": "ISC",
   "dependencies": {
     "chalk": "^2.3.1",
@@ -27,7 +26,10 @@
   "pkg": {
     "scripts": "cmds/**/*.js"
   },
-  "bin": "fog",
+  "main": "index.js",
+  "bin": {
+    "fog": "bin/fog"
+  },
   "devDependencies": {
     "eslint": "^5.2.0",
     "eslint-plugin-node": "^7.0.1"
