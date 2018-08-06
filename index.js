@@ -1,8 +1,7 @@
-#!/usr/bin/env node
 require('yargs')
   // .completion()
   .commandDir('cmds')
   .demandCommand()
   .help()
   // .version('SNAPSHOT')
-  .argv
+  .argv;
