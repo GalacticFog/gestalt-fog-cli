@@ -73,6 +73,16 @@ async function resolveTemplateDirective(directiveString) {
     const directive = tokens[0];
     tokens.shift(); // Pop off the directive from tokens
 
+    // Remove any blank parameters
+    while (true) {
+        const index = tokens.indexOf('');
+        if (index > -1) {
+            tokens.splice(index, 1);
+        } else {
+            break;
+        }
+    }
+
     debug('Tokens:')
     debug(tokens);
 
@@ -88,9 +98,9 @@ async function resolveTemplateDirective(directiveString) {
 }
 
 const directiveHandlers = {
-    resolveProvider: resolveProvider,
-    resolveConfig: resolveConfig,
-    resolveEnvironment: resolveEnvironment
+    Provider: resolveProvider,
+    Config: resolveConfig,
+    Environment: resolveEnvironment
 }
 
 async function resolveProvider(path, param) {
