@@ -4,15 +4,16 @@ const { serviceSchema, lambdaSchema, endpointSchema } = require('../lib/schemas'
 const { asyncForEach } = require('../lib/helpers');
 
 const command = 'service';
-const desc = 'Create an API Service';
+const desc = 'Create a Service';
 const builder = {
   file: {
     alias: 'f',
     description: 'service definition file',
+    required: true,
   },
 };
 
-const handler = cmd.handler(async (argv) => {
+const handler = async (argv) => {
   if (argv.file) {
     console.log(`Loading service spec from file ${argv.file}`);
 
@@ -118,11 +119,11 @@ const handler = cmd.handler(async (argv) => {
   }
 
   throw Error('A Service Definition file must be provided');
-});
+};
 
 module.exports = {
   command,
   desc,
   builder,
-  handler,
+  handler: cmd.handler(handler),
 };
