@@ -2,6 +2,9 @@ require('yargs')
   // .completion()
   .commandDir('cmds')
   .demandCommand()
-  .help()
   // .version('SNAPSHOT')
+  .help()
+  .strict()
   .argv;
+
+
