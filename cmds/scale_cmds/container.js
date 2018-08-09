@@ -29,7 +29,9 @@ exports.handler = cmd.handler(async function (argv) {
 
     } else {
 
-        const container = await selectContainer();
+        const context = await ui.resolveEnvironment();
+
+        const container = await selectContainer(context);
         const num_instances = await getUserInput();
         // Validate input
         if (!validate(num_instances)) {
@@ -40,7 +42,7 @@ exports.handler = cmd.handler(async function (argv) {
         if (await confirmIfNeeded(num_instances)) {
             // Scale up
             container.properties.num_instances = num_instances;
-            const c = await gestalt.updateContainer(container);
+            const c = await gestalt.updateContainer(container, context);
             console.log("Done.");
             console.log();
             console.log(`The following command may be run to scale the container directly:`);
@@ -68,9 +70,7 @@ exports.handler = cmd.handler(async function (argv) {
         return true;
     }
 
-    async function selectContainer() {
-
-        const context = await ui.resolveEnvironment();
+    async function selectContainer(context) {
 
         const res = await gestalt.fetchEnvironmentContainers(context);
 
