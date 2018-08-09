@@ -14,6 +14,9 @@ exports.builder = {
         alias: 't',
         description: 'provider types'
     },
+    raw: {
+        description: "Raw JSON output"
+    }
 }
 exports.handler = cmd.handler(async function (argv) {
     let resources = null;
@@ -29,5 +32,9 @@ exports.handler = cmd.handler(async function (argv) {
         context = await ui.resolveEnvironment(false);
         resources = await gestalt.fetchEnvironmentProviders(context, argv.type);
     }
-    ui.displayResources(resources, argv, context);
+    if (argv.raw) {
+        console.log(JSON.stringify(resources, null, 2));
+    } else {
+        ui.displayResources(resources, argv, context);
+    }
 });

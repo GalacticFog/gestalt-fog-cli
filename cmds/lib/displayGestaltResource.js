@@ -256,8 +256,8 @@ function displayApiEndpoints(resources, opts, context) {
 function displayProviders(resources, opts, context) {
     const options = {
         message: getContextMessage('Providers', context),
-        headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'UID'/*'Created'*/],
-        fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'id'/*'created.timestamp'*/],
+        headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'Parent', /*'Parent Type',*/ 'UID'/*'Created'*/],
+        fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'properties.parent.name', /*'properties.parent.typeId',*/ 'id'/*'created.timestamp'*/],
         sortField: 'name',
     }
     for (let item of resources) {
