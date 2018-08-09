@@ -66,7 +66,7 @@ function displayContainers(containers, opts, context) {
             }
         }
         // item.fqon = fqon;
-        item.running_instances = `${item.properties.tasks_running} / ${item.properties.num_instances}`;
+        item.running_instances = `${item.properties.tasks_running || 0} / ${item.properties.num_instances}`;
     }
 
     displayResource(Object.assign(options, opts), containers);
