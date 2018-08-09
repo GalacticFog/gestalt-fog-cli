@@ -1,6 +1,11 @@
-module.exports = {
-  command: 'deploy <service>',
-  desc: 'Deploy a Service from a service.yml',
-  builder: (yargs) => yargs.commandDir('deploy_cmds'),
-  handler: () => { },
-};
+const cmd = require('./lib/cmd-base');
+
+exports.command = 'deploy <command>'
+exports.desc = 'Deploys resources of specified type'
+exports.builder = function (yargs) {
+  return yargs.commandDir('deploy_cmds')
+}
+
+exports.handler = cmd.handler(async function (argv) {
+  throw Error(`Unrecognized command: '${argv.command}'`)
+});

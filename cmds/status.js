@@ -1,10 +1,8 @@
 'use strict';
-const inquirer = require('inquirer');
+const cmd = require('./lib/cmd-base');
 const gestaltContext = require('./lib/gestalt-context');
 const ui = require('./lib/gestalt-ui');
-const chalk = require('chalk');
 
-const cmd = require('./lib/cmd-base');
 exports.command = 'status'
 exports.desc = 'Show Status'
 exports.builder = {}

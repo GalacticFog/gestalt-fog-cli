@@ -22,7 +22,7 @@ function handler(main) {
 
 function handleError(argv, err) {
   // Write error to screen
-  console.error(chalk.red(`Error: ${err}`));
+  console.error(chalk.red(err));
 
   // Debug output
   debug(err);
