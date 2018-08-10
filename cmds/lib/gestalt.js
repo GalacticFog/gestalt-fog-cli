@@ -2,7 +2,8 @@
 const request = require('request-promise-native');
 const querystring = require('querystring');
 const gestaltContext = require('./gestalt-context');
-const debug = require('./debug').debug;
+const { debug } = require('./debug');
+const { isJsonString } = require('../lib/helpers');
 
 // Exports
 
@@ -450,7 +451,7 @@ function resolveContextUrl(context) {
             return `/${context.org.fqon}/environments/${context.environment.id}`
         } else if (context.workspace && context.workspace.id) {
             return `/${context.org.fqon}/workspaces/${context.workspace.id}`
-        } 
+        }
         return `/${context.org.fqon}`
     }
     throw Error(`Can't form URL path from context: ${JSON.stringify(context)}`);
@@ -720,12 +721,11 @@ exports.setCurrentOrg = (s) => {
 }
 
 exports.getContext = () => {
-    // returns a copy of the writen context    
+    // returns a copy of the writen context
     return getGestaltContext();
 }
 
 exports.authenticate = (creds, callback) => {//(username, password) => {
-
     const security_url = getGestaltConfig()['gestalt_url'] + '/security';
     const url = '/root/oauth/issue';
 
@@ -751,7 +751,6 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         method: 'POST',
         uri: `${security_url}${url}`
     }).then(body => {
-
         const auth = JSON.parse(body); // JSON.parse(String(res.getBody()));
 
         // Enhance payload with username
@@ -762,17 +761,18 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         gestaltContext.saveAuthToken(contents);
 
         callback(null, { username: username });
-    }).catch(res => {
-        // console.log(JSON.stringify(res,null, 2))
-        if (res.message) {
-            callback(res.message);
-        } else if (res.response && res.response.body) {
-            callback(JSON.parse(res.response.body).error_description);
+      }).catch(res => {
+        if (res.response && res.response.body) {
+          const error = res.response.body;
+
+          isJsonString(error)
+            ? callback(JSON.parse(error))
+            : callback(error);
         } else {
-            callback(res);
+          callback(res);
         }
     });
-}
+};
 
 exports.metaPost = (urlPath, payloadString) => {
     return meta_POST(`/migrate?version=${version}`, JSON.parse(payloadString));
@@ -860,7 +860,7 @@ function meta_DELETE(url, opts) {
     return http_DELETE(`${meta_url}${url}`, undefined, opts);
 }
 
-// Internal Context functions 
+// Internal Context functions
 
 function getCachedAuthToken() {
     return gestaltContext.getCachedAuthToken();
