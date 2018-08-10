@@ -5,6 +5,7 @@ const ui = require('../lib/gestalt-ui');
 const { renderResourceTemplate } = require('../lib/template-resolver');
 const out = console.log;
 const util = require('../lib/util');
+const { debug } = require('../lib/debug');
 
 exports.command = 'resource';
 exports.description = 'Create resource';
@@ -39,16 +40,16 @@ exports.handler = cmd.handler(async function (argv) {
     let config = {};
 
     if (argv.config) {
-        out(`Loading config from file ${argv.config}`);
+        debug(`Loading config from file ${argv.config}`);
         config = util.loadObjectFromFile(argv.config);
     }
 
     const resourceSpec = await renderResourceTemplate(resourceTemplate, config);
 
-    out(`Finished processing resource template.`)
+    debug(`Finished processing resource template.`)
 
     const resource = await gestalt.createResource(resourceSpec, context);
 
-    console.log(resource)
-    out(`Created '${resource.resource_type}' resource '${resource.name}'.`);
+    debug(resource);
+    out(`Created resource '${resource.name}' (${resource.resource_type}).`);
 });

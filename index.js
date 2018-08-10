@@ -4,7 +4,7 @@ require('yargs')
   .demandCommand()
   // .version('SNAPSHOT')
   .help()
-  .strict()
+  // .strict()
   .argv;
 
 

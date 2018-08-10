@@ -4,34 +4,39 @@ const cmd = require('../lib/cmd-base');
 exports.command = 'providers'
 exports.desc = 'List providers'
 exports.builder = {
-    org: {
-        description: 'Fetch providers from org'
-    },
-    workspace: {
-        description: 'Fetch providers from workspace'
-    },
     type: {
         alias: 't',
         description: 'provider types'
     },
     raw: {
         description: "Raw JSON output"
+    },
+    path: {
+        description: "Specify the context path (/<org>/<workspace>/<environment>)"
     }
+
 }
 exports.handler = cmd.handler(async function (argv) {
-    let resources = null;
     let context = null;
 
-    if (argv.org) {
-        context = await ui.resolveOrg(false);
-        resources = await gestalt.fetchOrgProviders([context.org.fqon], argv.type);
-    } else if (argv.workspace) {
-        context = await ui.resolveWorkspace(false);
-        resources = await gestalt.fetchWorkspaceProviders(context, argv.type);
+    if (argv.path) {
+        context = await cmd.resolveContextPath(argv.path);
     } else {
-        context = await ui.resolveEnvironment(false);
-        resources = await gestalt.fetchEnvironmentProviders(context, argv.type);
+        context = gestalt.getContext();
     }
+
+    if (!context.org) {
+        context = await ui.resolveOrg();
+        // console.log('No context set, using /root');
+        // context = {
+        //     org: {
+        //         fqon: 'root'
+        //     }
+        // }
+    }
+
+    const resources = await gestalt.fetchProviders(context, argv.type);
+
     if (argv.raw) {
         console.log(JSON.stringify(resources, null, 2));
     } else {
