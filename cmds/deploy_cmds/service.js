@@ -4,20 +4,23 @@ const cmd = require('../lib/cmd-base');
 const { serviceSchema, lambdaSchema, endpointSchema } = require('../../schemas');
 const { asyncForEach } = require('../lib/helpers');
 
-const command = 'service';
-const desc = 'Create a Service';
-const builder = {
-  file: {
-    alias: 'f',
-    description: 'service definition file',
-    required: true,
+module.exports = {
+  command: 'service',
+  desc: 'Create a Service',
+  builder: {
+    file: {
+      alias: 'f',
+      description: 'service definition file',
+      required: true,
+    },
+    filter: {
+      description: 'a',
+    },
   },
-  filter: {
-    description: 'a',
-  },
+  handler: cmd.handler(handler),
 };
 
-const handler = async (argv) => {
+async function handler (argv) {
   try {
     console.log(`Loading service spec from file ${argv.file}`);
     const service = serviceSchema.service.cast(cmd.loadYAMLFromFile(argv.file));
@@ -115,11 +118,4 @@ const handler = async (argv) => {
   } catch (e) {
     console.error(chalk.red(`There was an error creating the Service ${e}`));
   }
-};
-
-module.exports = {
-  command,
-  desc,
-  builder,
-  handler: cmd.handler(handler),
-};
+}
