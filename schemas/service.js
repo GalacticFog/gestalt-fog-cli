@@ -1,16 +1,16 @@
 const { object, string, boolean, number, array } = require('yup');
 
 const service = object().shape({
-  service: string().required(),
+  service: object().shape({
+    name: string().required(),
+  }),
   description: string(),
   provider: object().shape({
-    name: string().required(),
     context: string().required(),
     laser: string().required(),
     api: string().required(),
   }).required(),
   functions: object().required(),
-  plugins: string().required(),
 });
 
 const serviceFunction = object().shape({
