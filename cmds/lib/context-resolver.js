@@ -4,6 +4,21 @@ const { debug } = require('./debug');
 
 //TODO: Move 'requireArg' functions to separate library
 
+module.exports = {
+    resolveProvider,
+    resolveProviderByPath,
+    resolveContextFromProviderPath,
+    resolveOrg,
+    resolveWorkspace,
+    resolveEnvironment,
+    resolveEnvironmentApi,
+    resolveEnvironmentContainer,
+    resolveEnvironmentLambda,
+    lookupEnvironmentResourcebyName,
+    resolveContextPath,
+    requireArgs
+};
+
 function requireArgs(argv, requiredArgs) {
     for (let s of requiredArgs) {
         if (!argv[s]) throw Error(`Missing --${s} property`);
@@ -105,7 +120,6 @@ async function resolveContextPath(path) {
 const providerPathCache = {};
 
 async function resolveProviderByPath(providerPath) {
-
     const pathElements = providerPath.split('/');
 
     debug(pathElements);
@@ -138,6 +152,24 @@ async function resolveProviderByPath(providerPath) {
         return provider;
         throw Error(`Could not resolve provider for path '${providerPath}'`);
     }
+}
+
+async function resolveContextFromProviderPath(providerPath) {
+    const pathElements = providerPath.split('/');
+
+    debug(pathElements);
+
+    const providerName = pathElements.pop();
+
+    debug(pathElements);
+
+    debug('providerName: ' + providerName);
+
+    const contextPath = pathElements.join('/')
+    const context = await resolveContextPath(contextPath);
+
+    debug('context: ' + context);
+    return context;
 }
 
 async function resolveProvider(argv, providedContext, optionalType, param = 'provider') {
@@ -360,18 +392,3 @@ async function requireEnvironmentLambdaArg(argv, context) {
         throw Error('Missing --lambda property');
     }
 }
-
-
-module.exports = {
-    resolveProvider,
-    resolveProviderByPath,
-    resolveOrg,
-    resolveWorkspace,
-    resolveEnvironment,
-    resolveEnvironmentApi,
-    resolveEnvironmentContainer,
-    resolveEnvironmentLambda,
-    lookupEnvironmentResourcebyName,
-    resolveContextPath,
-    requireArgs
-};
