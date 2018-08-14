@@ -3,7 +3,10 @@ const contextResolver = require('../lib/context-resolver');
 
 exports.renderResourceTemplate = async function (template, config) {
     state.config = Object.assign({}, config);
-    const resource = Object.assign({}, template);
+    // const resource = Object.assign({}, template);
+    const resource = JSON.parse(JSON.stringify(template));
+    debug('cloned resource:')
+    debug(resource)
     await traverse(resource, parseFieldForDirectives)
     return resource;
 }

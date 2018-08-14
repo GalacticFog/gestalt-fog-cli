@@ -797,22 +797,26 @@ async function http_GET(url, opts) {
 }
 
 async function http_POST(url, body, opts) {
-    const token = getCachedAuthToken();
-    const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
-    options.json = body;
-    options.method = 'POST';
-    options.uri = url;
-    debug(`${options.method} ${options.uri}`);
-    debug(body);
-    const res = await request(options);
-    return res;
+    return httpRequest('POST', url, body, opts);
 }
 
 async function http_PUT(url, body, opts) {
+    return httpRequest('PUT', url, body, opts);
+}
+
+async function http_DELETE(url, body, opts) {
+    return httpRequest('DELETE', url, body, opts);
+}
+
+async function http_PATCH(url, body, opts) {
+    return httpRequest('PATCH', url, body, opts);
+}
+
+async function httpRequest(method, url, body, opts) {
     const token = getCachedAuthToken();
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
     options.json = body;
-    options.method = 'PUT';
+    options.method = method;
     options.uri = url;
     debug(`${options.method} ${options.uri}`);
     debug(body);
@@ -820,21 +824,11 @@ async function http_PUT(url, body, opts) {
     return res;
 }
 
-async function http_DELETE(url, body, opts) {
-    const token = getCachedAuthToken();
-    const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
-    options.json = body;
-    options.method = 'DELETE';
-    options.uri = url;
-    debug(`${options.method} ${options.uri}`);
-    debug(body);
-    const res = await request(options);
-    return res;
-}
 
 exports.metaGet = meta_GET;
 exports.metaPut = meta_PUT;
 exports.metaPost = meta_POST;
+exports.metaPatch = meta_PATCH;
 exports.metaDelete = meta_DELETE;
 
 
@@ -853,6 +847,11 @@ function meta_POST(url, body, opts) {
 function meta_PUT(url, body, opts) {
     const meta_url = getGestaltConfig()['gestalt_url'] + '/meta';
     return http_PUT(`${meta_url}${url}`, body, opts);
+}
+
+function meta_PATCH(url, body, opts) {
+    const meta_url = getGestaltConfig()['gestalt_url'] + '/meta';
+    return http_PATCH(`${meta_url}${url}`, body, opts);
 }
 
 function meta_DELETE(url, opts) {
