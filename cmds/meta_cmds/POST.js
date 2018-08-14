@@ -1,10 +1,9 @@
-const inquirer = require('inquirer');
-const fs = require('fs');
 const gestalt = require('../lib/gestalt')
 const ui = require('../lib/gestalt-ui')
-const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
+const { renderResourceTemplate } = require('../lib/template-resolver');
+
 exports.command = 'POST'
 exports.desc = 'HTTP functions'
 exports.builder = {
@@ -31,27 +30,32 @@ exports.handler = cmd.handler(async function (argv) {
         context = { org: { fqon: 'root' } };
         path = '';
     } else {
-    switch (argv.scope) {
-        case 'org':
-            context = cmd.resolveOrg(argv);
-            path = `/${context.org.fqon}`;
-            break;
-        case 'workspace':
-            context = cmd.resolveWorkspace(argv);
-            path = `/${context.org.fqon}/workspaces/${context.workspace.id}`;
-            break;
-        case 'environment':
-            context = cmd.resolveEnvironment(argv);
-            path = `/${context.org.fqon}/environments/${context.environment.id}`;
-            break;
-        default:
-            throw Error("Invalid --scope parameter. Valid arguments are 'root', 'org', 'workspace', 'environment'");
+        switch (argv.scope) {
+            case 'org':
+                context = cmd.resolveOrg(argv);
+                path = `/${context.org.fqon}`;
+                break;
+            case 'workspace':
+                context = cmd.resolveWorkspace(argv);
+                path = `/${context.org.fqon}/workspaces/${context.workspace.id}`;
+                break;
+            case 'environment':
+                context = cmd.resolveEnvironment(argv);
+                path = `/${context.org.fqon}/environments/${context.environment.id}`;
+                break;
+            default:
+                throw Error("Invalid --scope parameter. Valid arguments are 'root', 'org', 'workspace', 'environment'");
+        }
     }
-    }
+
+    ui.displayContext(context);
 
     // } else {
     console.log(`Loading resource spec from file ${argv.file}`);
     let spec = cmd.loadObjectFromFile(argv.file);
+
+    // Resolve parameters
+    spec = await renderResourceTemplate(spec, {});
 
     // Resolve environment context from command line args
     if (argv.provider) {
@@ -62,6 +66,8 @@ exports.handler = cmd.handler(async function (argv) {
             locations: []
         };
     }
+
+    console.log('POST ' + path + urlPath)
 
     const res = await gestalt.metaPost(path + urlPath, spec);
     console.log(JSON.stringify(res, null, 2));
