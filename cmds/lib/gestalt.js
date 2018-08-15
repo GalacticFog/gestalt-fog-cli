@@ -778,6 +778,14 @@ exports.metaPost = (urlPath, payloadString) => {
     return meta_POST(`/migrate?version=${version}`, JSON.parse(payloadString));
 }
 
+exports.getEnv = (context) => {
+  context = context || getGestaltContext();
+  if (!context.org) throw Error("No Org in current context");
+  if (!context.org.fqon) throw Error("No FQON in current context");
+
+  return meta_GET(`/${context.org.fqon}/environments/${context.environment.id}/env`)
+}
+
 // Authenticated HTTP calls
 
 exports.httpGet = http_GET;

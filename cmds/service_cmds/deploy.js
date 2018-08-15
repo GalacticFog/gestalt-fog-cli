@@ -5,8 +5,8 @@ const { serviceSchema, lambdaSchema, endpointSchema } = require('../../schemas')
 const { asyncForEach } = require('../lib/helpers');
 
 module.exports = {
-  command: 'service',
-  desc: 'Create a Service',
+  command: 'deploy',
+  desc: 'Deploy a Service',
   builder: {
     file: {
       alias: 'f',
@@ -20,6 +20,23 @@ module.exports = {
   handler: cmd.handler(handler),
 };
 
+function generatePackUrl(provider, func, env) {
+  if (!provider.objectStore) {
+    return func.package.artifact;
+  }
+
+  if (!env.GF_DEFAULT_OBJECT_STORAGE_ADDRESS) {
+    throw new Error('Missing Environment Variable: "GF_DEFAULT_OBJECT_STORAGE_ADDRESS"');
+  }
+
+  const BUCKET = 'lambdas';
+  const port = env.GF_DEFAULT_OBJECT_STORAGE_PORT
+    ? `:${env.GF_DEFAULT_OBJECT_STORAGE_PORT}`
+    : '';
+
+  return `http://${env.GF_DEFAULT_OBJECT_STORAGE_ADDRESS}${port}/${BUCKET}/${func.package.artifact}`;
+}
+
 async function handler (argv) {
   try {
     console.log(`Loading service spec from file ${argv.file}`);
@@ -32,6 +49,7 @@ async function handler (argv) {
       });
 
     const context = await cmd.resolveContextPath(provider.context);
+    const env = await gestalt.getEnv(context);
     const resolvedProvider = await cmd.resolveProvider({
       name: provider.laser,
       org: context.org.fqon,
@@ -60,7 +78,7 @@ async function handler (argv) {
         description: f.description,
         properties: {
           code_type: 'package',
-          package_url: f['package-url'],
+          package_url: generatePackUrl(provider, f, env),
           handler: f.handler,
           compressed: f.compressed,
           headers: f.headers,
