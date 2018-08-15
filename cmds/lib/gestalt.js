@@ -859,6 +859,42 @@ function meta_DELETE(url, opts) {
     return http_DELETE(`${meta_url}${url}`, undefined, opts);
 }
 
+
+exports.securityGet = security_GET;
+exports.securityPut = security_PUT;
+exports.securityPost = security_POST;
+exports.securityPatch = security_PATCH;
+exports.securityDelete = security_DELETE;
+
+
+// Functions
+
+function security_GET(url, opts) {
+    const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
+    return http_GET(`${baseurl}${url}`, opts);
+}
+
+function security_POST(url, body, opts) {
+    const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
+    return http_POST(`${baseurl}${url}`, body, opts);
+}
+
+function security_PUT(url, body, opts) {
+    const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
+    return http_PUT(`${baseurl}${url}`, body, opts);
+}
+
+function security_PATCH(url, body, opts) {
+    const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
+    return http_PATCH(`${baseurl}${url}`, body, opts);
+}
+
+function security_DELETE(url, opts) {
+    const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
+    return http_DELETE(`${baseurl}${url}`, undefined, opts);
+}
+
+
 // Internal Context functions
 
 function getCachedAuthToken() {
