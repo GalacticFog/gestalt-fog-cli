@@ -45,8 +45,8 @@ npm install
 
 Building from source bundles the nodejs engine with the `fog` code to provide a single binary with minimal external dependencies.
 
-```sh
-./build.sh
+```
+npm run build:local // or yarn build:local
 
 # for Linux
 cp ./target/linux/fog /usr/local/bin/fog
@@ -126,6 +126,10 @@ fog [command] <tab, tab>
   fog show users                     List users
   fog show workspace-entitlements    Show workspace entitlements
   fog show workspaces                List workspaces
+
+# Show commands
+  fog service deploy                 Deploy a service.yml config
+  fog service package                Package a service.yml config
 
 # Show status  
   fog status               
