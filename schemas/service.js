@@ -9,15 +9,18 @@ const service = object().shape({
     context: string().required(),
     laser: string().required(),
     api: string().required(),
+    minioEnabled: boolean().default(false),
   }).required(),
   functions: object().required(),
 });
 
 const serviceFunction = object().shape({
   description: string(),
-  'package-url': string().required(),
+  package: object().shape({
+    artifact: string().required(),
+  }),
   handler: string().required(),
-  compressed: boolean().default(false),
+  compressed: boolean().default(true),
   headers: object().default({ Accept: 'text/plain' }),
   memory: number().default(128),
   cpus: number().default(0.1),
