@@ -1,8 +1,14 @@
-const fs = require('fs');
-const yaml = require('js-yaml');
 const chalk = require('chalk');
 const { debug } = require('./debug');
 const contextResolver = require('./context-resolver');
+const util = require('./util');
+
+module.exports = {
+  ...contextResolver,
+  ...util,
+  debug,
+  handler
+};
 
 function handler(main) {
   return function (argv) {
@@ -28,30 +34,6 @@ function handleError(argv, err) {
   debug(err);
 }
 
-//TODO: Move to utils
-function loadObjectFromFile(filePath) {
-  if (fs.existsSync(filePath)) {
-    const contents = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(contents);
-  }
-
-  throw new Error(`File '${filePath}' not found`);
-}
-
-//TODO: Move to utils
-function loadYAMLFromFile(filePath) {
-  if (fs.existsSync(filePath)) {
-    try {
-      return yaml.safeLoad(fs.readFileSync(filePath, 'utf8'));
-    } catch (e) {
-      throw new Error(`Error reading '${filePath}'`);
-    }
-
-  }
-
-  throw new Error(`File '${filePath}' not found`);
-}
-
 async function run(fn, argv) {
   try {
     await fn(argv);
@@ -62,22 +44,3 @@ async function run(fn, argv) {
     process.exit(-1);
   }
 }
-
-
-module.exports = {
-  ...contextResolver,
-  debug,
-  loadObjectFromFile,
-  loadYAMLFromFile,
-  handler,
-  // resolveProvider,
-  // resolveOrg,
-  // resolveWorkspace,
-  // resolveEnvironment,
-  // resolveEnvironmentApi,
-  // resolveEnvironmentContainer,
-  // resolveEnvironmentLambda,
-  // lookupEnvironmentResourcebyName,
-  // resolveContextPath,
-  // requireArgs
-};

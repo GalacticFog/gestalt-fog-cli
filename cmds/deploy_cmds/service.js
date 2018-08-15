@@ -23,7 +23,7 @@ module.exports = {
 async function handler (argv) {
   try {
     console.log(`Loading service spec from file ${argv.file}`);
-    const service = serviceSchema.service.cast(cmd.loadYAMLFromFile(argv.file));
+    const service = serviceSchema.service.cast(cmd.loadObjectFromFile(argv.file));
     const { provider, functions } = service;
 
     await serviceSchema.service.validate(service)
