@@ -11,6 +11,7 @@
   "author": "engineering@galacticfog.com",
   "license": "ISC",
   "dependencies": {
+    "archiver": "^2.1.1",
     "aws-sdk": "^2.293.0",
     "chalk": "^2.3.1",
     "columnify": "^1.5.4",

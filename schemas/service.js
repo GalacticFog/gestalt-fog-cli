@@ -17,7 +17,7 @@ const service = object().shape({
 const serviceFunction = object().shape({
   description: string(),
   package: object().shape({
-    artifact: string().required(),
+    artifact: string(),
   }),
   handler: string().required(),
   compressed: boolean().default(true),

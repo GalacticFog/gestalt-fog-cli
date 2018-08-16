@@ -3,6 +3,7 @@ const gestalt = require('../lib/gestalt');
 const cmd = require('../lib/cmd-base');
 const { serviceSchema, lambdaSchema, endpointSchema } = require('../../schemas');
 const { asyncForEach } = require('../lib/helpers');
+const { generateBasePackURL } = require('./util');
 
 module.exports = {
   command: 'deploy',
@@ -20,21 +21,14 @@ module.exports = {
   handler: cmd.handler(handler),
 };
 
-function generatePackUrl(provider, func, env) {
+function generatePackUrl(provider, name, func, env) {
   if (!provider.objectStore) {
     return func.package.artifact;
   }
 
-  if (!env.GF_DEFAULT_OBJECT_STORAGE_ADDRESS) {
-    throw new Error('Missing Environment Variable: "GF_DEFAULT_OBJECT_STORAGE_ADDRESS"');
-  }
-
   const BUCKET = 'lambdas';
-  const port = env.GF_DEFAULT_OBJECT_STORAGE_PORT
-    ? `:${env.GF_DEFAULT_OBJECT_STORAGE_PORT}`
-    : '';
 
-  return `http://${env.GF_DEFAULT_OBJECT_STORAGE_ADDRESS}${port}/${BUCKET}/${func.package.artifact}`;
+  return `${generateBasePackURL(env)}/${BUCKET}/${func.package && func.package.artifact || `${name}.zip`}`;
 }
 
 async function handler (argv) {
@@ -49,7 +43,7 @@ async function handler (argv) {
       });
 
     const context = await cmd.resolveContextPath(provider.context);
-    const env = await gestalt.getEnv(context);
+    const env = await gestalt.getEnvironmentVariables(context);
     const resolvedProvider = await cmd.resolveProvider({
       name: provider.laser,
       org: context.org.fqon,
@@ -78,7 +72,7 @@ async function handler (argv) {
         description: f.description,
         properties: {
           code_type: 'package',
-          package_url: generatePackUrl(provider, f, env),
+          package_url: generatePackUrl(provider, name, f, env),
           handler: f.handler,
           compressed: f.compressed,
           headers: f.headers,
