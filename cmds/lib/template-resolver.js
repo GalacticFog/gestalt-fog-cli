@@ -106,7 +106,7 @@ const directiveHandlers = {
     Environment: resolveEnvironment
 }
 
-async function resolveProvider(path, param) {
+async function resolveProvider(path, param = 'id') {
     const provider = await contextResolver.resolveProviderByPath(path);
     debug(`Found provider '${provider.name}'`);
     return provider[param];
