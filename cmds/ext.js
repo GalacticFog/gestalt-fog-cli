@@ -1,7 +1,7 @@
 const cmd = require('./lib/cmd-base');
 
 exports.command = 'ext <command>'
-exports.desc = 'External commands'
+exports.desc = false // Hidden
 exports.builder = function (yargs) {
   return yargs.commandDir('ext_cmds')
 }
