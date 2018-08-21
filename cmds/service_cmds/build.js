@@ -4,11 +4,11 @@ module.exports = {
   build,
 };
 
-function build(type, file) {
+function build(type, args) {
   switch (type) {
-    case 'nodejs':
-      return buildNode(file);;
-    default:
-      return buildNode(file);
+  case 'nodejs':
+    return buildNode(args);
+  default:
+    return buildNode(args);
   }
 }

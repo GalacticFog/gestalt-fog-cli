@@ -1,3 +1,4 @@
+const fs = require('fs');
 const chalk = require('chalk');
 const AWS = require('aws-sdk');
 const gestalt = require('../lib/gestalt');
@@ -6,6 +7,8 @@ const { serviceSchema } = require('../../schemas');
 const { asyncForEach } = require('../lib/helpers');
 const { generateBasePackURL } = require('./util');
 const { build } = require('./build');
+const { zip } = require('../lib/zip');
+const { fspawn } = require('../lib/spawn');
 
 module.exports = {
   command: 'package',
@@ -16,6 +19,9 @@ module.exports = {
       description: 'service definition file',
       required: true,
     },
+    serverless: {
+      description: 'handle serverless build',
+    }
   },
   handler: cmd.handler(handler),
 };
@@ -38,9 +44,13 @@ async function handler(argv) {
 
     await asyncForEach(Object.values(functions), async (func, i) => {
       const name = Object.keys(functions)[i];
-      const artifactName = `${func.package && func.package.artifact || `${name}.zip`}`;
+      const artifactName = func.package && func.package.artifact ? `${func.package.artifact}` : `${name}.zip`;
+      const buildDir = argv.serverless ? '.serverless' : '.gestalt';
 
-      const body = await build(func.runtime, artifactName);
+      await fspawn('rm', ['-fr', 'node_modules', buildDir]);
+      await fspawn('mkdir', [buildDir]);
+      await build(func.runtime, artifactName, argv);
+      const body = await zip(`${buildDir}/${artifactName}`);
 
       const params = {
         Bucket: 'lambdas',
@@ -50,7 +60,7 @@ async function handler(argv) {
 
       s3.putObject(params, (err) => {
         if (err)
-          console.log(err)
+          console.log(chalk.red(err));
         else
           console.log(chalk.green(`Successfully uploaded ${artifactName}`));
       });
