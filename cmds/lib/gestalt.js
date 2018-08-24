@@ -102,7 +102,7 @@ async function fetchContainersFromOrg(fqon) {
 
     const envs = await fetchOrgEnvironments([fqon]);
     const promises = envs.map(env => {
-        console.log(`Fetching containers from ${fqon}/'${env.name}'`);
+        console.error(`Fetching containers from ${fqon}/'${env.name}'`);
         const context2 = {
             org: {
                 fqon: fqon
@@ -121,7 +121,7 @@ async function fetchContainersFromOrg(fqon) {
             }
             return containers;
         }).catch(err => {
-            console.log('Warning: ' + err.message);
+            console.error('Warning: ' + err.message);
             return [];
         });
     });
@@ -135,7 +135,7 @@ function fetchFromOrgs(type, fqonList, type2) {
     if (!fqonList) fqonList = [getGestaltContext().org.fqon];
 
     let promises = fqonList.map(fqon => {
-        console.log(`Fetching ${type} from ${fqon}...`);
+        console.error(`Fetching ${type} from ${fqon}...`);
         let url = `/${fqon}/${type}?expand=true`;
         if (type2) url += `&type=${type2}`;
         const res = meta_GET(url);
@@ -216,6 +216,19 @@ exports.fetchProviders = (context, type) => {
     throw Error(`Context doesn't contain org info`);
 }
 
+exports.fetchPolicies = (context) => {
+    if (context.org) {
+        if (context.workspace) {
+            if (context.environment) {
+                return fetchFromEnvironment('policies', context);
+            }
+            return fetchFromWorkspace('policies', context);
+        }
+        return fetchFromOrgs('policies', [context.org.fqon]);
+    }
+    throw Error(`Context doesn't contain org info`);
+}
+
 exports.fetchEnvironmentResources = (type, providedContext) => {
     return fetchFromEnvironment(type, providedContext);
 }
@@ -228,7 +241,18 @@ exports.fetchEnvironmentPolicies = (providedContext) => {
     return fetchFromEnvironment('policies', providedContext);
 }
 
+function fetchFromWorkspace(type, context) {
+    context = context || getGestaltContext();
+    if (!context.org) throw Error("No Org in current context");
+    if (!context.org.fqon) throw Error("No FQON in current context");
+    if (!context.workspace) throw Error("No Workspace in current context");
+    if (!context.workspace.id) throw Error("No Workspace ID in current context");
+    const res = meta_GET(`/${context.org.fqon}/workspaces/${context.workspace.id}/${type}?expand=true`)
+    return res;
+}
+
 function fetchFromEnvironment(type, providedContext, type2) {
+    debug(`fetchFromEnvironment(${type}, ${providedContext}, ${type2}`);
     const context = providedContext || getGestaltContext();
     if (!context.org) throw Error("No Org in current context");
     if (!context.org.fqon) throw Error("No FQON in current context");
@@ -259,6 +283,25 @@ exports.fetchProviderContainers = (providerSpec) => {
     if (!providerSpec.org.properties.fqon) throw Error("No FQON in current context");
     const fqon = providerSpec.org.properties.fqon; // default org
     return meta_GET(`/${fqon}/providers/${providerSpec.id}/containers`); // can't use '?expand=true' unless in environment
+}
+
+
+exports.fetchPolicy = async (context, spec) => {
+    if (!spec) throw Error('No spec')
+    if (!spec.name && !spec.id) throw Error('No spec.name or spec.id fields')
+
+    const policies = await this.fetchPolicies(context);
+    const matchParam = spec.id ? 'id' : 'name';
+    return policies.find(p => p[matchParam] == spec[matchParam]);
+}
+
+exports.fetchPolicyRules = async (context, policySpec) => {
+    let id = policySpec.id;
+    if (!id) {
+        const policy = await this.fetchPolicy(context, policySpec);
+        id = policy.id;
+    }
+    return meta_GET(`/${context.org.fqon}/policies/${id}/rules?expand=true`);    
 }
 
 
@@ -798,7 +841,6 @@ async function http_GET(url, opts) {
     const options = Object.assign({ headers: { Authorization: `Bearer ${token}` } }, opts); // merge in user specified options
     options.method = 'GET';
     options.uri = url;
-    // console.log(`GET ${url}`)
     debug(`${options.method} ${options.uri}`);
     const res = await request(options);
     return JSON.parse(res);

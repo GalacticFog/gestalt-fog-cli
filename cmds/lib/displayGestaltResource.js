@@ -1,6 +1,7 @@
-const gestalt = require('./gestalt');
 const displayContext = require('./displayContext');
 const displayResource = require('./displayResourceUI').run;
+const yaml = require('js-yaml');
+
 const fmap = {
     'Gestalt::Resource::Node::Lambda': displayLambdas,
     'Gestalt::Resource::Container': displayContainers,
@@ -14,7 +15,6 @@ const fmap = {
 }
 
 exports.run = (resources, options, context) => {
-
     if (options && options.raw) {
         console.log(JSON.stringify(resources, null, 2));
     } else if (resources.length == 0) {
@@ -31,7 +31,8 @@ exports.run = (resources, options, context) => {
         if (fn) {
             fn(resources, options, context);
         } else {
-            throw Error(`No display function for resource type '${resourceType}'`);
+            // throw Error(`No display function for resource type '${resourceType}'`);
+            console.log(yaml.dump(resources));
         }
     }
 }
