@@ -216,6 +216,26 @@ exports.fetchProviders = (context, type) => {
     throw Error(`Context doesn't contain org info`);
 }
 
+exports.fetchSecrets = (context) => {
+    if (context.org) {
+        if (context.environment) {
+            return fetchFromEnvironment('secrets', context);
+        }
+        throw Error(`Context doesn't contain environment info`);
+    }
+    throw Error(`Context doesn't contain org info`);
+}
+
+exports.fetchSecret = async (context, spec) => {
+    if (!spec) throw Error('No spec')
+    if (!spec.name && !spec.id) throw Error('No spec.name or spec.id fields')
+
+    const secrets = await this.fetchSecrets(context);
+    const matchParam = spec.id ? 'id' : 'name';
+    return secrets.find(p => p[matchParam] == spec[matchParam]);
+}
+
+
 exports.fetchPolicies = (context) => {
     if (context.org) {
         if (context.workspace) {
@@ -301,7 +321,7 @@ exports.fetchPolicyRules = async (context, policySpec) => {
         const policy = await this.fetchPolicy(context, policySpec);
         id = policy.id;
     }
-    return meta_GET(`/${context.org.fqon}/policies/${id}/rules?expand=true`);    
+    return meta_GET(`/${context.org.fqon}/policies/${id}/rules?expand=true`);
 }
 
 
@@ -804,15 +824,15 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         gestaltContext.saveAuthToken(contents);
 
         callback(null, { username: username });
-      }).catch(res => {
+    }).catch(res => {
         if (res.response && res.response.body) {
-          const error = res.response.body;
+            const error = res.response.body;
 
-          isJsonString(error)
-            ? callback(JSON.parse(error))
-            : callback(error);
+            isJsonString(error)
+                ? callback(JSON.parse(error))
+                : callback(error);
         } else {
-          callback(res);
+            callback(res);
         }
     });
 };
@@ -822,11 +842,11 @@ exports.metaPost = (urlPath, payloadString) => {
 }
 
 exports.getEnvironmentVariables = (context) => {
-  context = context || getGestaltContext();
-  if (!context.org) throw Error("No Org in current context");
-  if (!context.org.fqon) throw Error("No FQON in current context");
+    context = context || getGestaltContext();
+    if (!context.org) throw Error("No Org in current context");
+    if (!context.org.fqon) throw Error("No FQON in current context");
 
-  return meta_GET(`/${context.org.fqon}/environments/${context.environment.id}/env`)
+    return meta_GET(`/${context.org.fqon}/environments/${context.environment.id}/env`)
 }
 
 // Authenticated HTTP calls
