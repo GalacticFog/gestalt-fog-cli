@@ -9,14 +9,21 @@ exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
     // console.log();
     const config = gestaltContext.getConfig();
-    const context = gestaltContext.getContext();
-    console.log(`Gestalt Endpoint:  ${config.gestalt_url}`);
-    console.log(`User:              ${config.username}`);
-    console.log('Context:           ' + ui.getContextString(context));
-    console.log(`Browser URL:       ${gestaltContext.getBrowserUrl()}`);
 
-    if (argv.all) {
-        console.log(JSON.stringify(gestalt.getContext(), null, 2));
+    if (config.gestalt_url) {
+        console.log(`Gestalt Endpoint:  ${config.gestalt_url}`);
+        console.log(`User:              ${config.username}`);
+
+        const context = gestaltContext.getContext();
+
+        console.log('Context:           ' + ui.getContextString(context));
+        console.log(`Browser URL:       ${gestaltContext.getBrowserUrl()}`);
+
+        if (argv.all) {
+            console.log(JSON.stringify(context, null, 2));
+        }
+    } else {
+        console.log('Not logged in.');
     }
     console.log();
 });
