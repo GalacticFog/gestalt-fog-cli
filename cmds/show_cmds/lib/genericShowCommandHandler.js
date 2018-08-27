@@ -40,7 +40,7 @@ function getHandler(type) {
         } else {
             context = gestaltContext.getContext();
 
-            if (!context.environment && !context.environment.id) {
+            if (!context.environment || !context.environment.id) {
                 // No arguments, allow choosing interatively
                 context = await selectHierarchy.chooseContext({ includeNoSelection: true });
             }

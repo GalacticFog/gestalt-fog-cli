@@ -21,5 +21,6 @@ module.exports = {
     ...require('./streamspec'),
     ...require('./user'),
     ...require('./util'),
+    ...require('./volume'),
     ...require('./workspace'),
 }
