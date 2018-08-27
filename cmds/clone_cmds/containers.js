@@ -21,7 +21,7 @@ exports.handler = cmd.handler(async function (argv) {
         description: sourceEnv.description
     }
 
-    const containers = await gestalt.fetchEnvironmentContainers(context);
+    const containers = await gestalt.fetchContainers(context);
 
     console.log("Select containers to clone (use arrows and spacebar to modify selection)");
     console.log();

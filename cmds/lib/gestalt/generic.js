@@ -6,6 +6,7 @@ const { debug } = require('../debug');
 // Exports
 
 module.exports = {
+    fetchResources,
     fetchOrgResources,
     fetchResourcesFromOrgEnvironments,
     fetchEnvironmentResources,
@@ -23,6 +24,20 @@ module.exports = {
     // TODO: Remove
     getContext: getGestaltContext
 }
+
+function fetchResources(type, context) {
+    if (context.org) {
+        if (context.workspace) {
+            if (context.environment) {
+                return fetchEnvironmentResources(type, context);
+            }
+            return fetchWorkspaceResources(type, context);
+        }
+        return fetchOrgResources(type, [context.org.fqon]);
+    }
+    throw Error(`Context doesn't contain org info`);
+}
+
 
 function fetchOrgResources(type, fqonList, type2) {
     // if (!fqonList) fqonList = [getGestaltContext().org.fqon];

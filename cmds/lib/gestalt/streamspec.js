@@ -5,7 +5,7 @@ const {
 } = require('./generic');
 
 exports.fetchStreamSpecs = (context) => {
-    return fetchEnvironmentResources('streamspecs', context);
+    return fetchEnvironmentResources('streamspecs', context); // Must be at environment
 }
 
 exports.fetchStreamspec = (spec, context) => {

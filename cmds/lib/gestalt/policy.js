@@ -1,20 +1,9 @@
 const {
-    fetchOrgResources,
-    fetchEnvironmentResources,
-    fetchWorkspaceResources,
+    fetchResources,
 } = require('./generic');
 
 exports.fetchPolicies = (context) => {
-    if (context.org) {
-        if (context.workspace) {
-            if (context.environment) {
-                return fetchEnvironmentResources('policies', context);
-            }
-            return fetchWorkspaceResources('policies', context);
-        }
-        return fetchOrgResources('policies', [context.org.fqon]);
-    }
-    throw Error(`Context doesn't contain org info`);
+    return fetchResources('policies', context);
 }
 
 exports.fetchPolicy = async (context, spec) => {

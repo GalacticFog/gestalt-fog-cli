@@ -9,18 +9,7 @@ exports.builder = {}
 
 exports.handler = cmd.handler(async function (argv) {
 
-    let context = null;
-    if (argv.path) {
-        context = await cmd.resolveContextPath(argv.path);
-    } else {
-        // Load from state
-        context = gestalt.getContext();
-
-        if (!context.org || !context.org.fqon) {
-            // No arguments, allow choosing interatively
-            context = await selectHierarchy.chooseContext({ includeNoSelection: true });
-        }
-    }
+    const context = await cmd.getContextFromPathOrPrompt(argv);
 
     console.error(ui.getContextString(context));
     console.error();

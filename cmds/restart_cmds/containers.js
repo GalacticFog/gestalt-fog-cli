@@ -7,7 +7,7 @@ exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
 
     const context = await ui.resolveEnvironment();
-    const containers = await gestalt.fetchEnvironmentContainers(context);
+    const containers = await gestalt.fetchContainers(context);
     const selectedContainers = await ui.selectContainer({ mode: 'checkbox', defaultChecked: false }, containers);
     for (let container of selectedContainers) {
         console.log(`Restarting container ${container.name}`);

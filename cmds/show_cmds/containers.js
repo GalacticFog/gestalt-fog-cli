@@ -30,7 +30,7 @@ exports.handler = cmd.handler(async function (argv) {
 
 async function showContainers(argv) {
     const context = await ui.resolveEnvironment(false);
-    const containers = await gestalt.fetchEnvironmentContainers(context);
+    const containers = await gestalt.fetchContainers(context);
     ui.displayResources(containers, argv, context);
 }
 

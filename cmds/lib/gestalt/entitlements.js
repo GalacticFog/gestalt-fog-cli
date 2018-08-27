@@ -1,20 +1,9 @@
 const {
-    fetchOrgResources,
-    fetchEnvironmentResources,
-    fetchWorkspaceResources,
+    fetchResources,
 } = require('./generic');
 
 exports.fetchEntitlements = (context) => {
-    if (context.org) {
-        if (context.workspace) {
-            if (context.environment) {
-                return fetchEnvironmentResources("entitlements", context);
-            }
-            return fetchWorkspaceResources("entitlements", context);
-        }
-        return fetchOrgResources("entitlements", [context.org.fqon]);
-    }
-    throw Error(`Context doesn't contain org info`);
+    return fetchResources('entitlements', context);
 }
 
 // exports.fetchOrgEntitlements = (context) => {

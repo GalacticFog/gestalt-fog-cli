@@ -1,6 +1,7 @@
 const gestalt = require('./gestalt');
 const gestaltContext = require('./gestalt-context');
 const { debug } = require('./debug');
+const selectHierarchy = require('../lib/selectHierarchy');
 
 //TODO: Move 'requireArg' functions to separate library
 
@@ -16,8 +17,26 @@ module.exports = {
     resolveEnvironmentLambda,
     lookupEnvironmentResourcebyName,
     resolveContextPath,
-    requireArgs
+    requireArgs,
+    getContextFromPathOrPrompt
 };
+
+async function getContextFromPathOrPrompt(argv /*TODO: ,scope='any'*/) {
+    let context = null;
+    if (argv.path) {
+        context = await resolveContextPath(argv.path);
+    } else {
+        // Load from state
+        context = gestalt.getContext();
+
+        if (!context.org || !context.org.fqon) {
+            // No arguments, allow choosing interatively
+            context = await selectHierarchy.chooseContext({ includeNoSelection: true });
+        }
+    }
+
+    return context;
+}
 
 function requireArgs(argv, requiredArgs) {
     for (let s of requiredArgs) {
@@ -353,7 +372,7 @@ async function requireEnvironmentApiArg(argv, context) {
 async function requireEnvironmentContainerArg(argv, context) {
     if (argv.container) {
         context.container = {};
-        const resources = await gestalt.fetchEnvironmentContainers(context);
+        const resources = await gestalt.fetchContainers(context);
         for (let res of resources) {
             if (res.name == argv.container) {
                 context.container = {

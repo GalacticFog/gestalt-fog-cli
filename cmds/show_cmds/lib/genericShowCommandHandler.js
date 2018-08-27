@@ -57,9 +57,9 @@ function getHandler(type) {
 
             let resources = [];
             if (argv.name) {
-                const secret = await gestalt.fetchResource(type, { name: argv.name }, context);
-                if (secret) {
-                    resources.push(secret);
+                const res = await gestalt.fetchResource(type, { name: argv.name }, context);
+                if (res) {
+                    resources.push(res);
                 }
             } else {
                 resources = await gestalt.fetchEnvironmentResources(type, context);

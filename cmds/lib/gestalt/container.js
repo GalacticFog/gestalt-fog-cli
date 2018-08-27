@@ -8,12 +8,22 @@ const {
 } = require('./generic');
 
 
-exports.fetchOrgContainers = (fqonList) => {
-    return fetchResourcesFromOrgEnvironments('containers', fqonList);
+exports.fetchContainers = (context) => {
+    if (context.org) {
+        if (context.workspace) {
+            if (context.environment) {
+                return fetchEnvironmentResources('containers', context);
+            }
+            return fetchWorkspaceResources('containers', context);
+        }
+        // Have to iteratively fetch containers from all environments in org
+        return fetchResourcesFromOrgEnvironments('containers', fqonList);
+    }
+    throw Error(`Context doesn't contain org info`);
 }
 
-exports.fetchEnvironmentContainers = (context) => {
-    return fetchEnvironmentResources('containers', context);
+exports.fetchOrgContainers = (fqonList) => {
+    return fetchResourcesFromOrgEnvironments('containers', fqonList);
 }
 
 exports.fetchContainer = (spec, context) => {

@@ -10,5 +10,5 @@ exports.getHost = () => {
 }
 
 exports.getEnvironmentResourceTypes = () => {
-    return ['lambdas', 'apis', 'containers'];
+    return ['lambdas', 'apis', 'containers', 'datafeeds', 'streamspecs', 'secrets', 'policies'];
 }

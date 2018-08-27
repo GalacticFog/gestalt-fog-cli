@@ -72,7 +72,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     async function selectContainer(context) {
 
-        const res = await gestalt.fetchEnvironmentContainers(context);
+        const res = await gestalt.fetchContainers(context);
 
         let options = {
             mode: 'autocomplete',

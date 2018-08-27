@@ -5,7 +5,7 @@ const {
 } = require('./generic');
 
 exports.fetchSecrets = (context) => {
-    return fetchEnvironmentResources('secrets', context);
+    return fetchEnvironmentResources('secrets', context);  // Must be at environment
 }
 
 exports.fetchSecret = async (context, spec) => {
