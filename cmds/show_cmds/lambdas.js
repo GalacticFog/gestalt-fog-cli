@@ -1,3 +1,7 @@
+// const showCommandBuilder = require('./lib/genericShowCommandHandler');
+// module.exports = showCommandBuilder.buildCommand('lambdas');
+
+
 const gestalt = require('../lib/gestalt')
 const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');

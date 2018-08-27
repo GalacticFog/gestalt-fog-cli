@@ -3,6 +3,7 @@ const ui = require('../lib/gestalt-ui')
 const chalk = require('chalk');
 const inquirer = require('inquirer');
 const cmd = require('../lib/cmd-base');
+const { debug } = require('../lib/debug');
 exports.command = 'containers'
 exports.desc = 'Delete containers'
 exports.builder = {
@@ -34,7 +35,9 @@ exports.handler = cmd.handler(async function (argv) {
     console.log("Select containers to delete (use arrows and spacebar to modify selection)");
     console.log();
 
-    const fields = ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'org.properties.fqon', 'environment.name'];
+    debug(containers);
+
+    const fields = ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', 'org.properties.fqon'];
 
     const selectedContainers = await ui.selectContainer({ mode: 'checkbox', defaultChecked: false, fields: fields }, containers);
     console.log();

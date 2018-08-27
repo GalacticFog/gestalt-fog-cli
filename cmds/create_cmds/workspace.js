@@ -35,7 +35,7 @@ exports.handler = cmd.handler(async function (argv) {
         const context = await cmd.resolveOrg(argv);
 
         // Create workspace
-        const workspace = await gestalt.createWorkspace(workspaceSpec, context.org.fqon);
+        const workspace = await gestalt.createWorkspace(workspaceSpec, context);
         console.log(`Workspace '${workspace.name}' created.`);
     } else {
 
@@ -79,7 +79,7 @@ exports.handler = cmd.handler(async function (argv) {
                 description: answers.description
             };
 
-            const workspace = await gestalt.createWorkspace(workspaceSpec, fqon);
+            const workspace = await gestalt.createWorkspace(workspaceSpec, context);
             debug(`workspace: ${workspace}`);
             console.log(`Workspace '${workspace.name}' created.`);
         } else {

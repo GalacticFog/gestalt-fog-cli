@@ -17,7 +17,6 @@ exports.run = (options, unsedCallback) => {
 
     // -- Main --
 
-    const context = {}
     let resources = options.resources;
 
     // if (resources.length == 0) {
@@ -46,7 +45,13 @@ exports.run = (options, unsedCallback) => {
                 }
             } else {
                 // convert to flat map
-                di.display[f] = eval(`item.${f}`) || "(empty)";
+                try {
+                    di.display[f] = eval(`item.${f}`) || "(empty)";
+                } catch (err) {
+                    // Helpful debugging info
+                    console.error(`Error rendering 'item.${f}'`);
+                    throw err;
+                }
             }
         }
         return di;

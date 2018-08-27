@@ -191,12 +191,7 @@ async function resolveProvider(argv, providedContext, optionalType, param = 'pro
         }
 
         // Not found in cache, look up ID by name
-        let providers = null;
-        if (context.environment && context.environment.id) {
-            providers = await gestalt.fetchEnvironmentProviders(context, optionalType);
-        } else {
-            providers = await gestalt.fetchOrgProviders(['root'], optionalType);
-        }
+        let providers = await gestalt.fetchProviders(context, optionalType);
 
         for (let p of providers) {
             if (p.name == name) {

@@ -32,6 +32,8 @@ function handleError(argv, err) {
 
   // Debug output
   debug(err);
+
+  if (global.fog.debug) throw err;
 }
 
 async function run(fn, argv) {

@@ -1,2 +1,2 @@
 const showCommandBuilder = require('./lib/genericShowCommandHandler');
-module.exports = showCommandBuilder.buildCommand('policies');
+module.exports = showCommandBuilder.buildCommand('datafeeds');
