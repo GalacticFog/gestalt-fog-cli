@@ -1,9 +1,5 @@
 const {
     fetchOrgResources,
-    fetchEnvironmentResources,
-    fetchWorkspaceResources,
-    createEnvironmentResource,
-    createResource,
 } = require('./generic');
 
 exports.fetchUsers = () => {

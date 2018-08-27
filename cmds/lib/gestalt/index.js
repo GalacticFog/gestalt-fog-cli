@@ -2,6 +2,7 @@
 
 module.exports = {
     ...require('./api'),
+    ...require('./api-endpoint'),
     ...require('./auth'),
     ...require('./container'),
     ...require('./context'),
@@ -13,7 +14,9 @@ module.exports = {
     ...require('./lambda'),
     ...require('./org'),
     ...require('./policy'),
+    ...require('./policy-rule'),
     ...require('./provider'),
+    ...require('./provider-container'),
     ...require('./secret'),
     ...require('./streamspec'),
     ...require('./user'),

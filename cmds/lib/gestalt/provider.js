@@ -1,9 +1,5 @@
 const {
     fetchOrgResources,
-    fetchEnvironmentResources,
-    fetchWorkspaceResources,
-    createEnvironmentResource,
-    createResource,
     getGestaltContext
 } = require('./generic');
 
@@ -59,14 +55,6 @@ function fetchWorkspaceProviders(providedContext, type) {
         }
         return providers;
     });
-}
-
-exports.fetchProviderContainers = (providerSpec) => {
-    if (!providerSpec.org) throw Error("No Org in current context");
-    if (!providerSpec.org.properties) throw Error("No FQON in current context");
-    if (!providerSpec.org.properties.fqon) throw Error("No FQON in current context");
-    const fqon = providerSpec.org.properties.fqon; // default org
-    return meta.GET(`/${fqon}/providers/${providerSpec.id}/containers`); // can't use '?expand=true' unless in environment
 }
 
 // exports.createOrgProvider = (provider, parentFqon) => {
