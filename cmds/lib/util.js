@@ -4,6 +4,7 @@ const yaml = require('js-yaml');
 module.exports = {
   loadObjectFromFile,
   readFileAsText,
+  cloneObject
 };
 
 function loadObjectFromFile(file) {
@@ -33,4 +34,8 @@ function readFileAsText(file) {
   }
 
   throw Error(`'${file}' not found`);
+}
+
+function cloneObject(o) {
+  return JSON.parse(JSON.stringify(o));
 }
