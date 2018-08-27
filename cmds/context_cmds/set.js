@@ -24,11 +24,7 @@ exports.builder = {
     }
 }
 exports.handler = cmd.handler(async function (argv) {
-    if (argv.reset) {
-        // Reset context
-        
-        gestaltContext.clearContext();
-    } else if (argv.path) {
+    if (argv.path) {
         const context = await cmd.resolveContextPath(argv.path);
         gestaltContext.setContext(context);
     } else if (!argv.org && !argv.workspace && !argv.environment) {
