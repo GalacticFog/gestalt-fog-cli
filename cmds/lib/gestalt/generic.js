@@ -171,7 +171,18 @@ function createWorkspaceResource(type, spec, context) {
 }
 
 function createResource(spec, context) {
+    if (!spec) throw Error(`createResource: spec is '${spec}'`);
+    if (!spec.resource_type) throw Error(`createResource: spec.resource_type is '${spec.resource_type}'`);
+    if (!context) throw Error(`createResource: context is '${context}'`);
+
     const url = resolveResourceUrl(spec.resource_type, context);
+
+    // TODO: Workaround Meta bug of not accepting the resource_type for Lambdas and potentially other
+    // resource types, otherwise get the following error:
+    // StatusCodeError: 500 - {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
+    spec = JSON.parse(JSON.stringify(spec));
+    delete spec.resource_type;
+
     const res = meta.POST(url, spec);
     return res;
 }
@@ -247,6 +258,8 @@ function validateTypeSpecContext(type, spec, context) {
 }
 
 function resolveResourceUrl(resourceType, context) {
+    if (!resourceType) throw Error(`resolveResourceUrl: resourceType is ${resourceType}`)
+    if (!context) throw Error(`resolveResourceUrl: context is ${context}`)
 
     let urlBase = resolveContextUrl(context);
 

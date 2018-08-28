@@ -1,6 +1,7 @@
 const request = require('request-promise-native');
 const gestaltContext = require('../gestalt-context');
 const querystring = require('querystring');
+const { isJsonString } = require('../helpers')
 
 exports.authenticate = (creds, callback) => {//(username, password) => {
     const security_url = gestaltContext.getConfig()['gestalt_url'] + '/security';

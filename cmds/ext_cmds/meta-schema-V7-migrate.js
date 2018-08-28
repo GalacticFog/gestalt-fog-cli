@@ -5,6 +5,7 @@ const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
+const meta = require('../lib/gestalt/metaclient');
 exports.command = 'meta-schema-V7-migrate'
 exports.desc = 'Meta V7 Schema migrate'
 exports.builder = {
@@ -33,6 +34,6 @@ exports.handler = cmd.handler(async function (argv) {
         spec.V7.lambda.properties.provider.id = provider.id;
     }
 
-    const res = await gestalt.metaPost(path, spec);
+    const res = await meta.POST(path, spec);
     console.log(JSON.stringify(res, null, 2));
 });

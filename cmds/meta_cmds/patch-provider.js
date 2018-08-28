@@ -36,7 +36,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     const provider = await contextResolver.resolveProviderByPath(path);
 
-    const resourceSpec = await renderResourceTemplate(resourceTemplate, {});
+    const resourceSpec = await renderResourceTemplate(resourceTemplate, {}, undefined);
 
     debug('Resource Spec:')
     debug(resourceSpec);

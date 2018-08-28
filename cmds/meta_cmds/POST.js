@@ -55,7 +55,7 @@ exports.handler = cmd.handler(async function (argv) {
     let spec = cmd.loadObjectFromFile(argv.file);
 
     // Resolve parameters
-    spec = await renderResourceTemplate(spec, {});
+    spec = await renderResourceTemplate(spec, {}, undefined);
 
     // Resolve environment context from command line args
     if (argv.provider) {

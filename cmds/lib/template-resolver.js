@@ -1,8 +1,12 @@
 const debug = require('./debug').debug;
 const contextResolver = require('../lib/context-resolver');
+const gestalt = require('../lib/gestalt');
+const util = require('../lib/util');
 
-exports.renderResourceTemplate = async function (template, config) {
-    state.config = Object.assign({}, config);
+exports.renderResourceTemplate = async function (template, config, context) {
+    state.config = util.cloneObject(config);
+    state.context = util.cloneObject(context);
+
     // const resource = Object.assign({}, template);
     const resource = JSON.parse(JSON.stringify(template));
     debug('cloned resource:')
@@ -13,6 +17,7 @@ exports.renderResourceTemplate = async function (template, config) {
 
 const state = {
     config: undefined,
+    context: undefined,
     directivesCache: {}
 };
 
@@ -103,7 +108,9 @@ async function resolveTemplateDirective(directiveString) {
 const directiveHandlers = {
     Provider: resolveProvider,
     Config: resolveConfig,
-    Environment: resolveEnvironment
+    Environment: resolveEnvironment,
+    // Lambda: resolveLambda,
+    // Api: resolveApi,
 }
 
 async function resolveProvider(path, param = 'id') {
@@ -123,3 +130,20 @@ async function resolveEnvironment(path, param) {
     const context = await contextResolver.resolveContextPath(path);
     return context.environment[param];
 }
+
+// async function resolveApi(apiName, param = 'id') {
+//     const resources = await gestalt.fetchEnvironmentApis(state.context);
+//     const api = resources.find(r => r.name == apiName);
+//     if (api) {
+//         return api[param];
+//     }
+//     throw Error(`Unable to resolve API with name '${apiName}'`);
+// }
+
+
+// //TODO: implement
+// async function resolveLambda(lambdaName, param = 'id') {
+//     const lambda = await gestalt.fetchLambda({ name: lambdaName }, state.context);
+//     debug(`Found lambda '${lambda.name}'`);
+//     return lambda[param];
+// }

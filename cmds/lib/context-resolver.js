@@ -169,7 +169,7 @@ async function resolveProviderByPath(providerPath) {
         debug('providers: ' + providers)
         const provider = providers.find(p => p.name == providerName);
         return provider;
-        throw Error(`Could not resolve provider for path '${providerPath}'`);
+        // throw Error(`Could not resolve provider for path '${providerPath}'`);
     }
 }
 
@@ -247,7 +247,7 @@ async function resolveWorkspace(argv) {
     return context;
 }
 
-async function resolveEnvironment(argv, optionalContext = {}) {
+async function resolveEnvironment(argv, optionalContext) {
     const context = optionalContext || gestalt.getContext();
     await requireOrgArg(argv, context);
     await requireWorkspaceArg(argv, context);
