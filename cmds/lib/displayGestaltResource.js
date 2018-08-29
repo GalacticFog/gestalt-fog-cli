@@ -36,6 +36,8 @@ exports.run = (resources, options, context) => {
                 // throw Error(`No display function for resource type '${resourceType}'`);
                 console.log(yaml.dump(resources));
             }
+        } else {
+            console.log(yaml.dump(resources));    
         }
     } else {
         // throw Error(`No display function for resource type '${resourceType}'`);
