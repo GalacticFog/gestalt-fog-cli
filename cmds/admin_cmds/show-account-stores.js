@@ -2,7 +2,7 @@ const cmd = require('../lib/cmd-base');
 const security = require('../lib/gestalt/securityclient');
 const ui = require('../lib/gestalt-ui')
 
-exports.command = 'show-account-stores';
+exports.command = 'show-account-stores [org]';
 exports.description = 'Show account stores';
 exports.builder = {
     org: {

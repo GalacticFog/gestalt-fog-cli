@@ -3,6 +3,7 @@ const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
 const { renderResourceTemplate } = require('../lib/template-resolver');
+const meta = require('../lib/gestalt/metaclient');
 
 exports.command = 'POST'
 exports.desc = 'HTTP functions'
@@ -69,7 +70,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     console.log('POST ' + path + urlPath)
 
-    const res = await gestalt.metaPost(path + urlPath, spec);
+    const res = await meta.POST(path + urlPath, spec);
     console.log(JSON.stringify(res, null, 2));
     // }
 });

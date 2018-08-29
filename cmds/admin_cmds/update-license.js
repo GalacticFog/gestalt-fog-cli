@@ -4,7 +4,7 @@ const debug = cmd.debug;
 const util = require('../lib/util');
 
 
-exports.command = 'update-license'
+exports.command = 'update-license [file]'
 exports.desc = 'Update Gestalt license'
 exports.builder = {
     file: {

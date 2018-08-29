@@ -5,7 +5,7 @@ const util = require('../lib/util');
 const { debug } = require('../lib/debug');
 const { directorySchema } = require('../../schemas');
 
-exports.command = 'create-account-store';
+exports.command = 'create-account-store [file]';
 exports.description = 'Create Account Store';
 
 exports.builder = {

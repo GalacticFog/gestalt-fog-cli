@@ -4,8 +4,9 @@ const out = console.log;
 const util = require('../lib/util');
 const { debug } = require('../lib/debug');
 const { directorySchema } = require('../../schemas');
+const security = require('../lib/gestalt/securityclient');
 
-exports.command = 'create-directory';
+exports.command = 'create-directory [file]';
 exports.description = 'Create LDAP directory';
 
 exports.builder = {
@@ -64,7 +65,7 @@ exports.handler = cmd.handler(async function (argv) {
           throw err;
     }
 
-    const response = await gestalt.securityPost(`/${fqon}/directories`, spec);
+    const response = await security.POST(`/${fqon}/directories`, spec);
     debug(response);
     out(`Created directory '${response.name}' (${response.id})`);
 });

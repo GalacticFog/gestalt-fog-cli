@@ -2,7 +2,7 @@ const cmd = require('../lib/cmd-base');
 const security = require('../lib/gestalt/securityclient');
 const ui = require('../lib/gestalt-ui')
 
-exports.command = 'show-directories';
+exports.command = 'show-directories [org]';
 exports.description = 'Show LDAP directories';
 exports.builder = {
     org: {
