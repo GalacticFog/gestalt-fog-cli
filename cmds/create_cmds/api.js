@@ -98,7 +98,7 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 async function fetchGatewayProvider(context) {
-    const res = await gestalt.fetchEnvironmentProviders(context, 'GatewayManager');
+    const res = await gestalt.fetchProviders(context, 'GatewayManager');
     if (res.length != 1) throw Error(`Could not get Gateway Manager provider`);
     const gwmProvider = res[0];
     return gwmProvider;

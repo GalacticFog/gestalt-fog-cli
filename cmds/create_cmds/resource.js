@@ -44,7 +44,7 @@ exports.handler = cmd.handler(async function (argv) {
         config = util.loadObjectFromFile(argv.config);
     }
 
-    const resourceSpec = await renderResourceTemplate(resourceTemplate, config);
+    const resourceSpec = await renderResourceTemplate(resourceTemplate, config, context);
 
     debug(`Finished processing resource template.`)
 

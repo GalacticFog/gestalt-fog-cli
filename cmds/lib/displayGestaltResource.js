@@ -15,25 +15,31 @@ const fmap = {
 }
 
 exports.run = (resources, options, context) => {
+
     if (options && options.raw) {
         console.log(JSON.stringify(resources, null, 2));
-    } else if (resources.length == 0) {
-        console.log('No resources.');
+    } else if (Array.isArray(resources)) {
+        if (resources.length == 0) {
+            console.log('No resources.');
+        } else if (resources[0].resource_type) {
+            let resourceType = resources[0].resource_type;
+            if (!resourceType) throw Error("No resources[0].resource_type property");
+            let fn = null;
+            if (resourceType.indexOf('Gestalt::Configuration::Provider::') == 0) {
+                fn = displayProviders;
+            } else {
+                fn = fmap[resourceType];
+            }
+            if (fn) {
+                fn(resources, options, context);
+            } else {
+                // throw Error(`No display function for resource type '${resourceType}'`);
+                console.log(yaml.dump(resources));
+            }
+        }
     } else {
-        let resourceType = resources[0].resource_type;
-        if (!resourceType) throw Error("No resources[0].resource_type property");
-        let fn = null;
-        if (resourceType.indexOf('Gestalt::Configuration::Provider::') == 0) {
-            fn = displayProviders;
-        } else {
-            fn = fmap[resourceType];
-        }
-        if (fn) {
-            fn(resources, options, context);
-        } else {
-            // throw Error(`No display function for resource type '${resourceType}'`);
-            console.log(yaml.dump(resources));
-        }
+        // throw Error(`No display function for resource type '${resourceType}'`);
+        console.log(yaml.dump(resources));
     }
 }
 

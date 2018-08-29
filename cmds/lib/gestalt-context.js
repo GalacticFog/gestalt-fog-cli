@@ -154,6 +154,9 @@ function getJsonFromFile(file) {
 
 function getConfigDir() {
     let dir = getConfig().gestalt_url;
+    if (!dir) {
+        throw Error(`Could not get config directory, 'gestalt_url' not defined`);
+    }
     if (dir.indexOf('://') > -1) {
         dir = String(dir).substring(dir.indexOf('://') + 3);
     }

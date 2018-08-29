@@ -46,7 +46,7 @@ exports.handler = cmd.handler(async function (argv) {
             containers = await gestalt.fetchOrgContainers([context.org.fqon]);
         } else {
             context = await ui.resolveEnvironment();
-            containers = await gestalt.fetchEnvironmentContainers(context);
+            containers = await gestalt.fetchContainers(context);
         }
 
         if (containers.length == 0) {

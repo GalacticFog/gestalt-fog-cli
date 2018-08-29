@@ -1,3 +1,7 @@
+// const showCommandBuilder = require('./lib/genericShowCommandHandler');
+// module.exports = showCommandBuilder.buildCommand('containers');
+
+
 const gestalt = require('../lib/gestalt')
 const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
@@ -26,7 +30,7 @@ exports.handler = cmd.handler(async function (argv) {
 
 async function showContainers(argv) {
     const context = await ui.resolveEnvironment(false);
-    const containers = await gestalt.fetchEnvironmentContainers(context);
+    const containers = await gestalt.fetchContainers(context);
     ui.displayResources(containers, argv, context);
 }
 
