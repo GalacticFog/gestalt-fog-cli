@@ -3,7 +3,7 @@ const {
     httpPut,
     httpPost,
     httpPatch,
-    httpDelete } = require('./http-client');
+    httpDelete } = require('./httpclient');
 
     // Gestalt stuff
 const gestaltContext = require('../gestalt-context');
@@ -21,27 +21,27 @@ module.exports = {
 
 function GET(url, opts) {
     const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
-    return http_GET(`${baseurl}${url}`, opts);
+    return httpGet(`${baseurl}${url}`, opts);
 }
 
 function POST(url, body, opts) {
     const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
-    return http_POST(`${baseurl}${url}`, body, opts);
+    return httpPost(`${baseurl}${url}`, body, opts);
 }
 
 function PUT(url, body, opts) {
     const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
-    return http_PUT(`${baseurl}${url}`, body, opts);
+    return httpPut(`${baseurl}${url}`, body, opts);
 }
 
 function PATCH(url, body, opts) {
     const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
-    return http_PATCH(`${baseurl}${url}`, body, opts);
+    return httpPatch(`${baseurl}${url}`, body, opts);
 }
 
 function DELETE(url, opts) {
     const baseurl = getGestaltConfig()['gestalt_url'] + '/security';
-    return http_DELETE(`${baseurl}${url}`, undefined, opts);
+    return httpDelete(`${baseurl}${url}`, undefined, opts);
 }
 
 function getGestaltConfig() {
