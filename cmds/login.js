@@ -66,7 +66,7 @@ async function handler(argv) {
     params.gestalt_url = 'https://' + params.gestalt_url;
   }
 
-  gestaltContext.saveConfig(params);
+  gestaltContext.saveConfig(Object.assign(config, params));
 
   let creds = {
     username: params.username,

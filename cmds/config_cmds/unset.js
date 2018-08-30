@@ -2,8 +2,8 @@ const cmd = require('../lib/cmd-base');
 const gestaltContext = require('../lib/gestalt-context');
 const util = require('../lib/util');
 
-exports.command = 'clear'
-exports.desc = 'clear config'
+exports.command = 'unset'
+exports.desc = 'Unset config'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
 
