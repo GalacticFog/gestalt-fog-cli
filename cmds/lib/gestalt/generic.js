@@ -272,6 +272,7 @@ function resolveResourceUrl(resourceType, context) {
         'Gestalt::Resource::Organization': 'orgs',
         'Gestalt::Resource::User': 'users',
         'Gestalt::Resource::Group': 'groups',
+        'Gestalt::Resource::Volume': 'volumes'
         // TODO: 'Gestalt::Resource::ApiEndpoint': displayApiEndpoints,
     }
 

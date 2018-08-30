@@ -7,5 +7,5 @@ exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
     const chalk = require('chalk')
     const resources = await gestalt.fetchGroups();
-    ui.displayResources(resources, argv, context);
+    ui.displayResources(resources, argv);
 });

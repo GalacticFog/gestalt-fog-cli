@@ -12,6 +12,7 @@ const fmap = {
     'Gestalt::Resource::User': displayUsers,
     'Gestalt::Resource::Group': displayGroups,
     'Gestalt::Resource::ApiEndpoint': displayApiEndpoints,
+    'Gestalt::Resource::Volume': displayVolumes,
 }
 
 exports.run = (resources, options, context) => {
@@ -276,6 +277,16 @@ function displayProviders(resources, opts, context) {
                 item.description = item.description.substring(0, 20) + '...';
             }
         }
+    }
+    displayResource(Object.assign(options, opts), resources);
+}
+
+function displayVolumes(resources, opts, context) {
+    let options = {
+        message: getContextMessage('Volumes', context),
+        headers: ['Name', 'Size', 'Config', 'External ID'],
+        fields: ['name', 'properties.size', 'properties.config', 'properties.external_id'],
+        sortField: 'description',
     }
     displayResource(Object.assign(options, opts), resources);
 }
