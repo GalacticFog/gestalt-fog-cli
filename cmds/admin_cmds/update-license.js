@@ -1,4 +1,4 @@
-const gestalt = require('../lib/gestalt')
+const meta = require('../lib/gestalt/metaclient')
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
 const util = require('../lib/util');
@@ -31,6 +31,6 @@ exports.handler = cmd.handler(async function (argv) {
 
     const spec = util.loadObjectFromFile(argv.file);
 
-    const res = await gestalt.metaPost('/root/licenses', spec);
+    const res = await meta.POST('/root/licenses', spec);
     console.log("Gestalt Platform license udpated.")
 });
