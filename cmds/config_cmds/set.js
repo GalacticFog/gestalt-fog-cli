@@ -1,6 +1,7 @@
 const cmd = require('../lib/cmd-base');
 const gestaltContext = require('../lib/gestalt-context');
 const util = require('../lib/util');
+const yaml = require('js-yaml');
 
 exports.command = 'set'
 exports.desc = 'Set config'
@@ -29,5 +30,5 @@ exports.handler = cmd.handler(async function (argv) {
     const newConfig = Object.assign(config, configArgs);
     gestaltContext.saveConfig(newConfig);
 
-    console.log(gestaltContext.getConfig());
+    console.log(yaml.dump({ 'Configuration Settings': gestaltContext.getConfig() }));
 });
