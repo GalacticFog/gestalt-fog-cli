@@ -2,6 +2,7 @@ const request = require('request-promise-native');
 const gestaltContext = require('../gestalt-context');
 const querystring = require('querystring');
 const { isJsonString } = require('../helpers')
+const { debug } = require('../debug');
 
 exports.authenticate = (creds, callback) => {//(username, password) => {
     const security_url = gestaltContext.getConfig()['gestalt_url'] + '/security';
@@ -19,6 +20,9 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         password: password
     });
 
+    debug(`${security_url}${url}`);
+    debug(postData)
+
     const res = request({
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -30,6 +34,9 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
         uri: `${security_url}${url}`
     }).then(body => {
         const auth = JSON.parse(body); // JSON.parse(String(res.getBody()));
+
+        debug('Response:');
+        debug(auth);
 
         // Enhance payload with username
         auth.username = username;

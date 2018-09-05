@@ -1,6 +1,5 @@
-const gestalt = require('../lib/gestalt')
+const meta = require('../lib/gestalt/metaclient');
 const cmd = require('../lib/cmd-base');
-const ui = require('../lib/gestalt-ui');
 const { renderResourceTemplate } = require('../lib/template-resolver');
 const out = console.log;
 const util = require('../lib/util');
@@ -43,9 +42,8 @@ exports.handler = cmd.handler(async function (argv) {
 
     debug(`Finished processing resource template.`)
 
-    const resource = await gestalt.metaPatch(`/${context.org.fqon}/providers/${provider.id}`, resourceSpec);
+    const resource = await meta.PATCH(`/${context.org.fqon}/providers/${provider.id}`, resourceSpec);
 
     debug(resource);
     out(`Patched provider '${resource.name}' (${resource.resource_type})`);
 });
-

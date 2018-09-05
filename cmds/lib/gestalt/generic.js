@@ -177,11 +177,13 @@ function createResource(spec, context) {
 
     const url = resolveResourceUrl(spec.resource_type, context);
 
-    // TODO: Workaround Meta bug of not accepting the resource_type for Lambdas and potentially other
-    // resource types, otherwise get the following error:
-    // StatusCodeError: 500 - {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
-    spec = JSON.parse(JSON.stringify(spec));
-    delete spec.resource_type;
+    if (spec.resource_type == 'Gestalt::Resource::Node::Lambda') {
+        // TODO: Workaround Meta bug of not accepting the resource_type for Lambdas and potentially other
+        // resource types, otherwise get the following error:
+        // StatusCodeError: 500 - {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
+        spec = JSON.parse(JSON.stringify(spec));
+        delete spec.resource_type;
+    }
 
     const res = meta.POST(url, spec);
     return res;
