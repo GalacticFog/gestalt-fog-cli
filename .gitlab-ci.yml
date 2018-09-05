@@ -12,6 +12,8 @@ build:
   script:
    - apt-get install zip unzip
    - npm install -g pkg 
+   - VERSION=$(<package.json jq -r '.version')
+   - echo "[Info][FOG CLI Version][${VERSION}]"
    - ./build.sh
    - ls ./target
    - ls ./target/alpine
