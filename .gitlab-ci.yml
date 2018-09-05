@@ -1,0 +1,10 @@
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  allow_failure: false
+  script:
+   - ./build.sh
