@@ -13,3 +13,5 @@ build:
    - apt-get install zip unzip
    - npm install -g pkg 
    - ./build.sh
+   - ls ./target
+   - ls ./target/alpine
