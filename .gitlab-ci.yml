@@ -12,4 +12,5 @@ build:
   script:
    - apt-get update
    - apt-get install zip unzip
+   - npm install -g pkg 
    - ./build.sh
