@@ -1,3 +1,6 @@
+image:
+  name: galacticfog/docker-yarn-debian:8.11.3
+
 stages:
   - build
   - test
