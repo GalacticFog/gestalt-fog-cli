@@ -12,5 +12,4 @@ build:
   script:
    - apt-get update
    - apt-get install zip unzip
-   - apt-get install pkg 
    - ./build.sh
