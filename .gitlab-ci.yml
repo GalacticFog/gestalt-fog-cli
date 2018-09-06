@@ -35,4 +35,6 @@ build-image:
     - echo "[Info][FOG CLI Version][${VERSION}]"
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - echo 2
+    - echo $CI_BUILD_TOKEN | docker login $CI_REGISTRY --username gitlab-ci-token --password-stdin
     - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
