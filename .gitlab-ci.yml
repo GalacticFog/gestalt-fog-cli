@@ -7,6 +7,9 @@ stages:
   - test
   - deploy
 
+services:
+  - docker:dind
+
 build-cli:
   stage: build-cli
   allow_failure: false
@@ -15,10 +18,7 @@ build-cli:
     - VERSION=$(<package.json jq -r '.version')
     - echo "[Info][FOG CLI Version][${VERSION}]"
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
-    - sudo service docker status
-    - which docker
     - ./build-cli.sh
-    - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
   artifacts:
     paths:
     - "./target/*/fog"
@@ -31,4 +31,7 @@ build-image:
   script:
     - apt-get install zip unzip
     - ls -la ./target
+    - VERSION=$(<package.json jq -r '.version')
+    - echo "[Info][FOG CLI Version][${VERSION}]"
+    - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
     - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
