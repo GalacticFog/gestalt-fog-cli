@@ -9,7 +9,7 @@ exit_on_error() {
 }
 
 IMAGE_NAME="gestalt-cli"
-publish="false"
+publish="true"
 
 #Build
 echo "Building..."
