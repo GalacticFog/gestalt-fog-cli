@@ -16,6 +16,7 @@ build-cli:
     - echo "[Info][FOG CLI Version][${VERSION}]"
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
     - ./build-cli.sh
+    - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
   artifacts:
     paths:
     - "./target/*/fog"
