@@ -2,13 +2,12 @@ image:
   name: galacticfog/docker-yarn-debian:8.11.3
 
 stages:
-  - build-cli
-  - build-image
+  - build
   - test
   - deploy
 
 build-cli:
-  stage: build-cli
+  stage: build
   allow_failure: false
   script:
     - npm install -g pkg 
@@ -18,8 +17,10 @@ build-cli:
     - ./build-cli.sh
 
 build-image:
-  stage: build-image
+  stage: build
   allow_failure: false
+  dependencies: 
+    - build-cli
   script:
     - apt-get install zip unzip
     - ls -la ./target
