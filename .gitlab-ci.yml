@@ -2,12 +2,16 @@ image:
   name: galacticfog/docker-yarn-debian:8.11.3
 
 stages:
-  - build
+  - build-cli
+  - build-image
   - test
   - deploy
 
+services:
+  - docker:dind
+
 build-cli:
-  stage: build
+  stage: build-cli
   allow_failure: false
   script:
     - npm install -g pkg 
@@ -15,11 +19,19 @@ build-cli:
     - echo "[Info][FOG CLI Version][${VERSION}]"
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
     - ./build-cli.sh
+  artifacts:
+    paths:
+    - "./target/*/fog"
 
 build-image:
-  stage: build
+  stage: build-image
   allow_failure: false
+  dependencies: 
+    - build-cli
   script:
     - apt-get install zip unzip
     - ls -la ./target
-    - ./build-image.sh
+    - VERSION=$(<package.json jq -r '.version')
+    - echo "[Info][FOG CLI Version][${VERSION}]"
+    - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
+    - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
