@@ -35,5 +35,5 @@ build-image:
     - echo "[Info][FOG CLI Version][${VERSION}]"
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
     - env | sort
-    - docker login -u ${GF_DOCKER_USER} -p ${GF_DOCKER_PWD} ${DOCKER_HOST} 
+    - echo ${GF_DOCKER_PWD} | docker login -u ${GF_DOCKER_USER}  ${DOCKER_HOST} 
     - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
