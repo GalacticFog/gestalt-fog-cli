@@ -28,4 +28,4 @@ build-image:
   script:
     - apt-get install zip unzip
     - ls -la ./target
-    - ./build-image.sh
+    - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
