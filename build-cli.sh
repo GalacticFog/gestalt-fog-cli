@@ -42,10 +42,3 @@ for os in ${OS_LIST}; do
   pkg -t node8-${os}-x64  -o ./target/${os}/fog .
   exit_on_error "Failed package fog cli for ${os}, aborting..."
 done
-
-
-
-
-    cd ./target/${os}
-    zip ../gestalt-fog-cli-${os}-${VERSION}.zip fog
-    cd -
