@@ -29,7 +29,7 @@ function initialize(argv) {
   // Setup Logging
   global.fog = global.fog || {};
   if (config['debug'] == 'true') {
-     global.fog.debug = true
+    global.fog.debug = true
     debug('Debug enabled via configuration');
   } else if (argv.debug) {
     global.fog.debug = true;
@@ -43,24 +43,15 @@ function initialize(argv) {
   }
 }
 
-function handleError(argv, err) {
-  // Write error to screen
-  console.error(chalk.red(err));
-
-  // Debug output
-  debug(err);
-
-  if (global.fog.debug) {
-    // re-throw error to show stack trace
-    throw err;
-  }
-}
-
 async function run(fn, argv) {
   try {
     await fn(argv);
   } catch (err) {
-    handleError(argv, err);
+    // Write error to screen
+    console.error(chalk.red(err));
+
+    // Debug output
+    debug(err.stack);
 
     //eslint-disable-next-line no-process-exit
     process.exit(-1);
