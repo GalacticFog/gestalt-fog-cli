@@ -35,5 +35,6 @@ build-image:
     - VERSION=$(<package.json jq -r '.version')
     - echo "[Info][FOG CLI Version][${VERSION}]"
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
-    - echo $CI_BUILD_TOKEN | docker login $CI_REGISTRY --username gitlab-ci-token --password-stdin
+    - DOCKER_HOST='tcp://docker:2375'
+    - echo $CI_BUILD_TOKEN | docker login $DOCKER_HOST --username gitlab-ci-token --password-stdin
     - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
