@@ -36,6 +36,5 @@ build-image:
     - VERSION=$(<package.json jq -r '.version')
     - echo "[Info][FOG CLI Version][${VERSION}]"
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
-    - DOCKER_REGISTRY='hub.docker.com'
-    - echo ${GF_DOCKER_PWD} | docker login $DOCKER_REGISTRY --username ${GF_DOCKER_USER} --password-stdin
+    - echo ${GF_DOCKER_PWD} | docker login --username ${GF_DOCKER_USER} --password-stdin
     - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
