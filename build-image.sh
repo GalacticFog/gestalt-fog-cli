@@ -11,6 +11,8 @@ exit_on_error() {
 IMAGE_NAME="gestalt-cli"
 publish="true"
 
+all_tags=$@
+
 #Build
 echo "Building..."
 docker build -t ${IMAGE_NAME} . | tee buildoutput
@@ -18,7 +20,7 @@ exit_on_error "docker build failed, aborting."
 imageid=`tail buildoutput | grep "^Successfully built" | awk '{ print $3 }'`
 
 #Tag and Push
-for curr_tag in $@; do
+for curr_tag in ${all_tags[@]}; do
   echo "Tagging ${curr_tag}"
   docker tag $imageid galacticfog/${IMAGE_NAME}:${curr_tag}
   exit_on_error "image tag '${curr_tag}' failed, aborting."
