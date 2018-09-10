@@ -34,6 +34,7 @@ build-cli:
     - ls -la /usr/local/lib/node_modules/npm
     - echo ${PKG_CACHE_PATH}
     - .ci/dependency success
+    - ls -la .ci/dependency
   artifacts:
     paths:
     - "./target/*/fog"
@@ -44,8 +45,6 @@ build-image:
   - .ci/dependency require build-cli
   stage: build-image
   allow_failure: false
-  dependencies: 
-    - build-cli
   script:
     - apt-get install zip unzip
     - ls -la ./target
