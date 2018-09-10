@@ -40,6 +40,8 @@ build-cli:
 
 build-image:
   <<: *dependency_common
+  before_script:
+  - .ci/dependency require build-cli
   stage: build-image
   allow_failure: false
   dependencies: 
@@ -57,7 +59,7 @@ build-image:
 github-publish:
   <<: *dependency_common
   before_script:
-  - .ci/dependency
+  - .ci/dependency require build-cli build-image
   stage: publish
   script: 
     - git remote remove github || true
