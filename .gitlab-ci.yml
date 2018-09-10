@@ -15,7 +15,6 @@ services:
   artifacts:
     paths:
     - .ci/
-    - .target/
 
 build-cli:
   <<: *dependency_common
@@ -54,7 +53,7 @@ build-image:
     - .ci/dependency success
   artifacts:
     paths:
-    - .ci/
+    - "./target/*/fog"
 
     
 github-publish:
