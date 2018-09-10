@@ -14,7 +14,6 @@ build-cli:
   stage: build-cli
   allow_failure: false
   script:
-    - ls -la /node_modules
     - echo ${CI_BUILD_TAG} ${CI_BUILD_REF_NAME}
     - echo ${CI_BUILD_TAG-$VERSION-${CI_BUILD_REF:0:8}}
     - echo ${CI_COMMIT_SHA:0:8}
