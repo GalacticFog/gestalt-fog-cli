@@ -6,11 +6,18 @@ stages:
   - build-image
   - test
   - deploy
+  - publish
 
 services:
   - docker:dind
+  
+.dependency_common: &dependency_common
+  artifacts:
+    paths:
+    - .ci/
 
 build-cli:
+  <<: *dependency_common
   stage: build-cli
   allow_failure: false
   script:
@@ -26,11 +33,13 @@ build-cli:
     - ./build-cli.sh
     - ls -la /usr/local/lib/node_modules/npm
     - echo ${PKG_CACHE_PATH}
+    - .ci/dependency success
   artifacts:
     paths:
     - "./target/*/fog"
 
 build-image:
+  <<: *dependency_common
   stage: build-image
   allow_failure: false
   dependencies: 
@@ -43,3 +52,21 @@ build-image:
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
     - echo ${GF_DOCKER_PWD} | docker login --username ${GF_DOCKER_USER} --password-stdin
     - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
+    - .ci/dependency success
+    
+github-publish:
+  <<: *dependency_common
+  before_script:
+  - .ci/dependency
+  stage: publish
+  script: 
+    - git remote remove github || true
+    - git remote add github https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_ORG}/${GITHUB_REPO}.git
+    - |
+      if [ -z ${CI_BUILD_TAG} ]; then 
+         git push github HEAD:$CI_BUILD_REF_NAME
+      else 
+         git push -f github $CI_BUILD_TAG
+      fi
+  when: manual
+
