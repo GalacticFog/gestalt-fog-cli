@@ -14,7 +14,7 @@ build-cli:
   stage: build-cli
   allow_failure: false
   script:
-    - npm install -g pkg 
+    - echo ${CI_BUILD_TAG} ${CI_BUILD_REF_NAME} #npm install -g pkg 
     - VERSION=$(<package.json jq -r '.version')
     - echo "[Info][FOG CLI Version][${VERSION}]"
     - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
