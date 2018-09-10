@@ -18,6 +18,7 @@ services:
 
 build-cli:
   <<: *dependency_common
+  - "./target/*/fog"
   stage: build-cli
   allow_failure: false
   script:
@@ -38,6 +39,7 @@ build-cli:
 
 build-image:
   <<: *dependency_common
+      - "./target/*/fog"
   before_script:
   - .ci/dependency require build-cli
   stage: build-image
@@ -51,9 +53,6 @@ build-image:
     - echo ${GF_DOCKER_PWD} | docker login --username ${GF_DOCKER_USER} --password-stdin
     - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
     - .ci/dependency success
-  artifacts:
-    paths:
-    - "./target/*/fog"
 
     
 github-publish:
