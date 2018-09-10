@@ -16,6 +16,8 @@ build-cli:
   script:
     - ls -la /node_modules
     - echo ${CI_BUILD_TAG} ${CI_BUILD_REF_NAME}
+    - echo ${CI_BUILD_TAG-$VERSION-${CI_BUILD_REF:0:8}}
+    - echo ${CI_COMMIT_SHA:0:8}
     - npm install -g pkg
     - ls -la /node_modules
     - echo ${GF_DOCKER_PWD} | docker login --username ${GF_DOCKER_USER} --password-stdin
