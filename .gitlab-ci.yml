@@ -18,7 +18,6 @@ services:
 
 build-cli:
   <<: *dependency_common
-  - "./target/*/fog"
   stage: build-cli
   allow_failure: false
   script:
@@ -36,10 +35,13 @@ build-cli:
     - echo ${PKG_CACHE_PATH}
     - .ci/dependency success
     - ls -la .ci/dependency
+  artifacts:
+    paths:
+    - "./target/*/fog"
 
 build-image:
   <<: *dependency_common
-      - "./target/*/fog"
+      - "./target
   before_script:
   - .ci/dependency require build-cli
   stage: build-image
