@@ -15,6 +15,7 @@ services:
   artifacts:
     paths:
     - .ci/
+    - .target/
 
 build-cli:
   <<: *dependency_common
@@ -35,9 +36,6 @@ build-cli:
     - echo ${PKG_CACHE_PATH}
     - .ci/dependency success
     - ls -la .ci/dependency
-  artifacts:
-    paths:
-    - "./target/*/fog"
 
 build-image:
   <<: *dependency_common
@@ -54,6 +52,10 @@ build-image:
     - echo ${GF_DOCKER_PWD} | docker login --username ${GF_DOCKER_USER} --password-stdin
     - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
     - .ci/dependency success
+  artifacts:
+    paths:
+    - .ci/
+
     
 github-publish:
   <<: *dependency_common
