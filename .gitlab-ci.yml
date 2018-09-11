@@ -2,8 +2,7 @@ image:
   name: galacticfog/docker-yarn-debian:8.11.3
 
 stages:
-  - build-cli
-  - build-image
+  - build
   - test
   - deploy
   - publish
@@ -15,47 +14,30 @@ services:
   artifacts:
     paths:
     - .ci/
+    name: ${CI_PROJECT_NAME}_${CI_BUILD_REF_NAME}_${CI_BUILD_REF}_ci_flags"
 
-build-cli:
+build:
   <<: *dependency_common
-  stage: build-cli
+  stage: build
   allow_failure: false
+  before_script:
+  - echo "Install Build Dependencies ..."
+  - npm install -g pkg
+  - echo "Docker Login ..."
+  - echo ${GF_DOCKER_PWD} | docker login --username ${GF_DOCKER_USER} --password-stdin
   script:
-    - echo ${CI_BUILD_TAG} ${CI_BUILD_REF_NAME}
-    - echo ${CI_BUILD_TAG-$VERSION-${CI_BUILD_REF:0:8}}
-    - echo ${CI_COMMIT_SHA:0:8}
-    - npm install -g pkg
-    - ls -la /usr/local/lib/node_modules
-    - echo ${GF_DOCKER_PWD} | docker login --username ${GF_DOCKER_USER} --password-stdin
     - VERSION=$(<package.json jq -r '.version')
-    - echo "[Info][FOG CLI Version][${VERSION}]"
-    - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
+    - echo "Build CLI ${VERSION} ..."
     - ./build-cli.sh
-    - ls -la /usr/local/lib/node_modules/npm
-    - echo ${PKG_CACHE_PATH}
+    - echo "Build and publish docker image with CLI"
+    - ./build-image.sh "${VERSION} ${CI_COMMIT_SHA:0:8}"
+    - echo "Mark ${CI_JOB_NAME} as success ..." 
     - .ci/dependency success
   artifacts:
     paths:
     - "./target/*/fog"
+    name: "${CI_PROJECT_NAME}_${CI_BUILD_REF_NAME}_${CI_BUILD_REF}_cli_binaries"
 
-build-image:
-  <<: *dependency_common
-  before_script:
-  - .ci/dependency require build-cli
-  stage: build-image
-  allow_failure: false
-  dependencies: 
-    - build-cli
-  script:
-    - apt-get install zip unzip
-    - ls -la ./target
-    - VERSION=$(<package.json jq -r '.version')
-    - echo "[Info][FOG CLI Version][${VERSION}]"
-    - echo "[Info][CI_COMMIT_SHA][$CI_COMMIT_SHA]"
-    - echo ${GF_DOCKER_PWD} | docker login --username ${GF_DOCKER_USER} --password-stdin
-    - ./build-image.sh "${VERSION} $CI_COMMIT_SHA"
-    - .ci/dependency success
-    
 github-publish:
   <<: *dependency_common
   before_script:
