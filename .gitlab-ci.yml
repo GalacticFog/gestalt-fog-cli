@@ -33,6 +33,7 @@ build:
     - ./build-image.sh "${VERSION} ${CI_COMMIT_SHA:0:8}"
     - echo "Mark ${CI_JOB_NAME} as success ..." 
     - .ci/dependency success
+    - ls -la .ci/dependency
   artifacts:
     paths:
     - "./target/*/fog"

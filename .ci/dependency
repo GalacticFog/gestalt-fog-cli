@@ -4,12 +4,15 @@ THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $THIS_DIR
 
 if [ "$1" = "require" ]; then
+    echo "Processing as 'require'..."
     shift 1
     ls -al $@ > /dev/null 2>&1 && exit 0
     echo "Dependencies $@ not satisfied"
     exit 1
 elif [ "$1" = "success" ]; then
+    echo "Processing as 'success'..."
     touch $CI_JOB_NAME
+    ls -la
     exit 0
 fi
 
