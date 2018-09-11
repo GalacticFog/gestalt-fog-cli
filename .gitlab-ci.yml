@@ -42,7 +42,7 @@ build:
 github-publish:
   <<: *dependency_common
   before_script:
-  - .ci/dependency require build-cli build-image
+  - .ci/dependency require build
   stage: publish
   script: 
     - git remote remove github || true
