@@ -41,7 +41,6 @@ build-cli:
 
 build-image:
   <<: *dependency_common
-      - "./target
   before_script:
   - .ci/dependency require build-cli
   stage: build-image
