@@ -236,7 +236,7 @@ function displayApiEndpoints(resources, opts, context) {
         options = {
             message: getContextMessage('API Endpoints', context),
             headers: [
-                'Resource Patch',
+                'Resource Path',
                 'Type',
                 'Security',
                 'FQON',
