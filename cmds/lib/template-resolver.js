@@ -32,6 +32,10 @@ async function traverse(obj, func) {
 }
 
 async function parseFieldForDirectives(value) {
+    return doDarseFieldForDirectives(value, resolveTemplateDirective)
+}
+
+async function doDarseFieldForDirectives(value, func) {
     if (typeof value !== 'string') {
         return value;
     }
@@ -41,7 +45,7 @@ async function parseFieldForDirectives(value) {
 
     let start = -1;
     while (true) {
-        start = value.indexOf(startToken, start + 1);
+        start = getDeepestTokenPosition(startToken, value);
         debug(`Parsing ${value} at start=${start}`)
         if (start > -1) {
             const end = value.indexOf(endToken, start + startToken.length);
@@ -51,7 +55,7 @@ async function parseFieldForDirectives(value) {
                 const directive = value.substring(start + startToken.length, end);
                 debug(`Directive: ${directive}`)
 
-                const replacementValue = await resolveTemplateDirective(directive);
+                const replacementValue = await func(directive);
                 debug(`Resolved: ${replacementValue}`)
 
                 value = value.replace(`${startToken}${directive}${endToken}`, replacementValue);
@@ -66,6 +70,20 @@ async function parseFieldForDirectives(value) {
     }
 
     return value;
+}
+
+function getDeepestTokenPosition(token, stringValue) {
+    let start = -1;
+    let pos = 0;
+    while (true) {
+        pos = stringValue.indexOf(token, start + 1);
+        if (pos > -1) {
+            start = pos;
+        } else {
+            break;
+        }
+    }
+    return start;
 }
 
 async function resolveTemplateDirective(directiveString) {
@@ -115,6 +133,9 @@ const directiveHandlers = {
 
 async function resolveProvider(path, param = 'id') {
     const provider = await contextResolver.resolveProviderByPath(path);
+    if (!provider) {
+        throw Error('Provider not found for path: ' + path);
+    }
     debug(`Found provider '${provider.name}'`);
     return provider[param];
 }
