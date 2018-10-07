@@ -12,7 +12,7 @@ function loadObjectFromFile(file) {
     return loadYAMLFromFile(file);
   }
 
-  return JSON.parse(this.readFileAsText(file));
+  return JSON.parse(readFileAsText(file));
 }
 
 function loadYAMLFromFile(filePath) {
@@ -37,5 +37,7 @@ function readFileAsText(file) {
 }
 
 function cloneObject(o) {
+  if (o === undefined) return undefined;
+  if (typeof o === 'undefined') return undefined; // just in case
   return JSON.parse(JSON.stringify(o));
 }
