@@ -127,7 +127,7 @@ const directiveHandlers = {
     Provider: resolveProvider,
     Config: resolveConfig,
     Environment: resolveEnvironment,
-    // Lambda: resolveLambda,
+    Lambda: resolveLambda,
     // Api: resolveApi,
 }
 
@@ -138,6 +138,15 @@ async function resolveProvider(path, param = 'id') {
     }
     debug(`Found provider '${provider.name}'`);
     return provider[param];
+}
+
+async function resolveLambda(path, param = 'id') {
+    const lambda = await contextResolver.resolveResourceByPath(path, 'lambdas');
+    if (!lambda) {
+        throw Error('Lambda not found for path: ' + path);
+    }
+    debug(`Found provider '${lambda.name}'`);
+    return lambda[param];
 }
 
 async function resolveConfig(key) {

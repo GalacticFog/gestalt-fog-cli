@@ -2,19 +2,22 @@ const gestalt = require('./gestalt');
 const gestaltContext = require('./gestalt-context');
 const { debug } = require('./debug');
 const selectHierarchy = require('../lib/selectHierarchy');
+const util = require('./util');
 
 //TODO: Move 'requireArg' functions to separate library
 
 module.exports = {
     resolveProvider,
     resolveProviderByPath,
-    resolveContextFromProviderPath,
+    resolveResourceByPath,
+    resolveContextFromResourcePath,
     resolveOrg,
     resolveWorkspace,
     resolveEnvironment,
     resolveEnvironmentApi,
     resolveEnvironmentContainer,
     resolveEnvironmentLambda,
+    resolveEnvironmentPolicy,
     lookupEnvironmentResourcebyName,
     resolveContextPath,
     requireArgs,
@@ -97,7 +100,7 @@ async function resolveEnvironmentContextByName(context, name) {
             ...context,
             environment: {
                 id: env.id,
-                name: envs.name
+                name: env.name
             }
         };
     }
@@ -136,9 +139,13 @@ async function resolveContextPath(path) {
     return context;
 }
 
-const providerPathCache = {};
+// This is a Map of maps. First level is resource type, second level is resource ID
+const resourcePathCache = {
+    'providers': {}
+};
 
 async function resolveProviderByPath(providerPath) {
+
     const pathElements = providerPath.split('/');
 
     debug(pathElements);
@@ -154,6 +161,7 @@ async function resolveProviderByPath(providerPath) {
 
     debug('context: ' + context);
 
+    const providerPathCache = resourcePathCache['providers'];
     const cachedProviders = providerPathCache[contextPath];
     if (cachedProviders) {
         const provider = cachedProviders.find(p => p.name == providerName);
@@ -173,16 +181,20 @@ async function resolveProviderByPath(providerPath) {
     }
 }
 
-async function resolveContextFromProviderPath(providerPath) {
-    const pathElements = providerPath.split('/');
+/**
+ * Returns a context object defined by a path to a resource
+ * @param {*} resourcePath /<org>/resource>, or /<org>/<workspace>/<resource>, or /<org>/<workspace>/<environment>/<resource>
+ */
+async function resolveContextFromResourcePath(resourcePath) {
+    const pathElements = resourcePath.split('/');
 
     debug(pathElements);
 
-    const providerName = pathElements.pop();
+    const resourceName = pathElements.pop();
 
     debug(pathElements);
 
-    debug('providerName: ' + providerName);
+    debug('resourceName: ' + resourceName);
 
     const contextPath = pathElements.join('/')
     const context = await resolveContextPath(contextPath);
@@ -232,6 +244,50 @@ async function resolveProvider(argv, providedContext, optionalType, param = 'pro
     }
 }
 
+/**
+ * Finds a resource by path
+ * @param {*} resourcePath a path defined by '/<org>/<workspace>/<environment>/<resource>'
+ * @param {*} resourceType 'provider', 'lambda', etc
+ */
+async function resolveResourceByPath(resourcePath, resourceType) {
+    const pathElements = resourcePath.split('/');
+
+    debug(pathElements);
+
+    const resourceName = pathElements.pop();
+
+    debug(pathElements);
+
+    debug('providerName: ' + resourceName);
+
+    const contextPath = pathElements.join('/')
+    const context = await resolveContextPath(contextPath);
+
+    debug('context: ' + context);
+
+    if (!resourcePathCache[resourceType]) {
+        resourcePathCache[resourceType] = {};
+    }
+
+    const cache = resourcePathCache[resourceType][contextPath];
+    if (cache) {
+        const resource = cache.find(r => r.name == resourceName);
+
+        debug(`Returning cached provider value for path '${resourcePath}'`);
+        return resource;
+    } else {
+        // const resources = await gestalt.fetchProviders(context);
+        const resources = await gestalt.fetchResources(resourceType, context);
+
+        // Save to cache
+        resourcePathCache[resourceType][contextPath] = resources;
+
+        debug('Resources of type ' + resourceType + ': ' + resources)
+        const resource = resources.find(r => r.name == resourceName);
+        return resource;
+    }
+}
+
 async function resolveOrg(argv) {
     const context = gestalt.getContext();
     await requireOrgArg(argv, context);
@@ -263,6 +319,28 @@ async function resolveEnvironmentApi(argv) {
     await requireEnvironmentArg(argv, context);
     await requireEnvironmentApiArg(argv, context);
 
+    return context;
+}
+
+async function resolveEnvironmentPolicy(context, name) {
+
+    if (!context) throw Error('Missing context');
+    if (!name) throw Error('Missing policy name');
+
+    // Clone first as not to mutate
+    context = util.cloneObject(context);
+    context['policy'] = {};
+    const resources = await gestalt.fetchEnvironmentPolicies(context);
+    for (let res of resources) {
+        if (res.name == name) {
+            context['policy'] = {
+                id: res.id,
+                name: res.name
+            };
+            break;
+        }
+    }
+    if (!context.policy.id) throw Error(`Could not find policy with name '${name}'`);
     return context;
 }
 

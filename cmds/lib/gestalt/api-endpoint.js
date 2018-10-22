@@ -1,5 +1,9 @@
 const meta = require('./metaclient');
 
+const {
+    getGestaltContext
+} = require('./generic');
+
 exports.fetchApiEndpoints = (apiList) => {
     if (!apiList) throw Error("No apiList provided");
 
@@ -14,6 +18,9 @@ exports.fetchApiEndpoints = (apiList) => {
 }
 
 exports.createApiEndpoint = (spec, providedContext) => {
+    // TODO: Untested
+    console.error('/lib/gestalt/api-endpoint.js:createApiEndpoint is untested');
+
     if (!spec) throw Error('missing spec');
     if (!spec.name) throw Error('missing spec.name');
     // TODO: Other required parameters

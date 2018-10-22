@@ -177,7 +177,7 @@ function createResource(spec, context) {
 
     const url = resolveResourceUrl(spec.resource_type, context);
 
-    if (spec.resource_type == 'Gestalt::Resource::Node::Lambda') {
+    if (spec.resource_type == 'Gestalt::Resource::Node::Lambda' || spec.resource_type == 'Gestalt::Resource::Policy') {
         // TODO: Workaround Meta bug of not accepting the resource_type for Lambdas and potentially other
         // resource types, otherwise get the following error:
         // StatusCodeError: 500 - {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
@@ -274,7 +274,8 @@ function resolveResourceUrl(resourceType, context) {
         'Gestalt::Resource::Organization': 'orgs',
         'Gestalt::Resource::User': 'users',
         'Gestalt::Resource::Group': 'groups',
-        'Gestalt::Resource::Volume': 'volumes'
+        'Gestalt::Resource::Volume': 'volumes',
+        'Gestalt::Resource::Policy': 'policies'
         // TODO: 'Gestalt::Resource::ApiEndpoint': displayApiEndpoints,
     }
 

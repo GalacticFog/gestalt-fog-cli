@@ -1,9 +1,14 @@
 const {
     fetchResources,
+    fetchEnvironmentResources
 } = require('./generic');
 
 exports.fetchPolicies = (context) => {
     return fetchResources('policies', context);
+}
+
+exports.fetchEnvironmentPolicies = (providedContext) => {
+    return fetchEnvironmentResources('policies', providedContext);
 }
 
 exports.fetchPolicy = async (context, spec) => {
@@ -25,3 +30,10 @@ exports.deletePolicy = (spec) => {
 
 
 // TODO: create, update, delete policy rules
+
+exports.createPolicy = (spec, providedContext) => {
+
+    // TODO: if Workspace or Environment
+
+    return createEnvironmentResource('policies', spec, providedContext);
+}
