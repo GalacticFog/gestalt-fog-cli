@@ -27,7 +27,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     if (context) {
         debug(context)
-        const rules = await gestalt.fetchPolicyRules(context, { name: policyName });
+        const rules = await gestalt.fetchPolicyRules({ name: policyName }, context);
         ui.displayResources(rules, argv, context);
     }
 });

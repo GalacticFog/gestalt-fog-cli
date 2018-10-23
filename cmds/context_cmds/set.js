@@ -4,7 +4,7 @@ const ui = require('../lib/gestalt-ui')
 const selectHierarchy = require('../lib/selectHierarchy');
 const gestaltContext = require('../lib/gestalt-context');
 
-exports.command = 'set'
+exports.command = 'set [path]'
 exports.desc = 'Set context'
 exports.builder = {
     reset: {

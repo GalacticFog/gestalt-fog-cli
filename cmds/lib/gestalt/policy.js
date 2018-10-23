@@ -1,6 +1,9 @@
 const {
     fetchResources,
-    fetchEnvironmentResources
+    fetchEnvironmentResources,
+    deleteResource,
+    updateResource,
+    createEnvironmentResource
 } = require('./generic');
 
 exports.fetchPolicies = (context) => {
@@ -11,7 +14,7 @@ exports.fetchEnvironmentPolicies = (providedContext) => {
     return fetchEnvironmentResources('policies', providedContext);
 }
 
-exports.fetchPolicy = async (context, spec) => {
+exports.fetchPolicy = async (spec, context) => {
     if (!spec) throw Error('No spec')
     if (!spec.name && !spec.id) throw Error('No spec.name or spec.id fields')
 
@@ -24,8 +27,8 @@ exports.updatePolicy = (spec, context) => {
     return updateResource('policies', spec, context);
 }
 
-exports.deletePolicy = (spec) => {
-    return deleteResource('policies', spec);
+exports.deletePolicy = (spec, options) => {
+    return deleteResource('policies', spec, options);
 }
 
 

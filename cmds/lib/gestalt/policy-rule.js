@@ -5,7 +5,7 @@ const {
 const meta = require('./metaclient');
 
 
-exports.fetchPolicyRules = async (context, policySpec) => {
+exports.fetchPolicyRules = async (policySpec, context) => {
     let id = policySpec.id;
     if (!id) {
         const policy = await this.fetchPolicy(context, policySpec);

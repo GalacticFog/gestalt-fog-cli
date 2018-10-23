@@ -2,6 +2,8 @@ exports.selectContainer = require('./selectContainer').run;
 
 exports.selectLambda = require('./selectLambda').run;
 
+exports.selectPolicy = require('./selectPolicy').run;
+
 exports.selectOrg = require('./selectOrg').run;
 
 exports.selectWorkspace = require('./selectWorkspace').run;

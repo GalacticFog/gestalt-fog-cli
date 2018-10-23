@@ -28,7 +28,7 @@ exports.handler = cmd.handler(async function (argv) {
         };
 
         const response = await gestalt.migrateContainer(container, context);
-        console.log(`Container '${container.name}' migration initiated. ${response}`);
+        console.log(`Container '${container.name}' migration initiated.`);
     } else {
 
         // Interactive mode
@@ -48,7 +48,7 @@ exports.handler = cmd.handler(async function (argv) {
 
         if (confirm) {
             const response = await gestalt.migrateContainer(container, context);
-            console.log(`Container '${container.name}' migration initiated. ${response}`);
+            console.log(`Container '${container.name}' migration initiated.`);
         } else {
             console.log('Aborted.');
         }

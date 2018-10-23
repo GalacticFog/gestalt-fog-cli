@@ -235,17 +235,21 @@ function deleteResource(type, spec, options) {
 
     let suffix = ''
 
-    if (options) {
-        for (let o of options) {
-            if (o == 'force') {
-                if (options.force) {
-                    suffix = '?force=true'
-                }
-            } else {
-                throw Error(`Invalid option: ${o}`);
-            }
-        }
+    if (options.force) {
+        suffix = '?force=true'
     }
+
+    // if (options) {
+    //     for (let o of options) {
+    //         if (o == 'force') {
+    //             if (options.force) {
+    //                 suffix = '?force=true'
+    //             }
+    //         } else {
+    //             throw Error(`Invalid option: ${o}`);
+    //         }
+    //     }
+    // }
 
     const fqon = spec.org.properties.fqon;
     return meta.DELETE(`/${fqon}/${type}/${spec.id}${suffix}`);
