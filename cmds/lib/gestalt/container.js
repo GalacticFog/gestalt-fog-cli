@@ -7,6 +7,7 @@ const {
     deleteResource,
 } = require('./generic');
 
+const meta = require('./metaclient')
 
 exports.fetchContainers = (context) => {
     if (context.org) {
@@ -40,4 +41,21 @@ exports.updateContainer = (spec, context) => {
 
 exports.deleteContainer = (spec /*, providedContext*/) => {
     return deleteResource('containers', spec);
+}
+
+exports.migrateContainer = (spec, context) => {
+    if (!spec) throw Error(`missing spec`);
+    if (spec.resource_type) {
+        if (spec.resource_type != 'Gestalt::Resource::Container') {
+            throw Error(`Expected spec.resource_type to be 'Gestalt::Resource::Container', but was '${spec.resource_type}'`);
+        }
+    }
+    if (!context) throw Error('missing context')
+    if (!context.org) throw Error('missing context.org')
+    if (!context.org.fqon) throw Error('missing context.org.fqon')
+    if (!context.provider) throw Error('missing context.provider')
+    if (!context.provider.id) throw Error('missing context.provider.id')
+    if (!spec.id) throw Error(`createResource: spec.resource_type is '${spec.resource_type}'`);
+    if (!context) throw Error(`createResource: context is '${context}'`);
+    return meta.POST(`/${context.org.fqon}/containers/${spec.id}/migrate?provider=${context.provider.id}`);
 }
