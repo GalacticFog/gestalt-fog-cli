@@ -39,8 +39,8 @@ exports.updateContainer = (spec, context) => {
     return updateResource('containers', spec, context);
 }
 
-exports.deleteContainer = (spec /*, providedContext*/) => {
-    return deleteResource('containers', spec);
+exports.deleteContainer = (spec, options) => {
+    return deleteResource('containers', spec, options);
 }
 
 exports.migrateContainer = (spec, context) => {
@@ -58,4 +58,21 @@ exports.migrateContainer = (spec, context) => {
     if (!spec.id) throw Error(`createResource: spec.resource_type is '${spec.resource_type}'`);
     if (!context) throw Error(`createResource: context is '${context}'`);
     return meta.POST(`/${context.org.fqon}/containers/${spec.id}/migrate?provider=${context.provider.id}`);
+}
+
+exports.promoteContainer = (spec, context) => {
+    if (!spec) throw Error(`missing spec`);
+    if (spec.resource_type) {
+        if (spec.resource_type != 'Gestalt::Resource::Container') {
+            throw Error(`Expected spec.resource_type to be 'Gestalt::Resource::Container', but was '${spec.resource_type}'`);
+        }
+    }
+    if (!context) throw Error('missing context')
+    if (!context.org) throw Error('missing context.org')
+    if (!context.org.fqon) throw Error('missing context.org.fqon')
+    if (!context.target_environment) throw Error('missing context.target_environment')
+    if (!context.target_environment.id) throw Error('missing context.target_environment.id')
+    if (!spec.id) throw Error(`createResource: spec.resource_type is '${spec.resource_type}'`);
+    if (!context) throw Error(`createResource: context is '${context}'`);
+    return meta.POST(`/${context.org.fqon}/containers/${spec.id}/promote?target=${context.target_environment.id}`);
 }

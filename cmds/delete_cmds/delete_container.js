@@ -3,8 +3,8 @@ const ui = require('../lib/gestalt-ui')
 const inquirer = require('inquirer');
 const cmd = require('../lib/cmd-base');
 
-exports.command = 'policy [policy_name]'
-exports.desc = 'Delete policy'
+exports.command = 'container [container_name]'
+exports.desc = 'Delete container'
 exports.builder = {
     force: {
         desc: "Force delete",
@@ -13,32 +13,31 @@ exports.builder = {
 }
 exports.handler = cmd.handler(async function (argv) {
 
-    // fog delete policy test1
+    // fog delete container nginx1
 
     // Main
-    if (argv.policy_name) {
+    if (argv.container_name) {
         // Command mode
 
         const context = await cmd.resolveEnvironment(argv, gestalt.getContext());
 
-        const policy = await gestalt.fetchPolicy({ name: argv.policy_name }, context);
+        const container = await gestalt.fetchContainer({ name: argv.container_name }, context);
 
-        const response = await gestalt.deletePolicy(policy, { force: argv.force });
-        console.log(`Policy '${policy.name}' deleted. ${response}`);
+        const response = await gestalt.deleteContainer(container, { force: argv.force });
+        console.log(`Container '${container.name}' deleted.`);
     } else {
 
         // Interactive mode
 
         const context = await ui.resolveEnvironment();
 
-        const policies = await gestalt.fetchPolicies(context);
-        const policy = await ui.selectPolicy({}, policies);
+        const containers = await gestalt.fetchContainers(context);
+        const container = await ui.selectContainer({}, containers);
 
         const confirm = await confirmIfNeeded();
         if (confirm) {
-            const response = await gestalt.deletePolicy(policy, { force: argv.force });
-            console.log(response);
-            console.log(`Policy '${policy.name}' deleted. ${response}`);
+            const response = await gestalt.deleteContainer(container, { force: argv.force });
+            console.log(`Container '${container.name}' deleted.`);
         } else {
             console.log('Aborted.');
         }
@@ -48,7 +47,7 @@ exports.handler = cmd.handler(async function (argv) {
 function confirmIfNeeded() {
     const questions = [
         {
-            message: `Will delete policy, are you sure?`,
+            message: `Will delete container, are you sure?`,
             type: 'confirm',
             name: 'confirm',
             default: false

@@ -3,37 +3,41 @@ const ui = require('../lib/gestalt-ui')
 const inquirer = require('inquirer');
 const cmd = require('../lib/cmd-base');
 
-exports.command = 'container [container_name]'
-exports.desc = 'Delete container'
-exports.builder = {}
+exports.command = 'lambda [lambda_name]'
+exports.desc = 'Delete lambda'
+exports.builder = {
+    force: {
+        desc: "Force delete",
+        required: false
+    }
+}
 exports.handler = cmd.handler(async function (argv) {
 
-    // fog delete container nginx1
+    // fog delete lambda test1
 
     // Main
-    if (argv.container_name) {
+    if (argv.lambda_name) {
         // Command mode
 
         const context = await cmd.resolveEnvironment(argv, gestalt.getContext());
 
-        const container = await gestalt.fetchContainer({ name: argv.container_name }, context);
+        const lambda = await gestalt.fetchLambda({ name: argv.lambda_name }, context);
 
-        const response = await gestalt.deleteContainer(container);
-        console.log(`Container '${container.name}' deleted. ${response}`);
+        const response = await gestalt.deleteLambda(lambda, { force: argv.force });
+        console.log(`Lambda '${lambda.name}' deleted.`);
     } else {
 
         // Interactive mode
 
         const context = await ui.resolveEnvironment();
 
-        const containers = await gestalt.fetchContainers(context);
-        const container = await ui.selectContainer({}, containers);
+        const lambdas = await gestalt.fetchEnvironmentLambdas(context);
+        const lambda = await ui.selectLambda({}, lambdas);
 
         const confirm = await confirmIfNeeded();
         if (confirm) {
-            const response = await gestalt.deleteContainer(container);
-            console.log(response);
-            console.log(`Container '${container.name}' deleted. ${response}`);
+            const response = await gestalt.deleteLambda(lambda, { force: argv.force });
+            console.log(`Lambda '${lambda.name}' deleted.`);
         } else {
             console.log('Aborted.');
         }
@@ -43,7 +47,7 @@ exports.handler = cmd.handler(async function (argv) {
 function confirmIfNeeded() {
     const questions = [
         {
-            message: `Will delete container, are you sure?`,
+            message: `Will delete lambda, are you sure?`,
             type: 'confirm',
             name: 'confirm',
             default: false
