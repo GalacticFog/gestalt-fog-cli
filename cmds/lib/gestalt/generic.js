@@ -177,17 +177,20 @@ function createResource(spec, context) {
 
     const url = resolveResourceUrl(spec.resource_type, context);
 
-    // Delete the resource_type from the request, since Meta doesn't need need it
-    spec = JSON.parse(JSON.stringify(spec));
-    delete spec.resource_type;
+    const typesNotAllowingResourceType = [
+        'Gestalt::Resource::Node::Lambda',
+        'Gestalt::Resource::Policy',
+        'Gestalt::Resource::User',
+        'Gestalt::Resource::Group',
+    ];
 
-    // if (spec.resource_type == 'Gestalt::Resource::Node::Lambda' || spec.resource_type == 'Gestalt::Resource::Policy') {
-    //     // TODO: Workaround Meta bug of not accepting the resource_type for Lambdas and potentially other
-    //     // resource types, otherwise get the following error:
-    //     // StatusCodeError: 500 - {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
-    //     spec = JSON.parse(JSON.stringify(spec));
-    //     delete spec.resource_type;
-    // }
+    if (typesNotAllowingResourceType.includes(spec.resource_type)) {
+        // TODO: Workaround Meta bug of not accepting the resource_type for Lambdas and potentially other
+        // resource types, otherwise get the following error:
+        // StatusCodeError: 500 - {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
+        spec = JSON.parse(JSON.stringify(spec));
+        delete spec.resource_type;
+    }
 
     const res = meta.POST(url, spec);
     return res;
