@@ -5,7 +5,7 @@ const debug = cmd.debug;
 const { renderResourceTemplate } = require('../lib/template-resolver');
 const meta = require('../lib/gestalt/metaclient');
 
-exports.command = 'POST [path]'
+exports.command = 'PUT [path]'
 exports.desc = 'HTTP functions'
 exports.builder = {
     file: {
@@ -27,7 +27,7 @@ exports.handler = cmd.handler(async function (argv) {
     // Resolve parameters
     spec = await renderResourceTemplate(spec, {}, undefined);
 
-    const response = await meta.POST(urlPath, spec);
+    const response = await meta.PUT(urlPath, spec);
     try {
         console.log(JSON.stringify(response, null, 2));
     } catch (err) {

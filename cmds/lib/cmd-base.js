@@ -3,7 +3,7 @@ const { debug } = require('./debug');
 const contextResolver = require('./context-resolver');
 const util = require('./util');
 const gestaltContext = require('./gestalt-context');
-let chalk = null;
+const chalk = require('./chalk');
 
 module.exports = {
   ...contextResolver,
