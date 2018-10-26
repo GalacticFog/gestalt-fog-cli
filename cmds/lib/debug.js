@@ -1,5 +1,4 @@
-const chalk = require('chalk');
-const yaml = require('js-yaml');
+const chalk = require('./chalk');
 
 function debug(message, ...optionalParams) {
   if (global.fog.debug) {

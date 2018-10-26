@@ -1,4 +1,4 @@
-const chalk = require('chalk')
+const chalk = require('./chalk')
 const { debug } = require('./debug')
 
 exports.initialize = (targetCommand, main, options = {}) => {

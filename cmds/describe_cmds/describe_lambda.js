@@ -1,7 +1,8 @@
 const gestalt = require('../lib/gestalt')
 const ui = require('../lib/gestalt-ui');
-const chalk = require('chalk');
 const cmd = require('../lib/cmd-base');
+const chalk = require('../lib/chalk');
+
 exports.command = 'lambda [name]'
 exports.desc = 'Describe lambda'
 exports.builder = {

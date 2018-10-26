@@ -1,10 +1,10 @@
 const cmd = require('../lib/cmd-base');
+const gestalt = require('../lib/gestalt')
+const chalk = require('../lib/chalk')
 exports.command = 'group-members';
 exports.desc = 'List group members';
 exports.builder = {};
 exports.handler = cmd.handler(async function (argv) {
-    const gestalt = require('../lib/gestalt')
-    const chalk = require('chalk')
 
     function sortBy(arr, key) {
         return arr.sort((a, b) => {

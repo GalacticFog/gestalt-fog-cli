@@ -1,7 +1,5 @@
 const gestalt = require('../lib/gestalt');
 const ui = require('../lib/gestalt-ui')
-const chalk = require('chalk');
-const inquirer = require('inquirer');
 const cmd = require('../lib/cmd-base');
 exports.command = 'lambdas'
 exports.desc = 'Delete lambdas'

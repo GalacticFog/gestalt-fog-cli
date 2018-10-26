@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+const chalk = require('../lib/chalk');
 const gestalt = require('../lib/gestalt');
 const cmd = require('../lib/cmd-base');
 const { serviceSchema, lambdaSchema, endpointSchema } = require('../../schemas');

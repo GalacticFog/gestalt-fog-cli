@@ -2,7 +2,7 @@
 const inquirer = require('inquirer');
 const gestaltContext = require('./lib/gestalt-context');
 const gestalt = require('./lib/gestalt');
-const chalk = require('chalk');
+const chalk = require('./lib/chalk');
 const cmd = require('./lib/cmd-base');
 
 module.exports = {
