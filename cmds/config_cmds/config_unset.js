@@ -5,23 +5,27 @@ const yaml = require('js-yaml');
 
 exports.command = 'unset'
 exports.desc = 'Unset config'
-exports.builder = {}
-exports.handler = cmd.handler(async function (argv) {
-
-    const args = util.cloneObject(argv._);
-    args.shift()
-    args.shift()
-
-    // Write config back
-
-    const config = gestaltContext.getConfig();
-
-    // Apply config
-    for (let a of args) {
-        delete config[a];
+exports.builder = {
+    all: {
+        description: 'Resets all configuration settings'
     }
+}
+exports.handler = cmd.handler(async function (argv) {
+    if (argv.all) {
+        gestaltContext.saveConfig({});
+    } else {
+        const args = util.cloneObject(argv._);
+        args.shift()
+        args.shift()
 
-    gestaltContext.saveConfig(config);
+        const config = gestaltContext.getConfig();
+
+        // Apply config
+        for (let a of args) {
+            delete config[a];
+        }
+        gestaltContext.saveConfig(config);
+    }
 
     console.log(yaml.dump({ 'Configuration Settings': gestaltContext.getConfig() }));
 });

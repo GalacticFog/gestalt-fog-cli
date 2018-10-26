@@ -11,7 +11,7 @@ exports.run = (options, resources) => {
     // validate options
     if (options.headers.length != options.fields.length) throw Error('options headers and fields must have the same number of items');
 
-    const chalk = require('chalk');
+    const chalk = require('./chalk');
 
     const widths = {};
 

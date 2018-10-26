@@ -3,10 +3,11 @@
 
 exports.run = (resources) => {
 
-    const argv = require('yargs').argv
     const columnify = require('columnify');
-    const chalk = require('chalk');
+    const chalk = require('./chalk');
     const identities = {};
+
+    // console.log(JSON.stringify(resources, null, 2))
 
     // Collect identities into a single ojbect tree
     for (let item of resources) {
@@ -32,7 +33,7 @@ exports.run = (resources) => {
         }
     })
 
-    // console.log(JSON.stringify(entitlements, null, 2))
+    //  console.log(JSON.stringify(entitlements, null, 2))
 
     for (let item of entitlements) {
         item.identities.map(i => {

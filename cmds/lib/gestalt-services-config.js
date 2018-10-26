@@ -5,7 +5,7 @@ const CONFIG_FILE = 'services-config.json';
 const LOCAL_SERVICES_FILE = 'service_configs.local';
 const CACHED_SERVICES_FILE = 'service_configs.cached';
 const inquirer = require('inquirer');
-const chalk = require('chalk');
+const chalk = require('./chalk');
 
 module.exports = { getServiceConfig, runInteractiveConfigure }
 

@@ -1,5 +1,5 @@
 const fs = require('fs');
-const chalk = require('chalk');
+const chalk = require('../lib/chalk');
 const AWS = require('aws-sdk');
 const gestalt = require('../lib/gestalt');
 const cmd = require('../lib/cmd-base');

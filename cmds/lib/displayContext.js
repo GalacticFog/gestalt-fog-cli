@@ -1,14 +1,12 @@
 const gestalt = require('./gestalt');
-const chalk = require('chalk');
+const chalk = require('./chalk');
 
 exports.run = (context) => {
     console.log(this.contextString(context));
 }
 
 exports.contextString = (context) => {
-    // context = context || gestalt.getContext();
-    // let s = `${chalk.bold('Context:')} ${chalk.green(gestalt.getHost())}`
-    // let s = `${chalk.green(gestalt.getHost())}`
+
     let s = `${chalk.bold.green(gestalt.getHost())}`
     if (context && context.org) {
         s += ` / ${chalk.green(context.org.fqon)}`;

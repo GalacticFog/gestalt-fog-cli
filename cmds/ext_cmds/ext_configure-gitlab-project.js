@@ -7,7 +7,7 @@ exports.handler = cmd.handler(async function (argv) {
     const gitlab = require('../lib/gestalt-gitlab-client');
     const selectResource = require('../lib/selectResourceUI');
     const selectHierarchy = require('../lib/selectHierarchy');
-    const chalk = require('chalk');
+    const chalk = require('../lib/chalk');
     const inquirer = require('inquirer');
 
     console.log("Step 1 - Select a Gitlab project to configure for deployment to Gestalt.")

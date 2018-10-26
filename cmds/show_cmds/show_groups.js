@@ -5,7 +5,6 @@ exports.command = 'groups'
 exports.desc = 'List groups'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    const chalk = require('chalk')
     const resources = await gestalt.fetchGroups();
     ui.displayResources(resources, argv);
 });
