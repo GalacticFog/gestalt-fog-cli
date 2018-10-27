@@ -62,7 +62,7 @@ exports.handler = cmd.handler(async function (argv) {
 function confirmIfNeeded() {
     const questions = [
         {
-            message: `Will migrate container, are you sure?`,
+            message: `Will promote container, are you sure?`,
             type: 'confirm',
             name: 'confirm',
             default: false
