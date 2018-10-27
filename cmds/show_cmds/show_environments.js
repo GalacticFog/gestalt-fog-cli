@@ -13,9 +13,29 @@ exports.builder = {
 }
 exports.handler = cmd.handler(async function (argv) {
     if (argv.all) {
-        let fqons = await gestalt.fetchOrgFqons();
-        let resources = await gestalt.fetchOrgEnvironments(fqons);
-        ui.displayResources(resources, argv);
+        if (argv.summary) {
+            let fqons = await gestalt.fetchOrgFqons();
+            let resources = await gestalt.fetchOrgEnvironments(fqons);
+            ui.displayResources(resources, argv);
+        } else {
+            let fqons = await gestalt.fetchOrgFqons();
+            let workspaces = await gestalt.fetchOrgWorkspaces(fqons);
+            for (ws of workspaces) {
+                const ctx = {
+                    org: {
+                        fqon: ws.org.properties.fqon
+                    },
+                    workspace: {
+                        id: ws.id,
+                        name: ws.name,
+                        description: ws.description
+                    }
+                }
+                const envs = await gestalt.fetchWorkspaceEnvironments(ctx);
+                console.log(ui.getContextString(ctx));
+                ui.displayResources(envs, argv);
+            }
+        }
     } else if (argv.org) {
         const context = await ui.resolveOrg(false);
         const resources = await gestalt.fetchOrgEnvironments([context.org.fqon]);
