@@ -105,13 +105,15 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
     return resources;
 }
 
-function fetchWorkspaceResources(type, context) {
+function fetchWorkspaceResources(type, context, filterType) {
     context = context || getGestaltContext();
     if (!context.org) throw Error("No Org in current context");
     if (!context.org.fqon) throw Error("No FQON in current context");
     if (!context.workspace) throw Error("No Workspace in current context");
     if (!context.workspace.id) throw Error("No Workspace ID in current context");
-    const res = meta.GET(`/${context.org.fqon}/workspaces/${context.workspace.id}/${type}?expand=true`)
+    let url = `/${context.org.fqon}/workspaces/${context.workspace.id}/${type}?expand=true`;
+    if (filterType) url += `&type=${filterType}`;
+    const res = meta.GET(url);
     return res;
 }
 
