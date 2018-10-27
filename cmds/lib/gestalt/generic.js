@@ -2,6 +2,7 @@
 const meta = require('./metaclient')
 const gestaltContext = require('../gestalt-context');
 const { debug } = require('../debug');
+const chalk = require('../chalk');
 
 // Exports
 
@@ -44,7 +45,7 @@ function fetchOrgResources(type, fqonList, type2) {
     if (!fqonList) throw Error('missing fqonList')
 
     let promises = fqonList.map(fqon => {
-        console.error(`Fetching ${type} from ${fqon}...`);
+        console.error(chalk.dim.blue(`Fetching ${type} from ${fqon}...`));
         let url = `/${fqon}/${type}?expand=true`;
         if (type2) url += `&type=${type2}`;
         const res = meta.GET(url);
@@ -75,7 +76,7 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
 
     const envs = await fetchOrgResources("environments", [fqon]);
     const promises = envs.map(env => {
-        console.error(`Fetching containers from ${fqon}/'${env.name}'`);
+        console.error(chalk.dim.blue(`Fetching ${type} from ${fqon}/'${env.name}'...`));
         const context2 = {
             org: {
                 fqon: fqon
@@ -84,15 +85,15 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
                 id: env.id
             }
         }
-        return fetchEnvironmentResources(type, context2).then(containers => {
-            for (let c of containers) {
+        return fetchEnvironmentResources(type, context2).then(res => {
+            for (let c of res) {
                 c.environment = {
                     name: env.name,
                     description: env.description,
                     id: env.id
                 };
             }
-            return containers;
+            return res;
         }).catch(err => {
             console.error('Warning: ' + err.message);
             return [];
@@ -100,11 +101,9 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
     });
 
     const arr = await Promise.all(promises);
-    const containers = [].concat.apply([], arr);
-    return containers;
+    const resources = [].concat.apply([], arr);
+    return resources;
 }
-
-
 
 function fetchWorkspaceResources(type, context) {
     context = context || getGestaltContext();
