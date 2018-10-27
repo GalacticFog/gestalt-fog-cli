@@ -3,15 +3,14 @@ const gestaltContext = require('../lib/gestalt-context');
 const util = require('../lib/util');
 const yaml = require('js-yaml');
 
-exports.command = 'set'
+exports.command = 'set [args...]'
 exports.desc = 'Set config'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
 
-    const args = util.cloneObject(argv._);
-    args.shift()
-    args.shift()
+    if (!argv.args) throw Error('No args specified - nothing to do.');
 
+    const args = argv.args;
     const configArgs = {};
 
     // Apply config

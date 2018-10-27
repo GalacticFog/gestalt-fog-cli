@@ -6,7 +6,14 @@ exports.command = 'view'
 exports.desc = 'view config'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
-    // console.log(yaml.dump({ 'Configuration Settings': gestaltContext.getConfig() }));
+
+    // Show configuration
     console.log(yaml.dump(gestaltContext.getConfig()));
 
+    // Show supported flags
+    console.log('Supported flags:')
+    console.log(`
+    debug: (true|false) Enables or disables debug mode
+    color: (true|false) Enables or disables colors
+    `);
 });
