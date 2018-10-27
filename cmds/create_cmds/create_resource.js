@@ -21,8 +21,8 @@ exports.builder = {
     name: {
         description: 'resource name (overrides name in resource file)'
     },
-    name: {
-        description: 'resource name (overrides name in resource file)'
+    description: {
+        description: 'resource description (overrides description in resource file)'
     },
     context: {
         description: "Target context path for resource creation. Overrides the current context if specified",
