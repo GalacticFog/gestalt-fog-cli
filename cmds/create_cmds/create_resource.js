@@ -7,7 +7,7 @@ const out = console.log;
 const util = require('../lib/util');
 const { debug } = require('../lib/debug');
 
-exports.command = 'resource';
+exports.command = 'resource [name] [description]';
 exports.description = 'Create resource';
 exports.builder = {
     file: {
@@ -17,6 +17,12 @@ exports.builder = {
     },
     config: {
         description: 'config file'
+    },
+    name: {
+        description: 'resource name (overrides name in resource file)'
+    },
+    name: {
+        description: 'resource name (overrides name in resource file)'
     },
     context: {
         description: "Target context path for resource creation. Overrides the current context if specified",
@@ -47,6 +53,10 @@ exports.handler = cmd.handler(async function (argv) {
     const resourceSpec = await renderResourceTemplate(resourceTemplate, config, context);
 
     debug(`Finished processing resource template.`)
+
+    // Override resource name if specified
+    if (argv.name) resourceSpec.name = argv.name;
+    if (argv.description) resourceSpec.description = argv.description;
 
     const resource = await gestalt.createResource(resourceSpec, context);
 
