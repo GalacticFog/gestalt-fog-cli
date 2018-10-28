@@ -4,7 +4,7 @@ const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
-exports.command = 'environment'
+exports.command = 'environment [name]'
 exports.desc = 'Create environment'
 exports.builder = {
     'org': {
@@ -34,7 +34,7 @@ exports.handler = cmd.handler(async function (argv) {
         // Command line
 
         // Check for required args
-        cmd.requireArgs(argv, ['name', 'type']);
+        if (!argv.type) throw Error('missing --type');
 
         const envSpec = {
             name: argv.name,
@@ -44,7 +44,17 @@ exports.handler = cmd.handler(async function (argv) {
             }
         };
 
-        const context = await cmd.resolveWorkspace(argv);
+        let context = null;
+        if (argv.org || argv.workspace) {
+
+            if (!argv.org) throw Error('missing --org');
+            if (!argv.workspace) throw Error('missing --workspace');
+
+            context = await cmd.resolveContextPath(`/${argv.org}/${argv.workspace}`);
+        }
+        else {
+            context = await cmd.resolveWorkspace();
+        }
 
         // Create environment
         const environment = await gestalt.createEnvironment(envSpec, context);

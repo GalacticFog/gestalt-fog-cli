@@ -4,8 +4,25 @@ const yaml = require('js-yaml');
 module.exports = {
   loadObjectFromFile,
   readFileAsText,
-  cloneObject
+  cloneObject,
+  getFileObjectType,
+  loadObjectFromString
 };
+
+function getFileObjectType(file) {
+  if (file.endsWith('.yaml') || file.endsWith('.yml')) {
+    return 'yaml';
+  }
+  if (file.endsWith('.json')) {
+    return 'json'
+  }
+  return undefined;
+}
+
+function loadObjectFromString(str, type) {
+  if (type == 'yaml') return yaml.safeLoad(str);
+  return JSON.parse(str);
+}
 
 function loadObjectFromFile(file) {
   if (file.endsWith('.yaml') || file.endsWith('.yml')) {

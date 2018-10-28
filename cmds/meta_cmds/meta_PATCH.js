@@ -21,11 +21,8 @@ exports.handler = cmd.handler(async function (argv) {
         throw Error('missing --file parameter');
     }
 
-    console.log(`Loading resource spec from file ${argv.file}`);
-    let spec = cmd.loadObjectFromFile(argv.file);
-
     // Resolve parameters
-    spec = await renderResourceTemplate(spec, {}, undefined);
+    const spec = await renderResourceTemplate(argv.file, {}, undefined);
 
     const response = await meta.PATCH(urlPath, spec);
     try {

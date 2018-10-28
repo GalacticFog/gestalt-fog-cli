@@ -6,6 +6,7 @@ const { renderResourceTemplate } = require('../lib/template-resolver');
 const out = console.log;
 const util = require('../lib/util');
 const { debug } = require('../lib/debug');
+const chalk = require('../lib/chalk');
 
 exports.command = 'resources [files...]';
 exports.description = 'Create resources';
@@ -18,7 +19,56 @@ exports.builder = {
     }
 }
 exports.handler = cmd.handler(async function (argv) {
+    if (argv.manifest && argv.files) {
+        throw Error('Can only specify one of files or manifest');
+    } else if (argv.manifest) {
 
+        // Manifest mode
+        processManifest(argv);
+    } else {
+
+        // Files mode
+        processFiles(argv);
+    }
+});
+
+
+//
+// Manifest mode
+//
+async function processManifest(argv) {
+
+    const manifest = util.loadObjectFromFile(argv.manifest);
+
+    // Validate phases (TODO - use yup schema)
+    if (!manifest.phases) throw Error(`Missing manifest.phases`);
+    for (let phase of manifest.phases) {
+        if (!phase.namme) throw Error('Missing phase.name');
+        if (!phase.files) throw Error(`Missing files for phase '${phase.name}'`);
+    }
+
+    const globalContext = await cmd.resolveContextPath(manifest.context);
+    let globalConfig = {};
+    if (manifest.config) {
+        console.log(`Loading config from ${manifest.config}`);
+        util.loadObjectFromFile(manifest.config);
+    }
+
+    for (let phase of manifest.phases) {
+        const context = phase.context ? await cmd.resolveContextPath(phase.context) : globalContext;
+        let config = globalConfig;
+        if (phase.config) {
+            config = Object.apply(util.loadObjectFromFile(phase.config), config);
+        }
+        console.log(chalk.bold(`=> Processing phase '${phase.name}'`));
+        processPhase(context, config, phase.files);
+    }
+}
+
+//
+// Explicit files mode
+//
+async function processFiles(argv) {
     let context = null;
     if (argv.context) {
         context = await cmd.resolveContextPath(argv.context);
@@ -35,13 +85,18 @@ exports.handler = cmd.handler(async function (argv) {
         config = util.loadObjectFromFile(argv.config);
     }
 
+    processPhase(context, config, argv.files);
+}
+
+async function processPhase(context, config, files) {
+    console.log('Using context: ' + ui.getContextString(context));
+
     const specs = {}
 
     // Render all templates into specs
-    for (file of argv.files) {
+    for (file of files) {
         out(`Loading template from file ${file}`);
-        const resourceTemplate = util.loadObjectFromFile(file);
-        const resourceSpec = await renderResourceTemplate(resourceTemplate, config, context);
+        const resourceSpec = await renderResourceTemplate(file, config, context);
 
         specs[file] = resourceSpec;
     }
@@ -56,4 +111,4 @@ exports.handler = cmd.handler(async function (argv) {
         console.log();
     }
     console.log('Completed.');
-});
+}

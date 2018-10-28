@@ -34,10 +34,7 @@ exports.handler = cmd.handler(async function (argv) {
     console.log('Using context: ' + ui.getContextString(context));
 
     // Include policy in context
-    context = await cmd.resolveEnvironmentPolicy(context, argv.policy);
-
-    out(`Loading template from file ${argv.file}`);
-    const resourceTemplate = util.loadObjectFromFile(argv.file);
+    context.policy = await cmd.lookupEnvironmentResource('policies', argv.policy, context);
 
     let config = {};
 
@@ -46,7 +43,7 @@ exports.handler = cmd.handler(async function (argv) {
         config = util.loadObjectFromFile(argv.config);
     }
 
-    const resourceSpec = await renderResourceTemplate(resourceTemplate, config, context);
+    const resourceSpec = await renderResourceTemplate(argv.file, config, context);
 
     debug(`Finished processing resource template.`)
 

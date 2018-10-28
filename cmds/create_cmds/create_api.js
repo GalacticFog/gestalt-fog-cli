@@ -4,7 +4,7 @@ const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
-exports.command = 'api'
+exports.command = 'api [name]'
 exports.desc = 'Create API'
 exports.builder = {}
 exports.handler = cmd.handler(async function (argv) {
@@ -13,15 +13,15 @@ exports.handler = cmd.handler(async function (argv) {
         // Command line
 
         // Check for required args
-        cmd.requireArgs(argv, ['name', 'description']);
+        if (!argv.description) throw Error('missing --description');
 
-        const context = await cmd.resolveEnvironment(argv);
+        const context = await cmd.resolveEnvironment();
 
         // Get global GWM provider
         const gwmProvider = await fetchGatewayProvider(context);
 
         // Get Kong provider
-        const kongProvider = await cmd.resolveProvider(argv, context, 'Kong');
+        const kongProvider = await cmd.resolveProvider(argv.provider, context, 'Kong');
 
         const apiSpec = {
             name: argv.name,

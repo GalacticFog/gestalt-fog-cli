@@ -1,4 +1,5 @@
 const meta = require('./metaclient');
+const util = require('../util');
 
 const {
     getGestaltContext
@@ -18,12 +19,13 @@ exports.fetchApiEndpoints = (apiList) => {
 }
 
 exports.createApiEndpoint = (spec, providedContext) => {
-    // TODO: Untested
-    console.error('/lib/gestalt/api-endpoint.js:createApiEndpoint is untested');
 
     if (!spec) throw Error('missing spec');
     if (!spec.name) throw Error('missing spec.name');
     // TODO: Other required parameters
+
+    spec = util.cloneObject(spec);
+    delete spec.resource_type; // Otherwise {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
 
     const context = providedContext || getGestaltContext();
     if (!context.org) throw Error("missing context.org");

@@ -27,12 +27,6 @@ exports.handler = cmd.handler(async function (argv) {
 
     if (!context.org) {
         context = await ui.resolveOrg();
-        // console.log('No context set, using /root');
-        // context = {
-        //     org: {
-        //         fqon: 'root'
-        //     }
-        // }
     }
 
     const resources = await gestalt.fetchProviders(context, argv.type);

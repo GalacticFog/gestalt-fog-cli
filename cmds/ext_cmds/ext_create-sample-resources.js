@@ -13,9 +13,9 @@ exports.builder = {
 exports.handler = cmd.handler(async function (argv) {
 
     // Resolve environment context from command line args
-    const context = await cmd.resolveEnvironment(argv);
-    const provider = await cmd.resolveProvider(argv, context);
-    const laserProvider = await cmd.resolveProvider(argv, context, null, 'laser-provider');
+    const context = await cmd.resolveEnvironment();
+    const provider = await cmd.resolveProvider(argv.provider, context);
+    const laserProvider = await cmd.resolveProvider(argv['laser-provider'], context);
 
     await createKafkaSamples(argv, context, provider, laserProvider);
 });
@@ -51,7 +51,7 @@ async function createKafkaSamples(argv, context, provider, laserProvider) {
 
     // createApiEndpointFromFile(argv, context, laserProvider, 'sms-hello-lambda.json');
 
-    const streamProvider = await cmd.resolveProvider(argv, context, null, 'stream-provider');
+    const streamProvider = await cmd.resolveProvider(argv['stream-provider'], context);
 
     spec = cmd.loadObjectFromFile(`${argv.dir}/fizzbuzz-stream-processor-lambda.json`);
     const processerLambda = await doCreateLambda(context, laserProvider, spec);

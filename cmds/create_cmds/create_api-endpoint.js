@@ -4,7 +4,7 @@ const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
-exports.command = 'api-endpoint'
+exports.command = 'api-endpoint [name]'
 exports.desc = 'Create API Endpoint'
 exports.builder = {
     template: {
@@ -27,12 +27,19 @@ exports.handler = cmd.handler(async function (argv) {
         // Command line
 
         // Check for required args
-        cmd.requireArgs(argv, ['name', 'description']);
+        if (!argv.description) throw Error('missing --description');
 
-        const context = await cmd.resolveEnvironmentApi(argv);
+        const context = await cmd.resolveEnvironment();
+        const resources = await gestalt.fetchEnvironmentApis(context);
+        const targetApi = resources.find(api => api.name == argv.api);
+        if (!targetApi) throw Error(`API ${argv.api} not found`);
+        context.api = {
+            id: targetApi.id,
+            name: targetApi.name
+        }
 
         // Get Kong provider
-        const kongProvider = await cmd.resolveProvider(argv, context, 'Kong');
+        const kongProvider = await cmd.resolveProvider(argv.provider, context, 'Kong');
 
         const specProperties = {};
 
@@ -56,8 +63,8 @@ exports.handler = cmd.handler(async function (argv) {
             argv.methods = argv.methods.toUpperCase().split(',');
         }
 
-        const targetResource = await cmd.lookupEnvironmentResourcebyName(argv.container,
-            specProperties.implementation_type + 's', context);
+        const targetResource = await cmd.lookupEnvironmentResource(
+            specProperties.implementation_type + 's', argv.container, context);
 
         specProperties.implementation_id = targetResource.id;
 
@@ -196,8 +203,14 @@ async function doCreateApiEndpoint(argv, spec) {
     }
 
     // Resolve environment context from command line args
-    // const context = await cmd.resolveEnvironment(argv);
-    const context = await cmd.resolveEnvironmentApi(argv);
+    const context = await cmd.resolveEnvironment();
+    const resources = await gestalt.fetchEnvironmentApis(context);
+    const targetApi = resources.find(api => api.name == argv.api);
+    if (!targetApi) throw Error(`API ${argv.api} not found`);
+    context.api = {
+        id: targetApi.id,
+        name: targetApi.name
+    }
 
     if (argv.container && argv.lambda) {
         throw Error('Can only specify one of --container and --lambda');
@@ -208,16 +221,21 @@ async function doCreateApiEndpoint(argv, spec) {
             throw Error('missing --port-name parameter');
         }
         // resolve container name
-        const target = await cmd.resolveEnvironmentContainer(argv);
+        const resources = await gestalt.fetchContainers(context);
+        const target = resources.find(c => c.name == argv.container);
+        if (!target) throw Error(`Container '${argv.container}' not found.`);
+
         spec.properties = Object.assign(spec.properties, {
-            'implementation_id': target.container.id,
+            'implementation_id': target.id,
             "implementation_type": "container",
             "container_port_name": argv['port-name']
         })
     } else if (argv.lambda) {
-        const target = await cmd.resolveEnvironmentLambda(argv);
+        const resources = await gestalt.fetchEnvironmentLambdas(context);
+        const target = resources.find(c => c.name == argv.lambda);
+        if (!target) throw Error(`Lambda '${argv.lambda}' not found.`);
         spec.properties = Object.assign(spec.properties, {
-            'implementation_id': target.lambda.id,
+            'implementation_id': target.id,
             "implementation_type": "lambda"
         })
     }

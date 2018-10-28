@@ -5,7 +5,7 @@ const fs = require('fs');
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
-exports.command = 'lambda'
+exports.command = 'lambda [name]'
 exports.desc = 'Create lambda'
 exports.builder = {
     url: {
@@ -71,10 +71,10 @@ function getCodeFromSource(source) {
 async function doCreateLambda(argv, spec) {
 
     // Resolve environment context from command line args
-    const context = await cmd.resolveEnvironment(argv);
+    const context = await cmd.resolveEnvironment();
 
     // Resolve provider by name
-    const provider = await cmd.resolveProvider(argv, context);
+    const provider = await cmd.resolveProvider(argv.provider, context);
 
     // Build provider spec
     spec.properties.provider = {
@@ -100,7 +100,9 @@ exports.handler = cmd.handler(async function (argv) {
         // Command line mode
 
         // Check for required args
-        cmd.requireArgs(argv, ['name', 'description', 'handler', 'runtime']);
+        if (!argv.description) throw Error('missing --description');
+        if (!argv.handler) throw Error('missing --handler');
+        if (!argv.runtime) throw Error('missing --runtime');
 
         // Build lambda spec
         const spec = {

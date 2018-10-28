@@ -4,12 +4,11 @@ const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
-exports.command = 'org'
+exports.command = 'org [name]'
 exports.desc = 'Create org'
 exports.builder = {
     'org': {
-        alias: 'o',
-        description: 'Parent org fqon'
+        description: 'Parent org FQON for context path'
     },
     'name': {
         alias: 'n',
@@ -25,15 +24,26 @@ exports.handler = cmd.handler(async function (argv) {
     if (argv.name) {
         // Command line
 
+        if (!argv.description) throw Error('missing --description');
+
         // Copy argv properties to workspace spec
-        const orgSpec = {};
-        for (let s of ['name', 'description']) {
-            if (!argv[s]) throw Error(`Missing --${s} property`);
-            orgSpec[s] = argv[s];
+        const orgSpec = {
+            name: argv.name,
+            description: argv.description
+        };
+
+        let context = null;
+        if (argv.org) {
+            if (argv.org.startsWith('/')) {
+                context = await cmd.resolveContextPath(argv.org);
+            } else {
+                context = { org: { fqon: argv.org } };
+            }
+        }
+        else {
+            context = await cmd.resolveOrg();
         }
 
-        // Check if org property is required
-        const context = await cmd.resolveOrg(argv);
         // Create Org
         const org = await gestalt.createOrg(orgSpec, context.org.fqon);
         console.log(`Org '${org.name}' created.`);

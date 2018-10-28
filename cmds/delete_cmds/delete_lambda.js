@@ -19,7 +19,7 @@ exports.handler = cmd.handler(async function (argv) {
     if (argv.lambda_name) {
         // Command mode
 
-        const context = await cmd.resolveEnvironment(argv, gestalt.getContext());
+        const context = await cmd.resolveEnvironment();
 
         const lambda = await gestalt.fetchLambda({ name: argv.lambda_name }, context);
 

@@ -17,7 +17,7 @@ exports.handler = cmd.handler(async function (argv) {
         if (!argv.container_name) throw Error('missing container_name')
         if (!argv.num_instances) throw Error('missing num_instances')
 
-        const context = await cmd.resolveEnvironment(argv, gestalt.getContext());
+        const context = await cmd.resolveEnvironment();
 
         validate(argv.num_instances);
 

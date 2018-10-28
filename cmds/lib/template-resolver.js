@@ -3,15 +3,45 @@ const contextResolver = require('../lib/context-resolver');
 const gestalt = require('../lib/gestalt');
 const util = require('../lib/util');
 
-exports.renderResourceTemplate = async function (template, config, context) {
+// -----------OLD Method - traversing an object --------------------------------------------------------------------
+// exports.renderResourceTemplate = async function (template, config, context) {
+//     state.config = util.cloneObject(config);
+//     state.context = util.cloneObject(context);
+
+//     // const resource = Object.assign({}, template);
+//     const resource = JSON.parse(JSON.stringify(template));
+//     debug('cloned resource:')
+//     debug(resource)
+//     await traverse(resource, parseFieldForDirectives)
+//     return resource;
+// }
+
+// async function traverse(obj, func) {
+//     for (let k in obj) {
+//         if (obj[k] && typeof obj[k] === 'object') {
+//             await traverse(obj[k], func)
+//         } else {
+//             obj[k] = await func(obj[k])
+//         }
+//     }
+// }
+// -----------OLD Method - traversing an object --------------------------------------------------------------------
+
+exports.renderResourceTemplate = async function (templateFile, config, context) {
     state.config = util.cloneObject(config);
     state.context = util.cloneObject(context);
 
-    // const resource = Object.assign({}, template);
-    const resource = JSON.parse(JSON.stringify(template));
+    debug(`Loading temmplate from '${templateFile}'`);
+    const template = util.readFileAsText(templateFile);
+
+    const dataType = util.getFileObjectType(templateFile);
+
+    const processedData = await parseFieldForDirectives(template);
+
+    const resource = util.loadObjectFromString(processedData, dataType);
+
     debug('cloned resource:')
     debug(resource)
-    await traverse(resource, parseFieldForDirectives)
     return resource;
 }
 
@@ -21,15 +51,6 @@ const state = {
     directivesCache: {}
 };
 
-async function traverse(obj, func) {
-    for (let k in obj) {
-        if (obj[k] && typeof obj[k] === 'object') {
-            await traverse(obj[k], func)
-        } else {
-            obj[k] = await func(obj[k])
-        }
-    }
-}
 
 async function parseFieldForDirectives(value) {
     return doDarseFieldForDirectives(value, resolveTemplateDirective)
@@ -132,7 +153,7 @@ const directiveHandlers = {
 }
 
 async function resolveProvider(path, param = 'id') {
-    const provider = await contextResolver.resolveProviderByPath(path);
+    const provider = await contextResolver.resolveProviderInfoByPath(path);
     if (!provider) {
         throw Error('Provider not found for path: ' + path);
     }
@@ -141,7 +162,7 @@ async function resolveProvider(path, param = 'id') {
 }
 
 async function resolveLambda(path, param = 'id') {
-    const lambda = await contextResolver.resolveResourceByPath(path, 'lambdas');
+    const lambda = await contextResolver.resolveResourceByPath('lambdas', path);
     if (!lambda) {
         throw Error('Lambda not found for path: ' + path);
     }

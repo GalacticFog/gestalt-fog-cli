@@ -1,11 +1,10 @@
 const inquirer = require('inquirer');
-const fs = require('fs');
 const gestalt = require('../lib/gestalt')
 const ui = require('../lib/gestalt-ui')
 const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
-exports.command = 'container'
+exports.command = 'container [name]'
 exports.desc = 'Create container'
 exports.builder = {
     template: {
@@ -15,11 +14,29 @@ exports.builder = {
     file: {
         alias: 'f',
         description: 'resource definition file'
-    }
+    },
+    image: {
+        alias: 'i',
+        description: 'image (overrides template)'
+    },
+    network: {
+        alias: 'n',
+        description: 'network (overrides template)'
+    },
+    cpus: {
+        description: 'cpus (overrides template)'
+    },
+    memory: {
+        description: 'memory (overrides template)'
+    },
+    num_instances: {
+        description: 'num_instances (overrides template)'
+    },
 }
 
 exports.handler = cmd.handler(async function (argv) {
-    if (argv.file) {
+    if (argv.file || argv.name || argv.description) {
+        if (!argv.file) throw Error('Missing file');
         // TODO - Make this standard for other resource types
         // if (argv.file == '-') {
 
@@ -48,6 +65,22 @@ exports.handler = cmd.handler(async function (argv) {
         // } else {
             console.log(`Loading container spec from file ${argv.file}`);
             let containerSpec = cmd.loadObjectFromFile(argv.file);
+
+            // Override resource name if specified
+            if (argv.name) containerSpec.name = argv.name;
+            if (argv.description) containerSpec.description = argv.description;
+
+            // TODO: Consider yup schema.cast to convert values to expected types, rather than
+            // dealing with numbers specifically
+
+            // Overrides (string values)
+            if (argv.image) containerSpec.properties.image = argv.image;
+            if (argv.network) containerSpec.properties.image = argv.network;
+
+            // Overrides (numbers)
+            if (argv['num-instances']) containerSpec.properties.num_instances = Number.parseInt(argv['num-instances']);
+            if (argv.cpus) containerSpec.properties.image = Number(argv.cpus);
+            if (argv.memory) containerSpec.properties.image = Number(argv.memory);
 
             await doCreateContainer(argv, containerSpec);
         // }
@@ -90,9 +123,9 @@ async function doCreateContainer(argv, containerSpec) {
     }
 
     // Resolve environment context from command line args
-    const context = await cmd.resolveEnvironment(argv);
+    const context = await cmd.resolveEnvironment();
 
-    const provider = await cmd.resolveProvider(argv, context);
+    const provider = await cmd.resolveProvider(argv.provider, context);
 
     containerSpec.properties.provider = provider;
 

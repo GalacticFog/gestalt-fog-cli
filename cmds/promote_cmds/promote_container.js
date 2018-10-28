@@ -17,7 +17,7 @@ exports.handler = cmd.handler(async function (argv) {
         if (!argv.container_name) throw Error('missing container_name')
         if (!argv.env_name) throw Error('missing env_name')
 
-        const context = await cmd.resolveEnvironment(argv, gestalt.getContext());
+        const context = await cmd.resolveEnvironment();
 
         const container = await gestalt.fetchContainer({ name: argv.container_name }, context);
 

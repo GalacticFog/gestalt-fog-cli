@@ -183,6 +183,7 @@ function createResource(spec, context) {
         'Gestalt::Resource::Policy',
         'Gestalt::Resource::User',
         'Gestalt::Resource::Group',
+        'Gestalt::Resource::ApiEndpoint'
     ];
 
     if (typesNotAllowingResourceType.includes(spec.resource_type)) {

@@ -27,15 +27,9 @@ exports.handler = cmd.handler(async function (argv) {
 
     const context = await contextResolver.resolveContextFromResourcePath(path);
 
-    out(`Loading template from file ${argv.file}`);
-    const resourceTemplate = util.loadObjectFromFile(argv.file);
-
-    debug('Resource Template:')
-    debug(resourceTemplate);
-
     const provider = await contextResolver.resolveProviderByPath(path);
 
-    const resourceSpec = await renderResourceTemplate(resourceTemplate, {}, undefined);
+    const resourceSpec = await renderResourceTemplate(argv.file, {}, undefined);
 
     debug('Resource Spec:')
     debug(resourceSpec);

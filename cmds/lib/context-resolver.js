@@ -2,25 +2,21 @@ const gestalt = require('./gestalt');
 const gestaltContext = require('./gestalt-context');
 const { debug } = require('./debug');
 const selectHierarchy = require('../lib/selectHierarchy');
-const util = require('./util');
+const chalk = require('./chalk');
 
 //TODO: Move 'requireArg' functions to separate library
 
 module.exports = {
     resolveProvider,
     resolveProviderByPath,
+    resolveProviderInfoByPath,
     resolveResourceByPath,
     resolveContextFromResourcePath,
     resolveOrg,
     resolveWorkspace,
     resolveEnvironment,
-    resolveEnvironmentApi,
-    resolveEnvironmentContainer,
-    resolveEnvironmentLambda,
-    resolveEnvironmentPolicy,
-    lookupEnvironmentResourcebyName,
+    lookupEnvironmentResource,
     resolveContextPath,
-    requireArgs,
     getContextFromPathOrPrompt
 };
 
@@ -41,31 +37,12 @@ async function getContextFromPathOrPrompt(argv /*TODO: ,scope='any'*/) {
     return context;
 }
 
-function requireArgs(argv, requiredArgs) {
-    for (let s of requiredArgs) {
-        if (!argv[s]) throw Error(`Missing --${s} property`);
-    }
-}
-
-function requireOrgArg(argv, context) {
-    // Check if org property is required
-    if (argv.org) {
-        context.org = { fqon: argv.org };
-    } else {
-        if (!context.org || !context.org.fqon) {
-            throw Error('Missing --org property, not found in current context');
-        }
-    }
-    // console.log(`Using '${context.org.fqon}' org.`)
-}
-
-async function resolveOrgContextByName(context, name) {
+async function resolveOrgContextByName(name) {
     const orgs = await gestalt.fetchOrgFqons();
     const fqon = orgs.find(i => i === name);
 
     if (fqon) {
         return {
-            ...context,
             org: { fqon },
         };
     }
@@ -125,7 +102,8 @@ async function resolveContextPath(path) {
     let context = {};
 
     if (orgName) {
-        context = await resolveOrgContextByName(context, orgName);
+        // context = await resolveOrgContextByName(orgName);
+        context = { org: { fqon: orgName } }
         if (workspaceName) {
             context = await resolveWorkspaceContextByName(context, workspaceName);
             if (environmentName) {
@@ -161,9 +139,12 @@ async function resolveProviderByPath(providerPath) {
 
     debug('context: ' + context);
 
-    const providerPathCache = resourcePathCache['providers'];
-    const cachedProviders = providerPathCache[contextPath];
-    if (cachedProviders) {
+    // const providerPathCache = resourcePathCache['providers'];
+    //    const cachedProviders = providerPathCache[contextPath];
+    const cachedProviders = gestaltContext.getResourceIdCache(contextPath);
+
+    // if (cachedProviders) {
+    if (Object.keys(cachedProviders).length > 0) {
         const provider = cachedProviders.find(p => p.name == providerName);
 
         debug(`Returning cached provider value for path '${providerPath}'`);
@@ -172,12 +153,63 @@ async function resolveProviderByPath(providerPath) {
         const providers = await gestalt.fetchProviders(context);
 
         // Save to cache
-        providerPathCache[contextPath] = providers;
+        // providerPathCache[contextPath] = providers;
+        gestaltContext.saveResourceIdCache(contextPath, providers);
+
 
         debug('providers: ' + providers)
         const provider = providers.find(p => p.name == providerName);
         return provider;
         // throw Error(`Could not resolve provider for path '${providerPath}'`);
+    }
+}
+
+/**
+ * Returns provider info { name, id }
+ * @param {*} providerPath 
+ */
+async function resolveProviderInfoByPath(providerPath) {
+
+    const pathElements = providerPath.split('/');
+
+    debug(pathElements);
+
+    const providerName = pathElements.pop();
+
+    debug(pathElements);
+
+    debug('providerName: ' + providerName);
+
+    const contextPath = pathElements.join('/')
+    const context = await resolveContextPath(contextPath);
+
+    debug('context: ' + context);
+
+    // const providerPathCache = resourcePathCache['providers'];
+    //    const cachedProviders = providerPathCache[contextPath];
+    const cachedProviders = gestaltContext.getResourceIdCache('providersInfo');
+
+    // if (cachedProviders) {
+    if (cachedProviders[providerPath]) {
+        console.error(chalk.dim.blue(`Returning cached provider value for path '${providerPath}'`));
+        return cachedProviders[providerPath];
+    } else {
+        const providers = await gestalt.fetchProviders(context);
+
+        const providersInfo = {}
+        for (let p of providers) {
+            console.error(chalk.dim.blue(`Will cache provider for path '${contextPath + '/' + p.name}'`));
+            providersInfo[contextPath + '/' + p.name] = {
+                id: p.id,
+                name: p.name,
+            };
+        }
+
+        // Save to cache
+        // providerPathCache[contextPath] = providers;
+        gestaltContext.saveResourceIdCache('providersInfo', providersInfo);
+
+        return providersInfo[providerPath]
     }
 }
 
@@ -203,9 +235,11 @@ async function resolveContextFromResourcePath(resourcePath) {
     return context;
 }
 
-async function resolveProvider(argv, providedContext, optionalType, param = 'provider') {
+async function resolveProvider(name, providedContext, optionalType) {
+
+    console.error(chalk.dim.blue(`Resolving provider '${name}'`));
+
     const context = providedContext || gestalt.getContext();
-    const name = argv[param];
 
     // Check if workspace property is required
     if (name) {
@@ -214,7 +248,7 @@ async function resolveProvider(argv, providedContext, optionalType, param = 'pro
 
         // first, look in cache
         if (cache[name]) {
-            console.log(`Using cached id for provider ${name}`);
+            console.error(chalk.dim.blue(`Using cached id for provider ${name}`));
             return {
                 id: cache[name],
                 name: name
@@ -240,16 +274,16 @@ async function resolveProvider(argv, providedContext, optionalType, param = 'pro
         }
         throw Error(`Could not find provider with name '${name}'`);
     } else {
-        throw Error(`Missing --${param} property`);
+        throw Error(`Missing name property`);
     }
 }
 
 /**
  * Finds a resource by path
- * @param {*} resourcePath a path defined by '/<org>/<workspace>/<environment>/<resource>'
  * @param {*} resourceType 'provider', 'lambda', etc
+ * @param {*} resourcePath a path defined by '/<org>/<workspace>/<environment>/<resource>'
  */
-async function resolveResourceByPath(resourcePath, resourceType) {
+async function resolveResourceByPath(resourceType, resourcePath) {
     const pathElements = resourcePath.split('/');
 
     debug(pathElements);
@@ -288,83 +322,42 @@ async function resolveResourceByPath(resourcePath, resourceType) {
     }
 }
 
-async function resolveOrg(argv) {
+async function resolveOrg() {
     const context = gestalt.getContext();
-    await requireOrgArg(argv, context);
-
+    if (!context.org) throw Error('missing context.org');
+    if (!context.org.fqon) throw Error('missing context.org.fqon');
     return context;
 }
 
-async function resolveWorkspace(argv) {
+async function resolveWorkspace() {
     const context = gestalt.getContext();
-    await requireOrgArg(argv, context);
-    await requireWorkspaceArg(argv, context);
-
+    if (!context.org) throw Error('missing context.org');
+    if (!context.org.fqon) throw Error('missing context.org.fqon');
+    if (!context.workspace) throw Error('missing context.workspace');
+    if (!context.workspace.id) throw Error('missing context.workspace.id');
+    if (!context.workspace.name) throw Error('missing context.workspace.name');
     return context;
 }
 
-async function resolveEnvironment(argv, optionalContext) {
-    const context = optionalContext || gestalt.getContext();
-    await requireOrgArg(argv, context);
-    await requireWorkspaceArg(argv, context);
-    await requireEnvironmentArg(argv, context);
-
-    return context;
-}
-
-async function resolveEnvironmentApi(argv) {
+async function resolveEnvironment() {
     const context = gestalt.getContext();
-    await requireOrgArg(argv, context);
-    await requireWorkspaceArg(argv, context);
-    await requireEnvironmentArg(argv, context);
-    await requireEnvironmentApiArg(argv, context);
-
+    if (!context.org) throw Error('missing context.org');
+    if (!context.org.fqon) throw Error('missing context.org.fqon');
+    if (!context.workspace) throw Error('missing context.workspace');
+    if (!context.workspace.id) throw Error('missing context.workspace.id');
+    if (!context.workspace.name) throw Error('missing context.workspace.name');
+    if (!context.environment) throw Error('missing context.environment');
+    if (!context.environment.id) throw Error('missing context.environment.id');
+    if (!context.environment.name) throw Error('missing context.environment.name');
     return context;
 }
 
-async function resolveEnvironmentPolicy(context, name) {
+async function lookupEnvironmentResource(type, name, context) {
 
-    if (!context) throw Error('Missing context');
-    if (!name) throw Error('Missing policy name');
+    if (!type) throw Error('missing resource type');
+    if (!name) throw Error('missing resource name');
+    if (!context) throw Error('missing context');
 
-    // Clone first as not to mutate
-    context = util.cloneObject(context);
-    context['policy'] = {};
-    const resources = await gestalt.fetchEnvironmentPolicies(context);
-    for (let res of resources) {
-        if (res.name == name) {
-            context['policy'] = {
-                id: res.id,
-                name: res.name
-            };
-            break;
-        }
-    }
-    if (!context.policy.id) throw Error(`Could not find policy with name '${name}'`);
-    return context;
-}
-
-async function resolveEnvironmentContainer(argv) {
-    const context = gestalt.getContext();
-    await requireOrgArg(argv, context);
-    await requireWorkspaceArg(argv, context);
-    await requireEnvironmentArg(argv, context);
-    await requireEnvironmentContainerArg(argv, context);
-
-    return context;
-}
-
-async function resolveEnvironmentLambda(argv) {
-    const context = gestalt.getContext();
-    await requireOrgArg(argv, context);
-    await requireWorkspaceArg(argv, context);
-    await requireEnvironmentArg(argv, context);
-    await requireEnvironmentLambdaArg(argv, context);
-
-    return context;
-}
-
-async function lookupEnvironmentResourcebyName(name, type, context) {
     const resources = await gestalt.fetchEnvironmentResources(type, context);
     for (let res of resources) {
         if (name == res.name) {
@@ -376,111 +369,4 @@ async function lookupEnvironmentResourcebyName(name, type, context) {
     }
 
     throw Error(`Environment '${type}' resource with name '${name}' not found`);
-}
-
-async function requireWorkspaceArg(argv, context) {
-    // Check if workspace property is required
-    if (argv.workspace) {
-        context.workspace = {};
-
-        // Look up ID by name
-        const orgWorkspaces = await gestalt.fetchOrgWorkspaces([context.org.fqon]);
-        for (let ws of orgWorkspaces) {
-            if (ws.name == argv.workspace) {
-                // found it
-                context.workspace = {
-                    id: ws.id,
-                    name: ws.name
-                };
-                break;
-            }
-        }
-        if (!context.workspace.id) throw Error(`Could not find workspace with name '${argv.workspace}'`);
-    } else {
-        if (!context.workspace || !context.workspace.id) {
-            throw Error('Missing --workspace property, not found in current context');
-        }
-    }
-}
-
-async function requireEnvironmentArg(argv, context) {
-    // Check if environment property is required
-    if (argv.environment) {
-        context.environment = {};
-
-        // Look up ID by name
-        const envs = await gestalt.fetchWorkspaceEnvironments(context);
-        for (let env of envs) {
-            if (env.name == argv.environment) {
-                // found it
-                context.environment = {
-                    id: env.id,
-                    name: env.name
-                };
-                break;
-            }
-        }
-        if (!context.environment.id) throw Error(`Could not find environment with name '${argv.environment}'`);
-    } else {
-        if (!context.environment || !context.environment.id) {
-            throw Error('Missing --environment property, not found in current context');
-        }
-    }
-}
-
-async function requireEnvironmentApiArg(argv, context) {
-    if (argv.api) {
-        context.api = {};
-        const resources = await gestalt.fetchEnvironmentApis(context);
-        for (let res of resources) {
-            if (res.name == argv.api) {
-                context.api = {
-                    id: res.id,
-                    name: res.name
-                };
-                break;
-            }
-        }
-        if (!context.api.id) throw Error(`Could not find api with name '${argv.api}'`);
-    } else {
-        throw Error('Missing --api property');
-    }
-}
-
-async function requireEnvironmentContainerArg(argv, context) {
-    if (argv.container) {
-        context.container = {};
-        const resources = await gestalt.fetchContainers(context);
-        for (let res of resources) {
-            if (res.name == argv.container) {
-                context.container = {
-                    id: res.id,
-                    name: res.name
-                };
-                break;
-            }
-        }
-        if (!context.container.id) throw Error(`Could not find container with name '${argv.container}'`);
-    } else {
-        throw Error('Missing --container property');
-    }
-}
-
-async function requireEnvironmentLambdaArg(argv, context) {
-    if (argv.lambda) {
-        context.lambda = {};
-        const resources = await gestalt.fetchEnvironmentLambdas(context);
-        for (let res of resources) {
-            if (res.name == argv.lambda) {
-                context.lambda = {
-                    id: res.id,
-                    name: res.name
-                };
-                break;
-            }
-        }
-        if (!context.lambda.id) throw Error(`Could not find lambda with name '${argv.lambda}'`);
-    } else {
-        throw Error('Missing --lambda property');
-    }
 }

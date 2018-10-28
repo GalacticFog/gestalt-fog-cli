@@ -19,7 +19,7 @@ exports.handler = cmd.handler(async function (argv) {
     if (argv.policy_name) {
         // Command mode
 
-        const context = await cmd.resolveEnvironment(argv, gestalt.getContext());
+        const context = await cmd.resolveEnvironment();
 
         const policy = await gestalt.fetchPolicy({ name: argv.policy_name }, context);
 
