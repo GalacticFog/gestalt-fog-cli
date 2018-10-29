@@ -172,7 +172,11 @@ async function resolveLambda(path, param = 'id') {
 
 async function resolveConfig(key) {
     if (state.config[key]) {
+        debug(`Using '${key}' from configuration object`);
         return state.config[key];
+    } else if (process.env[key]) {
+        debug(`Using '${key}' from environment variable`);
+        return process.env[key];
     }
     throw Error(`Unable to resolve configuration for key '${key}'`);
 }
