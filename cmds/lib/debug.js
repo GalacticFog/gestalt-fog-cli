@@ -4,9 +4,9 @@ function debug(message, ...optionalParams) {
   if (global.fog.debug) {
     if (typeof message == 'object') {
       const str = JSON.stringify(message, null, 2);
-      console.error(chalk.gray(str, optionalParams));
+      console.error(chalk.dim(str, optionalParams));
     } else {
-      console.error(chalk.gray(message, optionalParams));
+      console.error(chalk.dim(message, optionalParams));
     }
   }
 }
