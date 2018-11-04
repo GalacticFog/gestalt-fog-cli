@@ -1,23 +1,26 @@
 const gestalt = require('../lib/gestalt')
 const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
-exports.command = 'workspaces'
+const gestaltContext = require('../lib/gestalt-context');
+exports.command = 'workspaces [context_path]'
 exports.desc = 'List workspaces'
 exports.builder = {
-    all: {
-        description: 'Display workspaces in all orgs'
+    raw: {
+        description: 'Show in raw JSON format'
     }
 }
 exports.handler = cmd.handler(async function (argv) {
-    if (argv.all) {
-        console.log('Showing all workspaces...');
-        let fqons = await gestalt.fetchOrgFqons();
-        let resources = await gestalt.fetchOrgWorkspaces(fqons);
-        ui.displayResources(resources, argv);
-    } else {
-        const context = await ui.resolveOrg(false);
-        const fqon = context.org.fqon;
-        const resources = await gestalt.fetchOrgWorkspaces([fqon]);
+
+    const context = argv.context_path ? await cmd.resolveContextPath(argv.context_path) : gestaltContext.getContext();
+
+    if (context.org) {
+        const resources = await gestalt.fetchOrgWorkspaces([context.org.fqon]);
         ui.displayResources(resources, argv, context);
+    } else {
+        const fqons = await gestalt.fetchOrgFqons();
+        for (let fqon of fqons) {
+            const resources = await gestalt.fetchOrgWorkspaces([fqon]);
+            ui.displayResources(resources, argv, { org: { fqon: fqon } });
+        }
     }
 });

@@ -3,13 +3,13 @@ const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 const yaml = require('js-yaml');
 
-exports.command = 'entitlement-actions'
-exports.desc = 'Show entitlement actions'
+exports.command = 'list-entitlements [context_path]'
+exports.desc = 'List entitlement actions at the specified context'
 exports.builder = {}
 
 exports.handler = cmd.handler(async function (argv) {
 
-    const context = await cmd.getContextFromPathOrPrompt(argv);
+    const context = await cmd.getContextFromPathOrPrompt(argv.context_path);
 
     console.error(ui.getContextString(context));
     console.error();

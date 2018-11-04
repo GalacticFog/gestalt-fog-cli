@@ -2,13 +2,15 @@ const {
     getGestaltContext
 } = require('./generic');
 
+const { fetchPolicy } = require('./policy');
+
 const meta = require('./metaclient');
 
 
 exports.fetchPolicyRules = async (policySpec, context) => {
     let id = policySpec.id;
     if (!id) {
-        const policy = await this.fetchPolicy(context, policySpec);
+        const policy = await fetchPolicy(policySpec, context);
         id = policy.id;
     }
     return meta.GET(`/${context.org.fqon}/policies/${id}/rules?expand=true`);
@@ -18,7 +20,7 @@ exports.fetchPolicyRules = async (policySpec, context) => {
 exports.createPolicyRule = (spec, providedContext) => {
     if (!spec) throw Error('missing spec');
     if (!spec.name) throw Error('missing spec.name');
-    
+
     // TODO: Other required parameters
 
     const context = providedContext || getGestaltContext();

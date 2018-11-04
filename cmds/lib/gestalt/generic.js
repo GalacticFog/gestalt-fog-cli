@@ -45,7 +45,7 @@ function fetchOrgResources(type, fqonList, type2) {
     if (!fqonList) throw Error('missing fqonList')
 
     let promises = fqonList.map(fqon => {
-        console.error(chalk.dim.blue(`Fetching ${type} from ${fqon}...`));
+        debug(chalk.dim.blue(`Fetching ${type} from ${fqon}...`));
         let url = `/${fqon}/${type}?expand=true`;
         if (type2) url += `&type=${type2}`;
         const res = meta.GET(url);
@@ -53,7 +53,8 @@ function fetchOrgResources(type, fqonList, type2) {
     });
 
     return Promise.all(promises).then(results => {
-        return [].concat.apply([], results);
+        const result = [].concat.apply([], results);
+        return result.sort();
     });
 }
 
@@ -76,7 +77,7 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
 
     const envs = await fetchOrgResources("environments", [fqon]);
     const promises = envs.map(env => {
-        console.error(chalk.dim.blue(`Fetching ${type} from ${fqon}/'${env.name}'...`));
+        debug(chalk.dim.blue(`Fetching ${type} from ${fqon}/'${env.name}'...`));
         const context2 = {
             org: {
                 fqon: fqon

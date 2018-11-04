@@ -6,7 +6,8 @@ const meta = require('./metaclient');
 
 exports.fetchOrgFqons = () => {
     return meta.GET('/orgs?expand=true').then(res => {
-        return res.map(item => item.properties.fqon).sort();
+        const fqons = res.map(item => item.properties.fqon);
+        return fqons.sort();
     });
 }
 

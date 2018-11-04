@@ -11,11 +11,14 @@ module.exports = {
 function buildCommand(type) {
 
     const command = {
-        command: type,
+        command: type + ' [context_path]',
         description: `Show ${type}`,
         builder: {
             raw: {
                 description: 'Show in raw JSON format'
+            },
+            'context_path': {
+                description: "Specify the context path (/<org>/<workspace>/<environment>)"
             }
         },
         handler: cmd.handler(getHandler(type))
@@ -35,56 +38,74 @@ function getHandler(type) {
 
         let context = null;
 
-        if (argv.path) {
-            context = await cmd.resolveContextPath(argv.path);
+        if (argv.context_path) {
+            context = await cmd.resolveContextPath(argv.context_path);
         } else {
             context = gestaltContext.getContext();
 
-            if (!context.environment || !context.environment.id) {
-                // No arguments, allow choosing interatively
-                context = await selectHierarchy.chooseContext({ includeNoSelection: true });
-            }
-        }
-
-        if (argv.org) {
-            showOrgResources(argv);
-            return;
-        }
-
-        if (context) {
-            console.error(ui.getContextString(context));
-            console.error();
-
-            let resources = [];
-            if (argv.name) {
-                const res = await gestalt.fetchResource(type, { name: argv.name }, context);
-                if (res) {
-                    resources.push(res);
+            const config = gestaltContext.getConfig();
+            if (config['interactive'] == 'true') {
+                if (!context.environment || !context.environment.id) {
+                    // No arguments, allow choosing interatively
+                    console.error("No context configured, choose a context.")
+                    context = await selectHierarchy.chooseContext({ includeNoSelection: true });
                 }
-            } else {
-                resources = await gestalt.fetchEnvironmentResources(type, context);
             }
+        }
 
-            ui.displayResources(resources, argv, context);
+        if (context.environment) {
+            doShowEnvironmentResources(type, context, argv);
+        } else if (context.workspace) {
+            doShowWorkspaceResources(type, context, argv);
+        } else if (context.org) {
+            doShowOrgResources(type, context, argv);
+        } else if (argv.context_path == '/') {
+            doShowAllResources(type, argv);
+        } else {
+            throw Error('No context specified');
         }
     }
 
-    async function showResources(argv) {
-        const context = await ui.resolveEnvironment(false);
-        const resources = await gestalt.fetchEnvironmentResources(type, context);
-        ui.displayResources(resources, argv, context);
-    }
-
-    async function showAllResources(argv) {
+    async function doShowAllResources(type, argv) {
         const fqons = await gestalt.fetchOrgFqons();
-        let resources = await gestalt.fetchOrgResources(type, fqons);
-        ui.displayResources(resources, argv);
+        for (let fqon of fqons) {
+            doShowOrgResources(type, { org: { fqon: fqon } }, argv);
+        }
     }
 
-    async function showOrgResources(argv) {
-        const context = await ui.resolveOrg(false);
-        const fqon = context.org.fqon;
-        const resources = await gestalt.fetchOrgResources(type, [fqon]);
+    async function doShowOrgResources(type, context, argv) {
+        const workspaces = await gestalt.fetchOrgWorkspaces([context.org.fqon]);
+        for (let ws of workspaces) {
+
+            const wsContext = {
+                ...context,
+                workspace: {
+                    id: ws.id,
+                    name: ws.name
+                }
+            }
+
+            doShowWorkspaceResources(type, wsContext, argv);
+        }
+    }
+
+    async function doShowWorkspaceResources(type, context, argv) {
+        const environments = await gestalt.fetchWorkspaceEnvironments(context);
+        for (let e of environments) {
+            const envContext = {
+                ...context,
+                environment: {
+                    id: e.id,
+                    name: e.name
+                }
+            }
+
+            doShowEnvironmentResources(type, envContext, argv);
+        }
+    }
+
+    async function doShowEnvironmentResources(type, context, argv) {
+        const resources = await gestalt.fetchEnvironmentResources(type, context);
         ui.displayResources(resources, argv, context);
     }
 }

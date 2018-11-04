@@ -12,9 +12,11 @@ exports.builder = {
         description: 'Entitlements definition file',
     },
     group: {
-        description: 'Entitlements definition file',
-
+        description: 'Group to apply entitlements to',
     },
+    // TODO: user: {
+    //     description: 'User to apply entitlements to',
+    // },
     path: {
         description: 'Context path to apply entitlements to',
     },
@@ -116,11 +118,12 @@ exports.handler = cmd.handler(async function (argv) {
 
     // Apply actions
     if (argv['dry-run']) {
-        console.error(`Skipping update due to dry run`);
+        console.error(`Skipping update due to --dry-run`);
     } else {
         for (let e of entitlementsToUpdate) {
             console.log('Updating entitlement ' + e.properties.action);
             const resp = await gestalt.updateEntitlement(context, e);
+            debug(resp);
         }
     }
 

@@ -3,7 +3,11 @@ const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 exports.command = 'orgs'
 exports.desc = 'List orgs'
-exports.builder = {}
+exports.builder = {
+    raw: {
+        description: 'Show in raw JSON format'
+    }
+}
 exports.handler = cmd.handler(async function (argv) {
 
     const resources = await gestalt.fetchOrgs();
@@ -11,5 +15,5 @@ exports.handler = cmd.handler(async function (argv) {
         r.fqon = r.properties.fqon; // for sorting
     })
 
-    ui.displayResources(resources, argv);
+    ui.displayResources(resources, argv, {});
 });

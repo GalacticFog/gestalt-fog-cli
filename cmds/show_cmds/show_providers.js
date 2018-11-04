@@ -1,7 +1,8 @@
 const gestalt = require('../lib/gestalt')
 const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
-exports.command = 'providers'
+const gestaltContext = require('../lib/gestalt-context');
+exports.command = 'providers [context_path]'
 exports.desc = 'List providers'
 exports.builder = {
     type: {
@@ -10,30 +11,15 @@ exports.builder = {
     },
     raw: {
         description: "Raw JSON output"
-    },
-    path: {
-        description: "Specify the context path (/<org>/<workspace>/<environment>)"
     }
-
 }
 exports.handler = cmd.handler(async function (argv) {
-    let context = null;
-
-    if (argv.path) {
-        context = await cmd.resolveContextPath(argv.path);
-    } else {
-        context = gestalt.getContext();
-    }
+    const context = argv.context_path ? await cmd.resolveContextPath(argv.context_path) : gestaltContext.getContext();
 
     if (!context.org) {
-        context = await ui.resolveOrg();
+        context.org = { fqon: 'root' };
     }
 
     const resources = await gestalt.fetchProviders(context, argv.type);
-
-    if (argv.raw) {
-        console.log(JSON.stringify(resources, null, 2));
-    } else {
-        ui.displayResources(resources, argv, context);
-    }
+    ui.displayResources(resources, argv, context);
 });

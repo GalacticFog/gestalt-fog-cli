@@ -20,10 +20,10 @@ module.exports = {
     getContextFromPathOrPrompt
 };
 
-async function getContextFromPathOrPrompt(argv /*TODO: ,scope='any'*/) {
+async function getContextFromPathOrPrompt(path /*TODO: ,scope='any'*/) {
     let context = null;
-    if (argv.path) {
-        context = await resolveContextPath(argv.path);
+    if (path) {
+        context = await resolveContextPath(path);
     } else {
         // Load from state
         context = gestalt.getContext();

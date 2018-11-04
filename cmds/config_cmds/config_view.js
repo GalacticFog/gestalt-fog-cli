@@ -15,5 +15,6 @@ exports.handler = cmd.handler(async function (argv) {
     console.log(`
     debug: (true|false) Enables or disables debug mode
     color: (true|false) Enables or disables colors
+    interactive: (true|false) Enables / disables interactive prompting
     `);
 });
