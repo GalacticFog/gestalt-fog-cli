@@ -1,6 +1,5 @@
 const cmd = require('../lib/cmd-base');
 const gestalt = require('../lib/gestalt')
-const chalk = require('../lib/chalk')
 exports.command = 'group-members';
 exports.desc = 'List group members';
 exports.builder = {};
@@ -18,15 +17,20 @@ exports.handler = cmd.handler(async function (argv) {
 
     resources = sortBy(resources, 'name');
 
-    console.log();
+    const model = {};
     for (let group of resources) {
-        group.properties.users = sortBy(group.properties.users, 'name');
+        model[group.name] = group.properties.users.map(u => u.name);
+    }
 
-        console.log(chalk.underline(group.name));
-        console.log();
-        for (let user of group.properties.users) {
-            console.log("    " + user.name);
+    if (argv.raw) {
+        console.log(JSON.stringify(model, null, 2));
+    } else {
+        for (let key of Object.keys(model)) {
+            console.log(key + ":");
+            for (let user of model[key]) {
+                console.log(` - ${user}`);
+            }
+            console.log();
         }
-        console.log();
     }
 });

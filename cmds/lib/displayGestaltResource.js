@@ -163,10 +163,15 @@ function displayUsers(resources, opts, context) {
 function displayGroups(resources, opts, context) {
     const options = {
         message: getContextMessage('Groups', context),
-        headers: ['Group', 'ID', 'Description', 'Org', 'Owner' /*'Created'*/],
-        fields: ['name', 'id', 'description', 'org.properties.fqon', 'owner.name' /*'created.timestamp'*/],
+        headers: ['Group', 'ID', 'Description', 'Org', 'Owner', 'Users', 'ID'],
+        fields: ['name', 'id', 'description', 'org.properties.fqon', 'owner.name', 'properties.num_users', 'id'],
         sortField: 'name',
     }
+    resources = util.cloneObject(resources);
+    resources.map(r => {
+        r.properties.num_users = String(r.properties.users.length);
+    });
+
     displayResource(Object.assign(options, opts), resources);
 }
 
