@@ -8,22 +8,25 @@ Client utility for Gestalt Platform (similar to `kubectl` for Kubernetes and `dc
 fog <command>
 
 Commands:
-  fog bash-completion      Show Bash Completion Script
-  fog clone <resource>     Clone resources of specified type
-  fog create <resource>    Creates resources of specified type (APIs, Containers, Lambdas, Streams, etc)
-  fog delete <resource>    Delete resources of specified type
-  fog describe <resource>  Describes resources of specified type
-  fog export <resource>    Exports resources of specified type
-  fog ext <command>        External commands
-  fog import <resource>    Imports resources of specified type
-  fog login                Log in to Gestalt Platform Instance
-  fog logout               Logout of Gestalt Platform Instance
-  fog reset-context        Reset context
-  fog restart <resource>   Restart resources of specified type
-  fog scale <resource>     Scale resources of specified type
-  fog show <resource>      Gets resources of specified type
-  fog status               Show Status
-  fog switch <resource>    Switch to resource of specified type
+  fog admin <command>       Admin commands
+  fog clone <command>       Clone resources of specified type
+  fog completion <command>  Shell completion commands
+  fog config <command>      Config commands
+  fog context <command>     Context commands
+  fog create <command>      Creates resources of specified type
+  fog delete <command>      Delete resources of specified type
+  fog export <command>      Exports resources of specified type
+  fog login                 Log in to Gestalt Platform Instance
+  fog logout                Logout of Gestalt Platform Instance
+  fog meta <command>        Gestalt Meta functions
+  fog migrate <command>     Migrate resources of specified type
+  fog promote <command>     Promote resources of specified type
+  fog restart <command>     Restart resources of specified type
+  fog scale <command>       Scale resources of specified type
+  fog security <command>    Gestalt Security functions
+  fog service <command>     service resources of specified type
+  fog show <command>        Gets resources of specified type
+  fog status                Show Status
 
 Options:
   --version  Show version number                                       [boolean]
@@ -57,7 +60,16 @@ cp ./target/macos/fog /usr/local/bin/fog
 
 ## Set up Bash Completion
 ```sh
-fog bash-completion >> ~/.bashrc
+fog completion bash >> ~/.bashrc
+
+# Log out of your shell, and re-login
+
+fog <tab, tab>                       # Autocomplete
+
+fog show <tab, tab>                  # Autocomplete the command
+
+fog create resource --f<tab, tab>    # Autocomplete the command flag
+
 ```
 
 ## Login to Gestalt Platform
@@ -75,176 +87,217 @@ fog --help
 fog [command] --help
 ```
 
-## Tab autocompletion
+## Working with Context
 ```sh
-fog <tab, tab>
-fog [command] <tab, tab>
-```
+fog show hierarchy --raw                   # Show all context paths
 
+fog context set /sandbox/                  # Set context to a specific org
 
-# Commands
-```
-# Create
-  fog create api-endpoint  Create API Endpoint
-  fog create api           Create API
-  fog create container     Create container
-  fog create environment   Create environment
-  fog create lambda        Create lambda
-  fog create org           Create org
-  fog create workspace     Create workspace
+fog context set /sandbox/dev-sandbox       # Set context to a specific workspace
 
-# Delete
-  fog delete containers  Delete containers
-  fog delete lambdas     Delete lambdas  fog describe <resource>  Describes resources of specified type
+fog context set /sandbox/dev-sandbox/dev   # Set context to a specific environment
 
-# Import / Export
-  fog export environment  Export environment
-  fog export root         Export root
-  fog import lambda
+fog context set                            # Select the context interactively
 
-# Login / Logout
-  fog login
-  fog logout
-
-# Container actions
-  fog clone containers
-  fog restart containers
-  fog scale container
-
-# Show commands
-  fog show api-endpoints             List API endpoints
-  fog show apis                      List APIs
-  fog show containers                List containers
-  fog show environment-entitlements  Show environment entitlements
-  fog show environments              List enviornments
-  fog show group-members             List group members
-  fog show groups                    List groups
-  fog show lambdas                   List lambdas
-  fog show org-entitlements          Show org entitlements
-  fog show orgs                      List orgs
-  fog show providers                 List providers
-  fog show users                     List users
-  fog show workspace-entitlements    Show workspace entitlements
-  fog show workspaces                List workspaces
-
-# Show commands
-  fog service deploy                 Deploy a service.yml config
-  fog service package                Package a service.yml config
-
-# Show status  
-  fog status               
-
-# Switch commands
-  fog switch environment  Change environment
-  fog switch org          Change org
-  fog switch workspace    Change workspace
-
-# Reset context
-  fog reset-context
-
-# Extension commands
-  fog ext configure-gitlab-project          Configure Gitlab project
-  fog ext configure                         Configure
-  fog ext container-volumes                 Container volumes
-  fog ext deploy-from-docker-compose        Deploy from Docker Compose file
-  fog ext elb-port-mappings                 ELB Port Mappings
-  fog ext kube-container-console            Container Console (Kubernetes)
-  fog ext kube-container-logs               Container logs (Kubernetes)
-  fog ext kubectl                           kubectl
-
-# Bash completion script
-  fog bash-completion      Show Bash Completion Script
+fog status                                 # Show the current context
 
 ```
 
-## Command Examples (Non-Interactive Commands)
 
-### Create Org
+## Showing resources
 ```sh
-fog create org --name 'example' --description 'Example Organization' --org root
+fog show orgs                                   # Show orgs
+
+fog show workspaces /                           # Show all workspaces
+
+fog show environments /                         # Show all environments
+
+fog show hierarchy                              # Show all context paths (Orgs, Workspaces, Environments)
+
+fog show providers /root                        # Show providers in /root
+
+fog show providers --type CaaS                  # Show filtered list of providers
+
+fog show lambdas                                # Show lambdas in the current context
+
+fog show lambdas /                              # Show all lambdas
+
+fog show containers                             # Show in the current context
+
+fog show conatiners /                           # Show all
+
+fog show containers /root                       # Show in the specified org
+
+fog show containers /root/dev-sandbox           # Show in the specified workspace
+
+fog show containers /root/dev-sandbox/dev       # Show from a specific environment
+
+fog show --help  # Show other available resource types (policies, datafeeds, secrets, users, groups, etc)
+
 ```
 
-### Create Workspace
-```sh
-fog create workspace --org 'example' --name 'example' --description 'Example Workspace'
+## Creating resources
+```
+fog create resource -f example.yaml
+
+fog create resource -f example.yaml --name 'override-the-name' --description 'Override the description'
+
+fog create resource -f example.yaml --context /root/dev-sandbox/dev
+
+fog create resource -f example.yaml --provider 'default-kubernetes'
+
+fog create resource -f example.yaml --render-only
+
 ```
 
-### Create Environment
 
+## Enabling / Disabling debug
 ```sh
-fog create environment --org 'example' --workspace 'example' --name 'dev' --description 'Development' --type development
+fog config set debug=true
+
+fog config unset debug
+
+fog config view
 ```
 
-### Create API
+## Container actions
 ```sh
-fog create api --org 'example' --workspace 'example' --environment 'dev' --provider 'default-kong' --name 'test-api' --description 'Test API'
-```
+fog create resource -f nginx-container-spec.json --name nginx --description 'My NGINX container'
 
-### Create Container from Template File
-```sh
-fog create container -f container_template.json --org example --workspace example --environment dev --provider default-kubernetes
-```
+fog scale container 'nginx' 3
 
-### Create API Endpoint for Container
-```sh
-fog create api-endpoint --name '/one' --description 'asdf' --org 'example' --workspace 'example' --environment 'dev' --api 'test-api' --provider 'default-kong' --container 'test' --port-name 'web' --methods 'GET,POST'
-```
+fog migrate container 'nginx' /root/default-kubernetes
 
-### Create Lambda from Template File
-```sh
-```
+fog promote container 'nginx' prod
 
-### Create API Endpoint for Lambda
-```sh
-```
+fog delete container 'nginx'
 
-### Show Containers in Current Environment
-```sh
-fog show containers
-```
-### Show Containers in the Current Org
-```sh
-fog show containers --org
-```
-### Show All Containers 
-```sh
-fog show containers --all
-```
+# Interactive commands
 
-### Show Lambdas
-```sh
-fog show lambdas
-```
-
-fog show lambdas --org
-fog show lambdas --all
-fog show lambdas --raw
-
-
-
-## Command Examples (Interactive)
-```sh
-# Show commands
-
-
-# Describe single resource commands
-
-fog describe container
-
-fog describe lambda
-fog describe lambda --fqon engineering --id c01c2296-ce76-4d41-8530-53ceb257133a
-
-# Change current context
-
-fog switch org
-fog switch workspace
-fog switch environment
-
-
-# Container actions
-
-fog scale container
-fog restart containers
 fog clone containers
 
+fog migrate containers
+
+fog promote containers
+
+fog delete containers
+
+```
+
+# Commands List
+```
+fog admin <command>
+  fog admin apply-entitlements              Apply entitlements from file
+  fog admin create-account-store [file]     Create Account Store
+  fog admin create-directory [file]         Create LDAP directory
+  fog admin delete-directory [name]         Delete LDAP directory
+  fog admin generate-api-key                Generate Gestalt Security API key
+  fog admin list-entitlements               List entitlement actions at the
+  fog admin show-account-stores [org]       Show account stores
+  fog admin show-directories [org]          Show LDAP directories
+  fog admin show-directory-accounts [name]  Show LDAP directories
+  fog admin show-directory-groups [name]    Show LDAP directories
+  fog admin show-groups [org]               Show groups
+  fog admin update-license [file]           Update Gestalt license
+
+fog bash-completion     Show Bash Completion Script
+
+fog clone <command>
+  fog clone containers  Clone containers
+
+fog completion <command>  Shell completion commands
+  fog completion bash  Show Bash Completion Script
+
+fog config <command>
+  fog config set [args...]    Set config
+  fog config unset [args...]  Unset config
+  fog config view             view config
+
+fog context <command>
+  fog context get-browser-url [path]  get-browser-url
+  fog context reset                   Reset context
+  fog context select-environment      Change environment
+  fog context select-org              Change org
+  fog context select-workspace        Change workspace
+  fog context set [path]              Set context
+
+fog create <command>
+  fog create api-endpoint [name]   Create API Endpoint
+  fog create api [name]            Create API
+  fog create container [name]      Create container
+  fog create environment [name]    Create environment
+  fog create lambda [name]         Create lambda
+  fog create org [name]            Create org
+  fog create policy-rule           Create policy rule
+  fog create resource [name]       Create resource
+  fog create resources [files...]  Create resources
+  fog create workspace [name]      Create workspace
+
+fog delete <command>
+  fog delete container [container_name]  Delete container
+  fog delete containers                  Delete containers
+  fog delete lambda [lambda_name]        Delete lambda
+  fog delete lambdas                     Delete lambdas
+  fog delete policy [policy_name]        Delete policy
+
+fog export <command>
+  fog export environment  Export environment
+  fog export root         Export root
+
+fog login               Log in to Gestalt Platform Instance
+
+fog logout              Logout of Gestalt Platform Instance
+
+fog meta <command>
+  fog meta DELETE [path]   HTTP functions
+  fog meta GET [path]      HTTP functions
+  fog meta PATCH [path]    HTTP functions
+  fog meta POST [path]     HTTP functions
+  fog meta PUT [path]      HTTP functions
+  fog meta patch-provider  HTTP functions
+
+fog migrate <command>
+  fog migrate container [container_name]    Migrate container
+  fog migrate containers                    Migrate containers
+
+fog promote <command>
+  fog promote container [container_name]    Promote container
+  fog promote containers                    Promote containers
+
+fog restart <command>
+  fog restart containers  Restart containers
+
+fog scale <command>
+  fog scale container [container_name]      Scale container
+
+fog security <command>
+  fog security GET [path]           HTTP functions
+  fog security PATCH [path] [file]  HTTP functions
+
+fog service <command>
+  fog service deploy   Deploy a Service
+  fog service package  Package a Service
+
+fog show <command>
+  fog show api-endpoints [context_path]  List API endpoints
+  fog show apis [context_path]           Show apis
+  fog show containers [context_path]     Show containers
+  fog show datafeeds [context_path]      Show datafeeds
+  fog show entitlements [context_path]   Show entitlements
+  fog show environments [context_path]   List enviornments
+  fog show group-members                 List group members
+  fog show groups                        List groups
+  fog show hierarchy                     Show the hierarchy
+  fog show lambdas [context_path]        Show lambdas
+  fog show orgs                          List orgs
+  fog show policies [context_path]       Show policies
+  fog show policy-rules [context_path]   List policy rules
+  fog show providers [context_path]      List providers
+  fog show secrets [context_path]        Show secrets
+  fog show streamspecs [context_path]    Show streamspecs
+  fog show users                         List users
+  fog show volumes [context_path]        Show volumes
+  fog show workspaces [context_path]     List workspaces
+
+fog status              Show Status
 ```
