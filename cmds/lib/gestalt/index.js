@@ -10,6 +10,7 @@ module.exports = {
     ...require('./environment'),
     ...require('./entitlements'),
     ...require('./generic'),
+    ...require('./group'),
     ...require('./httpclient'),
     ...require('./lambda'),
     ...require('./org'),

@@ -187,12 +187,17 @@ fog delete containers
 # Commands List
 ```
 fog admin <command>
+  fog admin add-user-to-group               Add user to group
   fog admin apply-entitlements              Apply entitlements from file
   fog admin create-account-store [file]     Create Account Store
   fog admin create-directory [file]         Create LDAP directory
+  fog admin create-group [name]             Create group
+  [description]
   fog admin delete-directory [name]         Delete LDAP directory
   fog admin generate-api-key                Generate Gestalt Security API key
   fog admin list-entitlements               List entitlement actions at the
+  [context_path]                            specified context
+  fog admin remove-user-from-group          Remove user from group
   fog admin show-account-stores [org]       Show account stores
   fog admin show-directories [org]          Show LDAP directories
   fog admin show-directory-accounts [name]  Show LDAP directories
