@@ -72,19 +72,19 @@ fog create resource --f<tab, tab>    # Autocomplete the command flag
 
 ```
 
+## Discover commands
+```sh
+# Help
+fog --help
+fog [command] --help
+```
+
 ## Login to Gestalt Platform
 ```sh
 fog login                                           # Interactively
 fog login <url>                                     # Prompts for username, password
 fog login <url> -u <username>                       # Only prompts for password
 fog login <url> -u <username> -p <password>         # No prompts
-```
-
-## Discover commands
-```sh
-# Help
-fog --help
-fog [command] --help
 ```
 
 ## Working with Context
@@ -300,4 +300,37 @@ fog show <command>
   fog show workspaces [context_path]     List workspaces
 
 fog status              Show Status
+```
+
+## Resource Templates
+
+Resource templates can be in either JSON or YAML format.  The following template directives are supported:
+
+```
+#{Config CONFIG_KEY} - Replaces with the config value CONFIG_KEY from the --config <file> or from environment variable
+
+#{Provider /root/provider-name id} - Replaces with the ID of the named provider
+
+#{Lambda /root/workspace/env/lambda-name id} - Replaces with the ID of the named lambda
+
+#{Environment /root/workspace/env id} - Replaces with the ID of the named environment
+
+```
+
+Example Usage:
+
+```
+# The following gets replaced with the ID of the provider 'default-laser'
+...
+        "provider": {
+            "id": "#{Provider /root/default-laser id}",
+            "locations": []
+        },
+...
+
+
+fog create resource -f template.json      # Creates the resource from template
+
+fog create resource -f template.json --config config.yaml      # Creates the resource from template, using a config file for paramters
+
 ```
