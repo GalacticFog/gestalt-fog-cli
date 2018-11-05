@@ -1,10 +1,10 @@
-exports.command = 'bash-completion'
+exports.command = 'bash'
 exports.desc = 'Show Bash Completion Script'
 exports.builder = {}
 exports.handler = function (argv) {
 
     console.log(`#
-# Run: fog bash-completion >> ~/.bashrc
+# Run: fog completion bash >> ~/.bashrc
 #
 _fog_completions()
 {
