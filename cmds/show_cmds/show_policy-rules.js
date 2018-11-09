@@ -5,6 +5,10 @@ const { debug } = require('../lib/debug');
 exports.command = 'policy-rules [context_path]'
 exports.desc = 'List policy rules'
 exports.builder = {
+    output: {
+        alias: 'o',
+        description: 'json, raw, yaml, list'
+    },
     raw: {
         description: 'Show in raw JSON format'
     }

@@ -4,6 +4,10 @@ const cmd = require('../lib/cmd-base');
 exports.command = 'orgs'
 exports.desc = 'List orgs'
 exports.builder = {
+    output: {
+        alias: 'o',
+        description: 'json, raw, yaml, list'
+    },
     raw: {
         description: 'Show in raw JSON format'
     }

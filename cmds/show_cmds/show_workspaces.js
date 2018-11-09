@@ -5,6 +5,10 @@ const gestaltContext = require('../lib/gestalt-context');
 exports.command = 'workspaces [context_path]'
 exports.desc = 'List workspaces'
 exports.builder = {
+    output: {
+        alias: 'o',
+        description: 'json, raw, yaml, list'
+    },
     raw: {
         description: 'Show in raw JSON format'
     }

@@ -36,3 +36,22 @@ exports.createOrg = (org, parentFqon) => {
     const res = meta.POST(`/${context.org.fqon}`, org);
     return res;
 }
+
+exports.deleteOrg = (contextOrFqon, options) => {
+    const fqon = typeof contextOrFqon === 'string' ? contextOrFqon : contextOrFqon.org.fqon;
+    let suffix = '';
+
+    if (options) {
+        for (let o of Object.keys(options)) {
+            if (o == 'force') {
+                if (options.force) {
+                    suffix = '?force=true'
+                }
+            } else {
+                throw Error(`Invalid delete resource option: ${o}`);
+            }
+        }
+    }
+
+    return meta.DELETE(`/${fqon}${suffix}`);
+}

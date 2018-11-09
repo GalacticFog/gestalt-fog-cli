@@ -6,6 +6,8 @@ const {
     deleteResource
 } = require('./generic');
 
+const meta = require('./metaclient');
+
 exports.fetchOrgWorkspaces = (fqonList) => {
     return fetchOrgResources("workspaces", fqonList);
 }
@@ -29,6 +31,26 @@ exports.updateWorkspace = (spec, context) => {
     return updateResource('workspaces', spec, context);
 }
 
-exports.deleteWorkspace = (spec) => {
-    return deleteResource('workspaces', spec);
+exports.deleteWorkspace = (context, options) => {
+    if (!context.org) throw Error(`Missing context.org`);
+    if (!context.org.fqon) throw Error(`Missing context.org.fqon`);
+    if (!context.workspace) throw Error(`Missing context.workspace`);
+    if (!context.workspace.id) throw Error(`Missing context.workspace.id`);
+
+    let suffix = '';
+
+    if (options) {
+        for (let o of Object.keys(options)) {
+            if (o == 'force') {
+                if (options.force) {
+                    suffix = '?force=true'
+                }
+            } else {
+                throw Error(`Invalid delete resource option: ${o}`);
+            }
+        }
+    }
+
+    return meta.DELETE(`/${context.org.fqon}/workspaces/${context.workspace.id}${suffix}`);
 }
+

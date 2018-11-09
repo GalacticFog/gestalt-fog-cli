@@ -17,6 +17,10 @@ function buildCommand(type) {
             raw: {
                 description: 'Show in raw JSON format'
             },
+            output: {
+                alias: 'o',
+                description: 'json, raw, yaml, list'
+            },
             'context_path': {
                 description: "Specify the context path (/<org>/<workspace>/<environment>)"
             }

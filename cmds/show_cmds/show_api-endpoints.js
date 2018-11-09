@@ -4,6 +4,10 @@ const cmd = require('../lib/cmd-base');
 exports.command = 'api-endpoints [context_path]'
 exports.desc = 'List API endpoints'
 exports.builder = {
+    output: {
+        alias: 'o',
+        description: 'json, raw, yaml, list'
+    },
     raw: {
         description: 'Show in raw JSON format'
     }

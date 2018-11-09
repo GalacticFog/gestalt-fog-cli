@@ -9,6 +9,10 @@ exports.builder = {
         alias: 't',
         description: 'provider types'
     },
+    output: {
+        alias: 'o',
+        description: 'json, raw, yaml, list'
+    },
     raw: {
         description: "Raw JSON output"
     }

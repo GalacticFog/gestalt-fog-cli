@@ -5,12 +5,15 @@ const gestaltContext = require('../lib/gestalt-context');
 exports.command = 'environments [context_path]'
 exports.desc = 'List enviornments'
 exports.builder = {
+    output: {
+        alias: 'o',
+        description: 'json, raw, yaml, list'
+    },
     raw: {
         description: 'Show in raw JSON format'
     }
 }
 exports.handler = cmd.handler(async function (argv) {
-
     const context = argv.context_path ? await cmd.resolveContextPath(argv.context_path) : gestaltContext.getContext();
 
     if (context.workspace) {

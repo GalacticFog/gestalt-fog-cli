@@ -6,6 +6,10 @@ const gestaltContext = require('../lib/gestalt-context');
 exports.command = 'entitlements [context_path]'
 exports.desc = 'Show entitlements'
 exports.builder = {
+    output: {
+        alias: 'o',
+        description: 'json, raw, yaml, list'
+    },
     raw: {
         description: 'Show in raw JSON format'
     }

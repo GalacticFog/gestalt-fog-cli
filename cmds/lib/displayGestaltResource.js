@@ -26,6 +26,16 @@ exports.run = (resources, options, context) => {
 
     if (options && options.raw) {
         console.log(JSON.stringify(resources, null, 2));
+    } else if (options && options.output) {
+        if (options.output == 'raw' || options.output == 'json') {
+            console.log(JSON.stringify(resources, null, 2));
+        } else if (options.output == 'yaml') {
+            console.log(yaml.safeDump(resources));
+        } else if (options.output == 'list') {
+            for (let res of resources) {
+                console.log(res.name);
+            }
+        }
     } else if (Array.isArray(resources)) {
         if (resources.length == 0) {
             // console.log(getContextMessage('(No Resources)', context));
