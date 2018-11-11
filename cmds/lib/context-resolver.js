@@ -4,8 +4,6 @@ const { debug } = require('./debug');
 const selectHierarchy = require('../lib/selectHierarchy');
 const chalk = require('./chalk');
 
-//TODO: Move 'requireArg' functions to separate library
-
 module.exports = {
     resolveProvider,
     resolveProviderByPath,
@@ -16,9 +14,11 @@ module.exports = {
     resolveWorkspace,
     resolveEnvironment,
     lookupEnvironmentResource,
-    resolveContextPath,
-    getContextFromPathOrPrompt
-};
+    getContextFromPathOrPrompt,
+    resolveContextPath: gestalt.contextResolver.resolveContextPath
+}
+
+const resolveContextPath = module.exports.resolveContextPath;
 
 async function getContextFromPathOrPrompt(path /*TODO: ,scope='any'*/) {
     let context = null;
@@ -33,86 +33,6 @@ async function getContextFromPathOrPrompt(path /*TODO: ,scope='any'*/) {
             context = await selectHierarchy.chooseContext({ includeNoSelection: true });
         }
     }
-
-    return context;
-}
-
-async function resolveOrgContextByName(name) {
-    const orgs = await gestalt.fetchOrgFqons();
-    const fqon = orgs.find(i => i === name);
-
-    if (fqon) {
-        return {
-            org: { fqon },
-        };
-    }
-
-    throw Error(`Could not find org with fqon '${name}'`);
-}
-
-async function resolveWorkspaceContextByName(context, name) {
-    const { org } = context;
-    const orgWorkspaces = await gestalt.fetchOrgWorkspaces([org.fqon]);
-    const workspace = orgWorkspaces.find(i => i.name === name);
-
-    if (workspace) {
-        return {
-            ...context,
-            workspace: {
-                id: workspace.id,
-                name: workspace.name
-            }
-        };
-    }
-
-    throw Error(`Could not find workspace with name '${name}'`);
-}
-
-async function resolveEnvironmentContextByName(context, name) {
-    const envs = await gestalt.fetchWorkspaceEnvironments(context);
-    const env = envs.find(i => i.name === name);
-
-    if (env) {
-        return {
-            ...context,
-            environment: {
-                id: env.id,
-                name: env.name
-            }
-        };
-    }
-
-    throw Error(`Could not find environment with name '${name}'`);
-}
-
-/**
- * Resolves a context object given a context path.
- * Supports the following path structures:
- * - "/<fqon>"
- * - "/<fqon>/<workspace name>"
- * - "/<fqon>/<workspace name>/<environment name>"
- * @param {*} path An absolute context path specifiying a target org, workspace, or environment
- */
-async function resolveContextPath(path) {
-    const [unused, orgName, workspaceName, environmentName] = path.split('/');
-    debug('Context path: ', path);
-
-    if (unused) throw Error("Path must start with '/'");
-
-    let context = {};
-
-    if (orgName) {
-        // context = await resolveOrgContextByName(orgName);
-        context = { org: { fqon: orgName } }
-        if (workspaceName) {
-            context = await resolveWorkspaceContextByName(context, workspaceName);
-            if (environmentName) {
-                context = await resolveEnvironmentContextByName(context, environmentName);
-            }
-        }
-    }
-
-    debug(context);
 
     return context;
 }

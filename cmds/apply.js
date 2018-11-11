@@ -41,18 +41,26 @@ exports.builder = {
     }
 }
 exports.handler = cmd.handler(async function (argv) {
-
     let context = null;
     if (argv.context) {
+        // Use context from the command line
         context = await cmd.resolveContextPath(argv.context);
     } else {
-        context = gestaltContext.getContext();
+        // look for a special file
+        if (argv.directory && fs.existsSync(`${argv.directory}/context`)) {
+            const contextFile = `${argv.directory}/context`;
+            const contextPath = util.readFileAsText(contextFile);
+            console.log('CONTEXT PATH: ' + contextPath)
+            context = await cmd.resolveContextPath(contextPath);
+        } else {
+            // Use saved context
+            context = gestaltContext.getContext();
+        }
     }
 
     console.log('Using context: ' + ui.getContextString(context));
 
     let config = {};
-
     if (argv.config) {
         debug(`Loading config from file ${argv.config}`);
         config = util.loadObjectFromFile(argv.config);
@@ -89,16 +97,17 @@ exports.handler = cmd.handler(async function (argv) {
         }
 
         // Display plan
+        console.error(`Deployment plan:`)
         for (let group of groups) {
-            console.error(`Will process ${group.type}:`);
+            console.error(`  ${group.type}`);
             for (let item of group.items) {
-                console.log(`  ${item.file}`);
+                console.error(`    ${item.file}`);
             }
+            console.error();
         }
 
         // Process groups
         for (let group of groups) {
-            console.error('Processing ' + group.type);
             for (let item of group.items) {
                 try {
                     await processFile(item.file, argv, config, context);
@@ -114,7 +123,12 @@ exports.handler = cmd.handler(async function (argv) {
 
 function prioritize(filesAndResources) {
     const resourceOrder = [
-        // Providers first
+        // Hierarchy first
+        'Gestalt::Resource::Organization',
+        'Gestalt::Resource::Workspace',
+        'Gestalt::Resource::Environment',
+
+        // Providers next
         'Gestalt::Configuration::Provider',
 
         // Next, resources that don't depend on other resources (except providers)
@@ -157,7 +171,7 @@ function prioritize(filesAndResources) {
     // Ensure the correct order for the specified resource types
     for (let key of resourceOrder) {
         if (groups[key]) {
-            groups[key].items.sort();  // sorts in place
+            sortBy(groups[key].items, 'file');  // sorts in place
             sorted.push(groups[key]);
             delete groups[key];
         }
@@ -165,11 +179,21 @@ function prioritize(filesAndResources) {
 
     // Append the rest of types not specified in the resource ordering
     for (let key of Object.keys(groups)) {
-        groups[key].items.sort();
+        sortBy(groups[key].items, 'file');  // sorts in place
         sorted.push(groups[key]);
     }
 
     return sorted;
+}
+
+function sortBy(arr, key) {
+    return arr.sort((a, b) => {
+        if (a == null) return 1;
+        if (b == null) return -1;
+        if (a[key] < b[key]) { return -1; }
+        if (a[key] > b[key]) { return 1; }
+        return 0;
+    })
 }
 
 async function processFile(file, params, config, context) {

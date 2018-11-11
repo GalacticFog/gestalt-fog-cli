@@ -24,6 +24,11 @@ module.exports = {
     createResource,
     getGestaltConfig,
     getGestaltContext,
+
+    // Just for context-resolver
+    contextResolver: {
+        resolveContextPath
+    }
 }
 
 /**
@@ -52,8 +57,30 @@ const typesNotAllowingResourceTypeFieldOnCreation = [
     'Gestalt::Resource::Policy',
     'Gestalt::Resource::User',
     'Gestalt::Resource::Group',
+    'Gestalt::Resource::Api',
+    'Gestalt::Resource::ApiEndpoint',
+    'Gestalt::Resource::Organization',
+    'Gestalt::Resource::Workspace',
+    'Gestalt::Resource::Environment',
+];
+
+/**
+ * These resource types require PATCH update rather than PUT
+ */
+const resourceTypesRequiringPatchUpdate = [
+    'Gestalt::Resource::Organization',
+    'Gestalt::Resource::Workspace',
+    'Gestalt::Resource::Environment',
+    'Gestalt::Resource::Node::Lambda',
+    'Gestalt::Resource::Api',
     'Gestalt::Resource::ApiEndpoint',
 ];
+
+const hierarchyResources = [
+    'Gestalt::Resource::Organization',
+    'Gestalt::Resource::Workspace',
+    'Gestalt::Resource::Environment',
+]
 
 /**
  * Fetch resources from the context - Org, Workspace, or Environment context
@@ -226,6 +253,8 @@ function createResource(spec, context) {
     // Special cases
     if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
         return createApiEndpoint(spec, context);
+    } else if (spec.resource_type == 'Gestalt::Resource::Organization') {
+        return createOrg(spec, context);
     }
 
     if (!context) throw Error(`createResource: context is '${context}'`);
@@ -241,6 +270,16 @@ function createResource(spec, context) {
     }
 
     const res = meta.POST(url, spec);
+    return res;
+}
+
+function createOrg(org, context) {
+    if (!org) throw Error('missing org');
+    if (!org.name) throw Error('missing org.name');
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
+    delete org.resource_type
+    const res = meta.POST(`/${context.org.fqon}`, org);
     return res;
 }
 
@@ -327,6 +366,7 @@ async function applyResource(spec, context) {
     spec = util.cloneObject(spec);
     context = util.cloneObject(context);
 
+    const resourceType = spec.resource_type;
     const type = resourceTypeToUrlType[spec.resource_type];
     if (!type) {
         debug(`  will throw Error: resource_type: ${spec.resource_type} not present`);
@@ -340,26 +380,55 @@ async function applyResource(spec, context) {
         context.api = spec.context.api;
     }
 
-    const resources = await fetchResources(spec.resource_type, context);
-    debug(`  ${resources.length} resources to process`);
+    if (hierarchyResources.includes(spec.resource_type)) {
+        debug(`Using context from hierarchy resource: ${spec.context}`);
+        context = await resolveContextPath(spec.context);
+        debug(`Using context from hierarchy resource: ${JSON.stringify(context, null, 2)}`);
+        delete spec.context;
+    }
 
+    let resources = null;
     let targetResource = null;
-    // special case
-    if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+
+    if (spec.resource_type == 'Gestalt::Resource::Organization') {
+        resources = await meta.GET(`/orgs?expand=true`);
+        targetResource = resources.find(r => r.properties.fqon == spec.properties.fqon);
+        delete spec.properties;
+    } else if (spec.resource_type == 'Gestalt::Resource::Workspace') {
+        resources = await fetchOrgResources("workspaces", [context.org.fqon]);
+        targetResource = resources.find(r => r.name == spec.name);
+        delete spec.properties;
+    } else if (spec.resource_type == 'Gestalt::Resource::Environment') {
+        resources = await fetchWorkspaceResources('environments', context);
+        targetResource = resources.find(r => r.name == spec.name);
+    } else if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+        resources = await fetchResources(spec.resource_type, context);
         targetResource = resources.find(r => r.properties.resource == spec.properties.resource);
     } else {
+        resources = await fetchResources(spec.resource_type, context);
         targetResource = resources.find(r => r.name == spec.name);
     }
+    debug(`  ${resources.length} resources to process`);
+
     if (targetResource) {
         debug(`  Target resource exists, will update`);
         // Update
         spec.id = targetResource.id;
 
-        // Special case for Lambdas and API endpoints - Require PATCH rather than PUT
-        if (spec.resource_type == 'Gestalt::Resource::Node::Lambda' ||
-            spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+        // Special case for resources requiring PATCH rather than PUT
+        if (resourceTypesRequiringPatchUpdate.includes(spec.resource_type)) {
 
             debug(`  Special case, will PATCH`);
+
+            if (hierarchyResources.includes(resourceType)) {
+                if (resourceType == 'Gestalt::Resource::Environment') {
+                    delete spec.properties.workspace;
+                    delete targetResource.properties.workspace;
+                } else {
+                    delete spec.properties;
+                    delete targetResource.properties;
+                } 
+            }
 
             // Delete unmodifyable parameters
             for (let s of ['resource_type', 'resource_state', 'owner', 'parent', 'modified', 'created', 'org']) {
@@ -367,8 +436,8 @@ async function applyResource(spec, context) {
                 delete targetResource[s];
             }
             for (let s of ['parent', 'provider']) {
-                delete spec.properties[s];
-                delete targetResource.properties[s];
+                if (spec.properties) delete spec.properties[s];
+                if (targetResource.properties) delete targetResource.properties[s];
             }
             // Delete extra parameters
             for (let s of ['context']) {
@@ -382,14 +451,14 @@ async function applyResource(spec, context) {
             if (patches.length > 0) {
                 const res = await meta.PATCH(`/${context.org.fqon}/${type}/${spec.id}`, patches);
                 const result = {
-                    status: `Resource '${res.name}' updated (PATCH).`,
+                    status: `${resourceType} '${res.name}' updated (PATCH).`,
                     resource: patches
                 };
                 return result;
             } else {
                 // Nothing to apply
                 return {
-                    status: `Resource '${targetResource.name}' unchanged.`,
+                    status: `${resourceType} '${targetResource.name}' unchanged.`,
                     resource: targetResource
                 };
             }
@@ -401,7 +470,7 @@ async function applyResource(spec, context) {
         delete spec.resource_type; // Updates don't need (and may not accep the resource_type field)
         const res = await meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);
         return {
-            status: `Resource '${res.name}' updated (PUT).`,
+            status: `${resourceType} '${res.name}' updated (PUT).`,
             resource: res
         };
     } else {
@@ -409,7 +478,7 @@ async function applyResource(spec, context) {
         // Create
         const res = await createResource(spec, context);
         return {
-            status: `Resource '${spec.name}' created.`,
+            status: `${resourceType} '${spec.name}' created.`,
             resource: res
         };
     }
@@ -493,3 +562,74 @@ function getGestaltConfig() {
 function getGestaltContext() {
     return gestaltContext.getContext();
 }
+
+
+
+/**
+ * Resolves a context object given a context path.
+ * Supports the following path structures:
+ * - "/<fqon>"
+ * - "/<fqon>/<workspace name>"
+ * - "/<fqon>/<workspace name>/<environment name>"
+ * @param {*} path An absolute context path specifiying a target org, workspace, or environment
+ */
+async function resolveContextPath(path) {
+    const [unused, orgName, workspaceName, environmentName] = path.split('/');
+    debug('Context path: ', path);
+
+    if (unused) throw Error("Path must start with '/'");
+
+    let context = {};
+
+    if (orgName) {
+        context = { org: { fqon: orgName } }
+        if (workspaceName) {
+            context = await resolveWorkspaceContextByName(context, workspaceName);
+            if (environmentName) {
+                context = await resolveEnvironmentContextByName(context, environmentName);
+            }
+        }
+    }
+
+    debug(context);
+
+    return context;
+
+    // ------------ functions ------------------
+
+    async function resolveWorkspaceContextByName(context, name) {
+        const { org } = context;
+        const orgWorkspaces = await fetchOrgResources("workspaces", [org.fqon]);
+        const workspace = orgWorkspaces.find(i => i.name === name);
+
+        if (workspace) {
+            return {
+                ...context,
+                workspace: {
+                    id: workspace.id,
+                    name: workspace.name
+                }
+            };
+        }
+
+        throw Error(`Could not find workspace with name '${name}'`);
+    }
+
+    async function resolveEnvironmentContextByName(context, name) {
+        const envs = await fetchWorkspaceResources('environments', context);
+        const env = envs.find(i => i.name === name);
+
+        if (env) {
+            return {
+                ...context,
+                environment: {
+                    id: env.id,
+                    name: env.name
+                }
+            };
+        }
+
+        throw Error(`Could not find environment with name '${name}'`);
+    }
+}
+
