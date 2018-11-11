@@ -189,6 +189,8 @@ function displayApiEndpoints(resources, opts, context) {
     const options = {
         message: getContextMessage('API Endpoints', context),
         headers: [
+            'Name',
+            'Description',
             'Resource Path',
             'Type',
             'Security',
@@ -197,6 +199,8 @@ function displayApiEndpoints(resources, opts, context) {
             'Owner'
         ],
         fields: [
+            'name',
+            'description',
             'properties.api_path',
             'properties.implementation_type',
             'properties.plugins.gestaltSecurity.enabled',

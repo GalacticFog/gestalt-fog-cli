@@ -40,8 +40,8 @@ exports.renderResourceTemplate = async function (templateFile, config, context) 
 
     const resource = util.loadObjectFromString(processedData, dataType);
 
-    debug('cloned resource:')
-    debug(resource)
+    // debug('cloned resource:')
+    // debug(resource)
     return resource;
 }
 
@@ -67,7 +67,7 @@ async function doDarseFieldForDirectives(value, func) {
     let start = -1;
     while (true) {
         start = getDeepestTokenPosition(startToken, value);
-        debug(`Parsing ${value} at start=${start}`)
+        // debug(`Parsing ${value} at start=${start}`)
         if (start > -1) {
             const end = value.indexOf(endToken, start + startToken.length);
             debug(`start: ${start}, end: ${end}`)
@@ -81,7 +81,7 @@ async function doDarseFieldForDirectives(value, func) {
 
                 value = value.replace(`${startToken}${directive}${endToken}`, replacementValue);
                 start = -1; //reset
-                debug(`New Value: ${value}`)
+                // debug(`New Value: ${value}`)
             } else {
                 break;
             }
@@ -149,7 +149,8 @@ const directiveHandlers = {
     Config: resolveConfig,
     Environment: resolveEnvironment,
     Lambda: resolveLambda,
-    // Api: resolveApi,
+    Container: resolveContainer,
+    Api: resolveApi,
 }
 
 async function resolveProvider(path, param = 'id') {
@@ -161,14 +162,42 @@ async function resolveProvider(path, param = 'id') {
     return provider[param];
 }
 
-async function resolveLambda(path, param = 'id') {
-    const lambda = await contextResolver.resolveResourceByPath('lambdas', path);
-    if (!lambda) {
-        throw Error('Lambda not found for path: ' + path);
+async function resolveLambda(pathOrName, param = 'id') {
+    let lambda = null;
+    if (pathOrName[0] == '/') {
+        lambda = await contextResolver.resolveResourceByPath('lambdas', pathOrName);
+        if (!lambda) {
+            throw Error('Lambda not found for path: ' + pathOrName);
+        }
+    } else {
+        const lambdas = await gestalt.fetchEnvironmentLambdas(state.context);
+        lambda = lambdas.find(l => l.name == pathOrName);
+        if (!lambda) {
+            throw Error('Lambda not found for path: ' + pathOrName);
+        }
     }
-    debug(`Found provider '${lambda.name}'`);
+    debug(`Found lambda '${lambda.name}'`);
     return lambda[param];
 }
+
+async function resolveContainer(pathOrName, param = 'id') {
+    let container = null;
+    if (pathOrName[0] == '/') {
+        container = await contextResolver.resolveResourceByPath('containers', pathOrName);
+        if (!container) {
+            throw Error('Container not found for path: ' + pathOrName);
+        }
+    } else {
+        const containers = await gestalt.fetchContainers(state.context);
+        container = containers.find(l => l.name == pathOrName);
+        if (!container) {
+            throw Error('Container not found for path: ' + pathOrName);
+        }
+    }
+    debug(`Found container '${container.name}'`);
+    return container[param];
+}
+
 
 async function resolveConfig(key) {
     if (state.config[key]) {
@@ -186,14 +215,14 @@ async function resolveEnvironment(path, param) {
     return context.environment[param];
 }
 
-// async function resolveApi(apiName, param = 'id') {
-//     const resources = await gestalt.fetchEnvironmentApis(state.context);
-//     const api = resources.find(r => r.name == apiName);
-//     if (api) {
-//         return api[param];
-//     }
-//     throw Error(`Unable to resolve API with name '${apiName}'`);
-// }
+async function resolveApi(apiName, param = 'id') {
+    const resources = await gestalt.fetchEnvironmentApis(state.context);
+    const api = resources.find(r => r.name == apiName);
+    if (api) {
+        return api[param];
+    }
+    throw Error(`Unable to resolve API with name '${apiName}'`);
+}
 
 
 // //TODO: implement

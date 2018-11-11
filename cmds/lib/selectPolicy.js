@@ -1,4 +1,4 @@
-exports.run = async (opts, res) => {
+exports.run = async (opts, res, context) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 

@@ -1,11 +1,11 @@
-exports.run = async (selectOpts, context) => {
+exports.run = async (selectOpts, res, context) => {
     const gestalt = require('./gestalt')
     const selectResource = require('./selectResourceUI');
 
     if (!selectOpts) selectOpts = {};
     if (!context) context = gestalt.getContext();
 
-    let res = await gestalt.fetchEnvironmentApis(context);
+    res = res || await gestalt.fetchEnvironmentApis(context);
 
     // Filter
     if (selectOpts.filter) {

@@ -3,6 +3,7 @@ const {
     fetchEnvironmentResources,
     fetchResource,
     createEnvironmentResource,
+    deleteResource
 } = require('./generic');
 
 exports.fetchOrgApis = (fqonList) => {
@@ -22,4 +23,8 @@ exports.fetchApi = (spec, context) => {
 
 exports.createApi = (spec, providedContext) => {
     return createEnvironmentResource('apis', spec, providedContext);
+}
+
+exports.deleteApi = (spec, options) => {
+    return deleteResource('apis', spec, options);
 }

@@ -2,7 +2,8 @@ const meta = require('./metaclient');
 const util = require('../util');
 
 const {
-    getGestaltContext
+    getGestaltContext,
+    createResource
 } = require('./generic');
 
 exports.fetchApiEndpoints = (apiList) => {
@@ -18,19 +19,8 @@ exports.fetchApiEndpoints = (apiList) => {
     });
 }
 
-exports.createApiEndpoint = (spec, providedContext) => {
-
-    if (!spec) throw Error('missing spec');
-    if (!spec.name) throw Error('missing spec.name');
-    // TODO: Other required parameters
-
+exports.createApiEndpoint = (spec, context) => {
     spec = util.cloneObject(spec);
-    delete spec.resource_type; // Otherwise {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
-
-    const context = providedContext || getGestaltContext();
-    if (!context.org) throw Error("missing context.org");
-    if (!context.org.fqon) throw Error("missing context.org.fqon");
-    if (!context.api) throw Error("missing context.api");
-    if (!context.api.id) throw Error("missing context.api.id");
-    return meta.POST(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints`, spec);
+    spec.resource_type = 'Gestalt::Resource::ApiEndpoint';
+    return createResource(spec, context);
 }

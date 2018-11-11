@@ -3,10 +3,13 @@ const meta = require('./metaclient')
 const gestaltContext = require('../gestalt-context');
 const { debug } = require('../debug');
 const chalk = require('../chalk');
+const jsonPatch = require('fast-json-patch');
+const util = require('../util');
 
 // Exports
 
 module.exports = {
+    applyResource,
     fetchResources,
     fetchOrgResources,
     fetchResourcesFromOrgEnvironments,
@@ -26,6 +29,40 @@ module.exports = {
     getContext: getGestaltContext
 }
 
+/**
+ * Maps Meta resource types to API URL paths
+ */
+const resourceTypeToUrlType = {
+    'Gestalt::Resource::Node::Lambda': 'lambdas',
+    'Gestalt::Resource::Container': 'containers',
+    'Gestalt::Resource::Api': 'apis',
+    'Gestalt::Resource::Environment': 'environments',
+    'Gestalt::Resource::Workspace': 'workspaces',
+    'Gestalt::Resource::Organization': 'orgs',
+    'Gestalt::Resource::User': 'users',
+    'Gestalt::Resource::Group': 'groups',
+    'Gestalt::Resource::Volume': 'volumes',
+    'Gestalt::Resource::Policy': 'policies',
+    'Gestalt::Resource::ApiEndpoint': 'apiendpoints',
+};
+
+/**
+ * These types don't allow the resource_type field to be present when creating
+ * the resources.
+ */
+const typesNotAllowingResourceTypeFieldOnCreation = [
+    'Gestalt::Resource::Node::Lambda',
+    'Gestalt::Resource::Policy',
+    'Gestalt::Resource::User',
+    'Gestalt::Resource::Group',
+    'Gestalt::Resource::ApiEndpoint',
+];
+
+/**
+ * Fetch resources from the context - Org, Workspace, or Environment context
+ * @param {*} type 
+ * @param {*} context 
+ */
 function fetchResources(type, context) {
     if (context.org) {
         if (context.workspace) {
@@ -39,9 +76,7 @@ function fetchResources(type, context) {
     throw Error(`Context doesn't contain org info`);
 }
 
-
 function fetchOrgResources(type, fqonList, type2) {
-    // if (!fqonList) fqonList = [getGestaltContext().org.fqon];
     if (!fqonList) throw Error('missing fqonList')
 
     let promises = fqonList.map(fqon => {
@@ -120,7 +155,17 @@ function fetchWorkspaceResources(type, context, filterType) {
 
 function fetchEnvironmentResources(type, providedContext, type2) {
     debug(`fetchEnvironmentResources(${type}, ${providedContext}, ${type2}`);
+
     const context = providedContext || getGestaltContext();
+
+    // Special case
+    if (type == 'Gestalt::Resource::ApiEndpoint' || type == 'apiendpoints') {
+        const res = meta.GET(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints?expand=true`)
+        return res;
+    }
+
+    type = resourceTypeToUrlType[type] || type;
+
     if (!context.org) throw Error("No Org in current context");
     if (!context.org.fqon) throw Error("No FQON in current context");
     if (!context.environment) throw Error("No Environment in current context");
@@ -175,29 +220,57 @@ function createWorkspaceResource(type, spec, context) {
 function createResource(spec, context) {
     if (!spec) throw Error(`createResource: spec is '${spec}'`);
     if (!spec.resource_type) throw Error(`createResource: spec.resource_type is '${spec.resource_type}'`);
+
+    // Special cases
+    if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+        return createApiEndpoint(spec, context);
+    }
+
     if (!context) throw Error(`createResource: context is '${context}'`);
 
     const url = resolveResourceUrl(spec.resource_type, context);
 
-    const typesNotAllowingResourceType = [
-        'Gestalt::Resource::Node::Lambda',
-        'Gestalt::Resource::Policy',
-        'Gestalt::Resource::User',
-        'Gestalt::Resource::Group',
-        'Gestalt::Resource::ApiEndpoint'
-    ];
-
-    if (typesNotAllowingResourceType.includes(spec.resource_type)) {
+    if (typesNotAllowingResourceTypeFieldOnCreation.includes(spec.resource_type)) {
         // TODO: Workaround Meta bug of not accepting the resource_type for Lambdas and potentially other
         // resource types, otherwise get the following error:
         // StatusCodeError: 500 - {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
-        spec = JSON.parse(JSON.stringify(spec));
+        spec = util.cloneObject(spec);
         delete spec.resource_type;
     }
 
     const res = meta.POST(url, spec);
     return res;
 }
+
+/**
+ * Creates an ApiEndpoint resource.  The ApiEndpoint requires a parent API object, which either
+ * needs to provided in the Context (context.api) or embedded in the spec (spec.context.api).
+ * @param {*} spec ApiEndpoint spec
+ * @param {*} providedContext Context to create the ApiEndpoint resource.
+ */
+function createApiEndpoint(spec, providedContext) {
+    if (!spec) throw Error('missing spec');
+    if (!spec.name) throw Error('missing spec.name');
+    // TODO: Other required parameters
+
+    const context = providedContext || getGestaltContext();
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
+    if (!context.api) {
+        if (!spec.context) throw Error("no context.api, missing spec.context");
+        if (!spec.context.api) throw Error("no context.api, missing spec.context.api");
+        if (!spec.context.api.id) throw Error("no context.api, missing spec.context.api.id");
+        context.api = spec.context.api;
+    }
+    if (!context.api) throw Error("missing context.api");
+    if (!context.api.id) throw Error("missing context.api.id");
+
+    spec = util.cloneObject(spec);
+    delete spec.resource_type; // Otherwise {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
+    delete spec.context;
+    return meta.POST(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints`, spec);
+}
+
 
 async function fetchResource(type, spec, context) {
     context = context || getGestaltContext();
@@ -217,22 +290,95 @@ async function fetchResource(type, spec, context) {
     return resources.find(r => r[matchParam] == spec[matchParam]);
 }
 
-// function fetchResourceById(type, id, context) {
-//     return meta.GET(`/${context.org.fqon}/${type}/${id}`)
-// }
-
 function updateResource(type, spec, context) {
     context = context || getGestaltContext();
     validateTypeSpecContext(type, spec, context);
 
     // Make a copy before mutating
-    spec = JSON.parse(JSON.stringify(spec));
+    spec = util.cloneObject(spec);
 
     delete spec.resource_type;
     delete spec.resource_state;
 
     const res = meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);
     return res;
+}
+
+/**
+ * Applys the resource - Queryies for the resource, if it exists then update the resource, otherwise create
+ * the resource.
+ * @param {*} spec Resource Spec to create or update
+ * @param {*} context Context to update or create the resource in.
+ */
+async function applyResource(spec, context) {
+    if (!spec) throw Error('missing spec');
+    if (!spec.resource_type) throw Error('missing spec.resource_type');
+    if (!context) throw Error("missing context");
+
+    spec = util.cloneObject(spec);
+    context = util.cloneObject(context);
+
+    const type = resourceTypeToUrlType[spec.resource_type];
+    if (!type) {
+        throw Error(`URL type for resourceType ${spec.resource_type} not present`);
+    }
+
+    // Special case
+    if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+        context.api = spec.context.api;
+    }
+
+    const resources = await fetchResources(spec.resource_type, context);
+
+    let targetResource = null;
+    // special case
+    if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+        targetResource = resources.find(r => r.properties.resource == spec.properties.resource);
+    } else {
+        targetResource = resources.find(r => r.name == spec.name);
+    }
+    if (targetResource) {
+        // Update
+        spec.id = targetResource.id;
+
+        // Special case for Lambdas and API endpoints - Require PATCH rather than PUT
+        if (spec.resource_type == 'Gestalt::Resource::Node::Lambda' ||
+            spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+
+
+            // Delete unmodifyable parameters
+            for (let s of ['resource_type', 'resource_state', 'owner', 'parent', 'modified', 'created', 'org']) {
+                delete spec[s];
+                delete targetResource[s];
+            }
+            for (let s of ['parent', 'provider']) {
+                delete spec.properties[s];
+                delete targetResource.properties[s];
+            }
+            // Delete extra parameters
+            for (let s of ['context']) {
+                delete spec[s];
+                delete targetResource[s];
+            }
+
+            const patches = jsonPatch.compare(targetResource, spec);
+            if (patches.length > 0) {
+                return meta.PATCH(`/${context.org.fqon}/${type}/${spec.id}`, patches);
+            } else {
+                // Nothing to apply
+                return new Promise((resolve) => {
+                    resolve(null);
+                })
+            }
+        }
+
+        // Otherwise, perform PATCH udpate
+        delete spec.resource_type; // Updates don't need (and may not accep the resource_type field)
+        return meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);    
+    } else {
+        // Create
+        return createResource(spec, context);
+    }
 }
 
 function deleteResource(type, spec, options) {
@@ -275,21 +421,7 @@ function resolveResourceUrl(resourceType, context) {
 
     let urlBase = resolveContextUrl(context);
 
-    const fmap = {
-        'Gestalt::Resource::Node::Lambda': 'lambdas',
-        'Gestalt::Resource::Container': 'containers',
-        'Gestalt::Resource::Api': 'apis',
-        'Gestalt::Resource::Environment': 'environments',
-        'Gestalt::Resource::Workspace': 'workspaces',
-        'Gestalt::Resource::Organization': 'orgs',
-        'Gestalt::Resource::User': 'users',
-        'Gestalt::Resource::Group': 'groups',
-        'Gestalt::Resource::Volume': 'volumes',
-        'Gestalt::Resource::Policy': 'policies'
-        // TODO: 'Gestalt::Resource::ApiEndpoint': displayApiEndpoints,
-    }
-
-    let type = fmap[resourceType];
+    let type = resourceTypeToUrlType[resourceType];
     if (!type) {
         if (resourceType.indexOf("Gestalt::Configuration::Provider::") == 0) {
             type = 'providers'
