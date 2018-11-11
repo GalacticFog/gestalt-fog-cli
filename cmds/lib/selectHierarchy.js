@@ -3,6 +3,7 @@ const gestalt = require('./gestalt');
 const selectOrg = require('./selectOrg');
 const selectWorkspace = require('./selectWorkspace');
 const selectEnvironment = require('./selectEnvironment');
+const gestaltContext = require('./gestalt-context');
 const chalk = require('./chalk');
 
 exports.resolveOrg = () => {
@@ -49,7 +50,7 @@ exports.displayContext = displayContext;
 
 function displayContext() {
     return new Promise((resolve, reject) => {
-        const context = gestalt.getContext();
+        const context = gestaltContext.getContext();
         let s = `${chalk.bold('Context:')} ${chalk.green(gestalt.getHost())}`
         // let s = `${chalk.green(gestalt.getHost())}`
         if (context.org) {
@@ -124,7 +125,8 @@ function chooseOrg() {
 }
 
 function chooseWorkspace(resolve) {
-    return selectWorkspace.run().then(result => {
+    const context = gestaltContext.getContext();
+    return selectWorkspace.run({}, null, context).then(result => {
         if (result) {
             gestalt.setCurrentWorkspace(result);
             console.log();
@@ -140,7 +142,8 @@ function chooseWorkspace(resolve) {
 
 
 function chooseEnvironment(resolve) {
-    return selectEnvironment.run({}).then(result => {
+    const context = gestaltContext.getContext();
+    return selectEnvironment.run({}, null, context).then(result => {
         if (result) {
             gestalt.setCurrentEnvironment(result);
 
@@ -181,7 +184,7 @@ async function chooseOrgWorkspaceEnvironment(options) {
 
     gestalt.setCurrentOrg(org);
 
-    const workspace = await selectWorkspace.run(options.workspace);
+    const workspace = await selectWorkspace.run(options.workspace, null, gestaltContext.getContext());
     if (!workspace) {
         // console.log("No selection, exiting.");
         return {

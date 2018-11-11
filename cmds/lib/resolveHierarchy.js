@@ -143,7 +143,7 @@ function chooseOrg() {
 }
 
 function chooseWorkspace(context) {
-    return selectWorkspace.run({}, context).then(result => {
+    return selectWorkspace.run({}, null, context).then(result => {
         if (result) {
             console.log();
             console.log(`Workspace '${result.name}' selected.`);
@@ -158,7 +158,7 @@ function chooseWorkspace(context) {
 
 
 function chooseEnvironment(context) {
-    return selectEnvironment.run({}, context).then(result => {
+    return selectEnvironment.run({}, null, context).then(result => {
         if (result) {
             console.log();
             console.log(`Environment '${result.name}' selected.`);
@@ -182,7 +182,7 @@ async function chooseOrgWorkspaceEnvironment(options) {
     console.log();
 
 
-    const workspace = await selectWorkspace.run({}, context);
+    const workspace = await selectWorkspace.run({}, null, context);
     if (!workspace) {
         console.log("No selection, exiting.");
         return;

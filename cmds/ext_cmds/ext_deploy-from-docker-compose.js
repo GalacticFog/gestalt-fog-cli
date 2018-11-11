@@ -3,6 +3,7 @@ const selectProvider = require('../lib/selectProvider');
 const displayResource = require('../lib/displayResourceUI');
 const selectEnvironment = require('../lib/selectEnvironment');
 const gestalt = require('../lib/gestalt');
+const gestaltContext = require('../lib/gestalt-context');
 const selectHierarchy = require('../lib/selectHierarchy');
 const chalk = require('../lib/chalk');
 const cmd = require('../lib/cmd-base');
@@ -20,7 +21,7 @@ exports.handler = cmd.handler(async function (argv) {
     // Now, containers need to have an environment and provider assigned
 
     await selectHierarchy.resolveWorkspace();
-    const env = await selectEnvironment.run({});
+    const env = await selectEnvironment.run({}, null, context);
     console.log();
 
     gestalt.setCurrentEnvironment(env);
@@ -35,7 +36,7 @@ exports.handler = cmd.handler(async function (argv) {
         };
     }
 
-    const context = gestalt.getContext();
+    const context = gestaltContext.getContext();
 
     console.log("Containers will be created in the following location:");
     console.log();

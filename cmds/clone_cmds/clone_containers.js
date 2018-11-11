@@ -12,7 +12,7 @@ exports.handler = cmd.handler(async function (argv) {
     console.log();
     console.log("Select source environment");
     console.log();
-    const sourceEnv = await ui.selectEnvironment({}, context);
+    const sourceEnv = await ui.selectEnvironment({}, null, context);
     console.log();
 
     context.environment = {
@@ -32,7 +32,7 @@ exports.handler = cmd.handler(async function (argv) {
     console.log("Select target environment to clone containers to")
     console.log();
 
-    const targetEnv = await ui.selectEnvironment({}, context);
+    const targetEnv = await ui.selectEnvironment({}, null, context);
     console.log();
 
     // Ensure different environments were used

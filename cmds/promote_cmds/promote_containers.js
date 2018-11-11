@@ -28,7 +28,7 @@ exports.handler = cmd.handler(async function (argv) {
     ui.displayResources(selectedContainers);
 
     console.log("Select environment to promote to");
-    const targetEnvironment = await ui.selectEnvironment({}, context);
+    const targetEnvironment = await ui.selectEnvironment({}, null, context);
     console.log();
 
     if (!targetEnvironment) {

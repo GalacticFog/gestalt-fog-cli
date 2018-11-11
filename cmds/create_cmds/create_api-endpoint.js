@@ -100,7 +100,7 @@ exports.handler = cmd.handler(async function (argv) {
         const context = await ui.resolveEnvironment();
 
         // API
-        const targetApi = await ui.selectApi({}, context);
+        const targetApi = await ui.selectApi({}, null, context);
 
         // Target Lambda (or Container)
         const lambdas = await gestalt.fetchEnvironmentLambdas(context);

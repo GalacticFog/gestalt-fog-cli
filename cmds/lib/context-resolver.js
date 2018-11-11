@@ -26,7 +26,7 @@ async function getContextFromPathOrPrompt(path /*TODO: ,scope='any'*/) {
         context = await resolveContextPath(path);
     } else {
         // Load from state
-        context = gestalt.getContext();
+        context = gestaltContext.getContext();
 
         if (!context.org || !context.org.fqon) {
             // No arguments, allow choosing interatively
@@ -239,7 +239,7 @@ async function resolveProvider(name, providedContext, optionalType) {
 
     console.error(chalk.dim.blue(`Resolving provider '${name}'`));
 
-    const context = providedContext || gestalt.getContext();
+    const context = providedContext || gestaltContext.getContext();
 
     // Check if workspace property is required
     if (name) {
@@ -323,14 +323,14 @@ async function resolveResourceByPath(resourceType, resourcePath) {
 }
 
 async function resolveOrg() {
-    const context = gestalt.getContext();
+    const context = gestaltContext.getContext();
     if (!context.org) throw Error('missing context.org');
     if (!context.org.fqon) throw Error('missing context.org.fqon');
     return context;
 }
 
 async function resolveWorkspace() {
-    const context = gestalt.getContext();
+    const context = gestaltContext.getContext();
     if (!context.org) throw Error('missing context.org');
     if (!context.org.fqon) throw Error('missing context.org.fqon');
     if (!context.workspace) throw Error('missing context.workspace');
@@ -340,7 +340,7 @@ async function resolveWorkspace() {
 }
 
 async function resolveEnvironment() {
-    const context = gestalt.getContext();
+    const context = gestaltContext.getContext();
     if (!context.org) throw Error('missing context.org');
     if (!context.org.fqon) throw Error('missing context.org.fqon');
     if (!context.workspace) throw Error('missing context.workspace');

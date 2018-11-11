@@ -88,14 +88,22 @@ exports.handler = cmd.handler(async function (argv) {
             debug(`  ${group.type}`);
         }
 
+        // Display plan
+        for (let group of groups) {
+            console.error(`Will process ${group.type}:`);
+            for (let item of group.items) {
+                console.log(`  ${item.file}`);
+            }
+        }
+
         // Process groups
         for (let group of groups) {
             console.error('Processing ' + group.type);
             for (let item of group.items) {
                 try {
                     await processFile(item.file, argv, config, context);
-                } catch (e) {
-                    console.error(chalk.red(JSON.stringify(e.error, null, 2)));
+                } catch (err) {
+                    console.error(chalk.red(err));
                 }
             }
         }
@@ -194,25 +202,6 @@ async function processFile(file, params, config, context) {
         }
     } else {
         const result = await gestalt.applyResource(resourceSpec, context);
-        if (result) {
-            console.log(`Resource '${result.name}' applied`);
-        } else {
-            console.log(`Nothing to apply.`);
-        }
-
-        // const resources = await gestalt.fetchResources(resourceSpec.resource_type, context);
-        // const targetResource = resources.find(r => r.name == resourceSpec.name);
-        // if (targetResource) {
-        //     // Update
-        //     resourceSpec.id = targetResource.id;
-        //     const resource = await gestalt.updateGenericResource(resourceSpec, context);
-        //     debug(resource);
-        //     out(`Updated resource '${resource.name}' (${resource.resource_type}).`);
-        // } else {
-        //     // Create
-        //     const resource = await gestalt.createResource(resourceSpec, context);
-        //     debug(resource);
-        //     out(`Created resource '${resource.name}' (${resource.resource_type}).`);
-        // }
+        console.log(result.status);
     }
 }

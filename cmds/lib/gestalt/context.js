@@ -1,8 +1,7 @@
 const gestaltContext = require('../gestalt-context');
-const getGestaltContext = gestaltContext.getContext;
 
 exports.getCurrentOrg = () => {
-    return getGestaltContext().org;
+    return gestaltContext.getContext().org;
 }
 
 exports.setCurrentOrg = (s) => {
@@ -16,7 +15,7 @@ exports.setCurrentOrg = (s) => {
         fqon: s.fqon
     }
 
-    const context = getGestaltContext();
+    const context = gestaltContext.getContext();
     Object.assign(context, { org: org }); // merge in context
 
     delete context.workspace;
@@ -36,7 +35,7 @@ exports.setCurrentEnvironment = (s) => {
         description: s.description
     }
 
-    const context = getGestaltContext();
+    const context = gestaltContext.getContext();
     Object.assign(context, { environment: env }); // merge in context
 
     delete context.container;
@@ -46,7 +45,7 @@ exports.setCurrentEnvironment = (s) => {
 
 
 exports.getCurrentWorkspace = () => {
-    return getGestaltContext().workspace;
+    return gestaltContext.getContext().workspace;
 }
 
 exports.setCurrentWorkspace = (s) => {
@@ -59,7 +58,7 @@ exports.setCurrentWorkspace = (s) => {
         description: s.description
     }
 
-    const context = getGestaltContext();
+    const context = gestaltContext.getContext();
     Object.assign(context, { workspace: ws }); // merge in context
 
     delete context.environment;
@@ -69,5 +68,5 @@ exports.setCurrentWorkspace = (s) => {
 }
 
 exports.getCurrentEnvironment = () => {
-    return getGestaltContext().environment;
+    return gestaltContext.getContext().environment;
 }

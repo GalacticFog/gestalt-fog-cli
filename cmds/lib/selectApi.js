@@ -3,7 +3,7 @@ exports.run = async (selectOpts, res, context) => {
     const selectResource = require('./selectResourceUI');
 
     if (!selectOpts) selectOpts = {};
-    if (!context) context = gestalt.getContext();
+    if (!context) throw Error(`Missing context`);
 
     res = res || await gestalt.fetchEnvironmentApis(context);
 
@@ -11,9 +11,6 @@ exports.run = async (selectOpts, res, context) => {
     if (selectOpts.filter) {
         res = res.filter(selectOpts.filter);
     }
-
-    const fqon = context.org.fqon;
-    const ws = context.workspace;
 
     const options = {
         mode: 'autocomplete',

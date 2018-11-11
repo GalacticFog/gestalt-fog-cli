@@ -24,9 +24,6 @@ module.exports = {
     createResource,
     getGestaltConfig,
     getGestaltContext,
-
-    // TODO: Remove
-    getContext: getGestaltContext
 }
 
 /**
@@ -76,7 +73,7 @@ function fetchResources(type, context) {
     throw Error(`Context doesn't contain org info`);
 }
 
-function fetchOrgResources(type, fqonList, type2) {
+async function fetchOrgResources(type, fqonList, type2) {
     if (!fqonList) throw Error('missing fqonList')
 
     let promises = fqonList.map(fqon => {
@@ -87,13 +84,17 @@ function fetchOrgResources(type, fqonList, type2) {
         return res;
     });
 
-    return Promise.all(promises).then(results => {
-        const result = [].concat.apply([], results);
-        return result.sort();
-    });
+    // return Promise.all(promises).then(results => {
+    //     const result = [].concat.apply([], results);
+    //     return result.sort();
+    // });
+
+    const results = await Promise.all(promises);
+    const result = [].concat.apply([], results);
+    return result.sort();
 }
 
-function fetchResourcesFromOrgEnvironments(type, fqonList, type2) {
+async function fetchResourcesFromOrgEnvironments(type, fqonList, type2) {
     if (!fqonList) fqonList = [getGestaltContext().org.fqon];
 
     let promises = fqonList.map(fqon => {
@@ -101,19 +102,18 @@ function fetchResourcesFromOrgEnvironments(type, fqonList, type2) {
         return res;
     });
 
-    return Promise.all(promises).then(results => {
-        return [].concat.apply([], results);
-    });
+    // return Promise.all(promises).then(results => {
+    //     return [].concat.apply([], results);
+    // });
+    const results = await Promise.all(promises);
+    return [].concat.apply([], results);
 }
 
 async function _fetchResourcesFromOrgEnvironments(type, fqon) {
-    const context = gestaltContext.getContext();
-    if (!fqon) fqon = context.org.fqon; // default org
-
     const envs = await fetchOrgResources("environments", [fqon]);
     const promises = envs.map(env => {
         debug(chalk.dim.blue(`Fetching ${type} from ${fqon}/'${env.name}'...`));
-        const context2 = {
+        const context = {
             org: {
                 fqon: fqon
             },
@@ -121,7 +121,7 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
                 id: env.id
             }
         }
-        return fetchEnvironmentResources(type, context2).then(res => {
+        return fetchEnvironmentResources(type, context).then(res => {
             for (let c of res) {
                 c.environment = {
                     name: env.name,
@@ -142,7 +142,6 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
 }
 
 function fetchWorkspaceResources(type, context, filterType) {
-    context = context || getGestaltContext();
     if (!context.org) throw Error("No Org in current context");
     if (!context.org.fqon) throw Error("No FQON in current context");
     if (!context.workspace) throw Error("No Workspace in current context");
@@ -153,36 +152,39 @@ function fetchWorkspaceResources(type, context, filterType) {
     return res;
 }
 
-function fetchEnvironmentResources(type, providedContext, type2) {
-    debug(`fetchEnvironmentResources(${type}, ${providedContext}, ${type2}`);
+function fetchEnvironmentResources(type, context, filterType) {
+    debug(`fetchEnvironmentResources(${type}, ${context}, ${filterType}`);
 
-    const context = providedContext || getGestaltContext();
+    if (!context) throw Error("missing context.org");
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
 
     // Special case
     if (type == 'Gestalt::Resource::ApiEndpoint' || type == 'apiendpoints') {
+
+        if (!context.api) throw Error("missing context.api");
+        if (!context.api.id) throw Error("missing context.api.id");
+
         const res = meta.GET(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints?expand=true`)
         return res;
     }
 
     type = resourceTypeToUrlType[type] || type;
+    if (!type) throw Error("Type not specified");
 
-    if (!context.org) throw Error("No Org in current context");
-    if (!context.org.fqon) throw Error("No FQON in current context");
     if (!context.environment) throw Error("No Environment in current context");
     if (!context.environment.id) throw Error("No Environment ID in current context");
-    if (!type) throw Error("Type not specified");
     let url = `/${context.org.fqon}/environments/${context.environment.id}/${type}?expand=true`;
-    if (type2) url += `&type=${type2}`
+    if (filterType) url += `&type=${filterType}`
     return meta.GET(url);
 }
 
-function createEnvironmentResource(group, spec, providedContext) {
+function createEnvironmentResource(group, spec, context) {
     if (!group) throw Error('missing group');
     if (!spec) throw Error('missing spec');
     if (!spec.name) throw Error('missing spec.name');
     // TODO: Other required parameters
 
-    const context = providedContext || getGestaltContext();
     if (!context.org) throw Error("missing context.org");
     if (!context.org.fqon) throw Error("missing context.org.fqon");
     if (!context.environment) throw Error("missing context.environment");
@@ -248,18 +250,19 @@ function createResource(spec, context) {
  * @param {*} spec ApiEndpoint spec
  * @param {*} providedContext Context to create the ApiEndpoint resource.
  */
-function createApiEndpoint(spec, providedContext) {
+function createApiEndpoint(spec, context) {
     if (!spec) throw Error('missing spec');
     if (!spec.name) throw Error('missing spec.name');
     // TODO: Other required parameters
 
-    const context = providedContext || getGestaltContext();
+    if (!context) throw Error("missing context.org");
     if (!context.org) throw Error("missing context.org");
     if (!context.org.fqon) throw Error("missing context.org.fqon");
     if (!context.api) {
         if (!spec.context) throw Error("no context.api, missing spec.context");
         if (!spec.context.api) throw Error("no context.api, missing spec.context.api");
         if (!spec.context.api.id) throw Error("no context.api, missing spec.context.api.id");
+        context = util.cloneObject(context);
         context.api = spec.context.api;
     }
     if (!context.api) throw Error("missing context.api");
@@ -273,10 +276,13 @@ function createApiEndpoint(spec, providedContext) {
 
 
 async function fetchResource(type, spec, context) {
-    context = context || getGestaltContext();
     if (!type) throw Error('No type')
     if (!spec) throw Error('No spec')
     if (!spec.name && !spec.id) throw Error('No spec.name or spec.id fields')
+
+    if (!context) throw Error("missing context.org");
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
 
     if (spec.id) {
         return meta.GET(`/${context.org.fqon}/${type}/${spec.id}`)
@@ -291,7 +297,9 @@ async function fetchResource(type, spec, context) {
 }
 
 function updateResource(type, spec, context) {
-    context = context || getGestaltContext();
+    if (!context) throw Error("missing context.org");
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
     validateTypeSpecContext(type, spec, context);
 
     // Make a copy before mutating
@@ -311,6 +319,7 @@ function updateResource(type, spec, context) {
  * @param {*} context Context to update or create the resource in.
  */
 async function applyResource(spec, context) {
+    debug(`applyResource(${spec.name}, ${context})`);
     if (!spec) throw Error('missing spec');
     if (!spec.resource_type) throw Error('missing spec.resource_type');
     if (!context) throw Error("missing context");
@@ -320,8 +329,11 @@ async function applyResource(spec, context) {
 
     const type = resourceTypeToUrlType[spec.resource_type];
     if (!type) {
+        debug(`  will throw Error: resource_type: ${spec.resource_type} not present`);
         throw Error(`URL type for resourceType ${spec.resource_type} not present`);
     }
+    debug(`  resource_type: ${spec.resource_type}`);
+    debug(`  type: ${type}`);
 
     // Special case
     if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
@@ -329,6 +341,7 @@ async function applyResource(spec, context) {
     }
 
     const resources = await fetchResources(spec.resource_type, context);
+    debug(`  ${resources.length} resources to process`);
 
     let targetResource = null;
     // special case
@@ -338,6 +351,7 @@ async function applyResource(spec, context) {
         targetResource = resources.find(r => r.name == spec.name);
     }
     if (targetResource) {
+        debug(`  Target resource exists, will update`);
         // Update
         spec.id = targetResource.id;
 
@@ -345,6 +359,7 @@ async function applyResource(spec, context) {
         if (spec.resource_type == 'Gestalt::Resource::Node::Lambda' ||
             spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
 
+            debug(`  Special case, will PATCH`);
 
             // Delete unmodifyable parameters
             for (let s of ['resource_type', 'resource_state', 'owner', 'parent', 'modified', 'created', 'org']) {
@@ -362,22 +377,41 @@ async function applyResource(spec, context) {
             }
 
             const patches = jsonPatch.compare(targetResource, spec);
+            debug(`  ${patches.length} patches`);
+
             if (patches.length > 0) {
-                return meta.PATCH(`/${context.org.fqon}/${type}/${spec.id}`, patches);
+                const res = await meta.PATCH(`/${context.org.fqon}/${type}/${spec.id}`, patches);
+                const result = {
+                    status: `Resource '${res.name}' updated (PATCH).`,
+                    resource: patches
+                };
+                return result;
             } else {
                 // Nothing to apply
-                return new Promise((resolve) => {
-                    resolve(null);
-                })
+                return {
+                    status: `Resource '${targetResource.name}' unchanged.`,
+                    resource: targetResource
+                };
             }
         }
 
-        // Otherwise, perform PATCH udpate
+        debug(`  Will update '${spec.name}' via PUT`);
+
+        // Otherwise, perform PUT udpate
         delete spec.resource_type; // Updates don't need (and may not accep the resource_type field)
-        return meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);    
+        const res = await meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);
+        return {
+            status: `Resource '${res.name}' updated (PUT).`,
+            resource: res
+        };
     } else {
+        debug(`  Will create '${spec.name}'`);
         // Create
-        return createResource(spec, context);
+        const res = await createResource(spec, context);
+        return {
+            status: `Resource '${spec.name}' created.`,
+            resource: res
+        };
     }
 }
 

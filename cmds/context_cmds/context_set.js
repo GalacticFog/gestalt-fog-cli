@@ -27,7 +27,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     // Print the context
     cmd.debug(gestaltContext.getContext());
-    console.log('Context: ' + ui.getContextString(gestalt.getContext()));
+    console.log('Context: ' + ui.getContextString(gestaltContext.getContext()));
 });
 
 
@@ -102,7 +102,7 @@ exports.handler = cmd.handler(async function (argv) {
 
 //     // Print the context
 //     cmd.debug(gestaltContext.getContext());
-//     console.log('Context: ' + ui.getContextString(gestalt.getContext()));
+//     console.log('Context: ' + ui.getContextString(gestaltContext.getContext()));
 // });
 
 // // Helper
