@@ -41,6 +41,8 @@ const resourceTypesRequiringPatchUpdate = [
     'Gestalt::Resource::Node::Lambda',
     'Gestalt::Resource::Api',
     'Gestalt::Resource::ApiEndpoint',
+    'Gestalt::Resource::Group',
+    'Gestalt::Resource::User',
 ];
 
 const hierarchyResources = [

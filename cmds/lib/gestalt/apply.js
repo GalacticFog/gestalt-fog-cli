@@ -104,7 +104,7 @@ async function applyResource(spec, context) {
         spec.id = targetResource.id;
 
         // Special case for resources requiring PATCH rather than PUT
-        if (resourceTypesRequiringPatchUpdate.includes(spec.resource_type)) {
+        if (resourceTypesRequiringPatchUpdate.includes(resourceType)) {
 
             debug(`  Special case, will PATCH`);
 
@@ -116,6 +116,11 @@ async function applyResource(spec, context) {
                     delete spec.properties;
                     delete targetResource.properties;
                 }
+            }
+
+            if (resourceType == 'Gestalt::Resource::Group') {
+                delete spec.properties;
+                delete targetResource.properties;
             }
 
             // Delete unmodifyable parameters

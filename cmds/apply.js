@@ -129,8 +129,8 @@ function prioritize(filesAndResources) {
         'Gestalt::Resource::Environment',
 
         // Users, groups
-        'Gestalt::Resource::Group',
         'Gestalt::Resource::User',
+        'Gestalt::Resource::Group',
 
         // Providers next
         'Gestalt::Configuration::Provider',
