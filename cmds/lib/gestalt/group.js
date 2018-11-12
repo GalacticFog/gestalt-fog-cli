@@ -18,7 +18,6 @@ exports.deleteGroup = (spec, options) => {
     return deleteResource('groups', spec, options);
 }
 
-
 exports.addUserToGroup = (spec, userSpec) => {
     if (!spec) throw Error(`Missing spec`);
     if (!spec.id) throw Error(`Missing spec.id`);

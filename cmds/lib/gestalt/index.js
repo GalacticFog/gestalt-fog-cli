@@ -3,9 +3,11 @@
 module.exports = {
     ...require('./api'),
     ...require('./api-endpoint'),
+    ...require('./apply'),
     ...require('./auth'),
     ...require('./container'),
     ...require('./context'),
+    ...require('./context-resolver'),
     ...require('./datafeed'),
     ...require('./environment'),
     ...require('./entitlements'),
