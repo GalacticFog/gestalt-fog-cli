@@ -35,8 +35,8 @@ exports.handler = cmd.handler(async function (argv) {
     if (!spec.name) throw Error(`Missing spec.name`);
     if (!spec.description) throw Error(`Missing spec.description`);
     if (!spec.storeType) throw Error(`Missing spec.storeType`);
-    if (!spec.isDefaultAccountStore) throw Error(`Missing spec.isDefaultAccountStore`);
-    if (!spec.isDefaultGroupStore) throw Error(`Missing spec.isDefaultGroupStore`);
+    if (!spec.isDefaultAccountStore == undefined) throw Error(`Missing spec.isDefaultAccountStore`);
+    if (!spec.isDefaultGroupStore == undefined) throw Error(`Missing spec.isDefaultGroupStore`);
 
     if (!spec.accountStoreId) {
         if (!argv.directory) throw Error(`Argument '--directory' required when 'accountStoreId' field is not present`);
