@@ -1,6 +1,6 @@
 {
   "name": "gestalt-fog-cli",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Galactic Fog Gestalt Platfporm CLI",
   "scripts": {
     "build:local": "./build.sh"
