@@ -40,15 +40,25 @@ exports.handler = cmd.handler(async function (argv) {
     out(`Loading account-store spec from file ${argv.file}`);
     const spec = util.loadObjectFromFile(argv.file);
 
+    if (!spec.name) throw Error(`Missing spec.name`);
+    if (!spec.description) throw Error(`Missing spec.description`);
+    if (!spec.storeType) throw Error(`Missing spec.storeType`);
+    if (!spec.isDefaultAccountStore) throw Error(`Missing spec.isDefaultAccountStore`);
+    if (!spec.isDefaultGroupStore) throw Error(`Missing spec.isDefaultGroupStore`);
+
     // Query for directory Id
     const directories = await getDirectories(fqon);
     const directory = directories.find(d => d.name == directoryName);
-    
-    if (directory) {
-        // Query for group
-        const group = await getDirectoryGroup(directory.id, groupName);
 
-        spec.accountStoreId = group.id;
+    if (directory) {
+        if (spec.storeType == 'GROUP') {
+            // Query for group
+            const group = await getDirectoryGroup(directory.id, groupName);
+            if (!group) throw Error(`Group ${groupName} not found in directory ${directory.name} (${directory.id})`);
+            spec.accountStoreId = group.id;
+        } else if (spec.storeType == 'DIRECTORY') {
+            spec.accountStoreId = directory.id;
+        }
 
         // Create account store based on group
         const response = await createAccountStore(fqon, spec);
