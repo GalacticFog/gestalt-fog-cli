@@ -8,34 +8,26 @@ const security = require('../lib/gestalt/securityclient');
 
 exports.command = 'create-account-store [file]';
 exports.description = 'Create Account Store';
-
 exports.builder = {
     file: {
         alias: 'f',
         description: 'patch definition file',
         required: true
     },
-
     org: {
         definition: 'Org to create directory against',
         required: true
     },
-
-    'directory': {
+    directory: {
         definition: 'Target directory name',
-        required: true
     },
-
     group: {
         definition: 'Target group name',
-        required: true
     }
 }
 
 exports.handler = cmd.handler(async function (argv) {
     const fqon = argv.org;
-    const directoryName = argv['directory'];
-    const groupName = argv.group;
 
     out(`Loading account-store spec from file ${argv.file}`);
     const spec = util.loadObjectFromFile(argv.file);
@@ -46,12 +38,19 @@ exports.handler = cmd.handler(async function (argv) {
     if (!spec.isDefaultAccountStore) throw Error(`Missing spec.isDefaultAccountStore`);
     if (!spec.isDefaultGroupStore) throw Error(`Missing spec.isDefaultGroupStore`);
 
-    // Query for directory Id
-    const directories = await getDirectories(fqon);
-    const directory = directories.find(d => d.name == directoryName);
+    if (!spec.accountStoreId) {
+        if (!argv.directory) throw Error(`Argument '--directory' required when 'accountStoreId' field is not present`);
 
-    if (directory) {
+        const directoryName = argv.directory;
+
+        // Query for directory Id
+        const directories = await getDirectories(fqon);
+        const directory = directories.find(d => d.name == directoryName);
+
+        if (!directory) throw Error(`Directory with ID '${directoryId}' not found.`);
+        
         if (spec.storeType == 'GROUP') {
+            if (!argv.group) throw Error(`Argument '--group' required when account store is of type group`)
             // Query for group
             const group = await getDirectoryGroup(directory.id, groupName);
             if (!group) throw Error(`Group ${groupName} not found in directory ${directory.name} (${directory.id})`);
@@ -59,14 +58,11 @@ exports.handler = cmd.handler(async function (argv) {
         } else if (spec.storeType == 'DIRECTORY') {
             spec.accountStoreId = directory.id;
         }
-
-        // Create account store based on group
-        const response = await createAccountStore(fqon, spec);
-        debug(response);
-        out(`Created account store '${response.name}' (${response.id})`);
-    } else {
-        throw Error(`Directory with ID '${directoryId}' not found.`);
     }
+
+    const response = await createAccountStore(fqon, spec);
+    debug(response);
+    out(`Created account store '${response.name}' (${response.id})`);
 });
 
 async function getDirectories(fqon) {
