@@ -21,7 +21,12 @@ exports.authenticate = (creds, callback) => {//(username, password) => {
     });
 
     debug(`${security_url}${url}`);
-    debug(postData)
+
+    { // Scope block
+        const debugPostData = querystring.parse(postData);
+        debugPostData.password = '******';
+        debug(querystring.stringify(debugPostData));
+    }
 
     const res = request({
         headers: {
