@@ -52,8 +52,8 @@ exports.handler = cmd.handler(async function (argv) {
         if (spec.storeType == 'GROUP') {
             if (!argv.group) throw Error(`Argument '--group' required when account store is of type group`)
             // Query for group
-            const group = await getDirectoryGroup(directory.id, groupName);
-            if (!group) throw Error(`Group ${groupName} not found in directory ${directory.name} (${directory.id})`);
+            const group = await getDirectoryGroup(directory.id, argv.group);
+            if (!group) throw Error(`Group ${argv.group} not found in directory ${directory.name} (${directory.id})`);
             spec.accountStoreId = group.id;
         } else if (spec.storeType == 'DIRECTORY') {
             spec.accountStoreId = directory.id;
