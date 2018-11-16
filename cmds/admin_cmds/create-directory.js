@@ -6,7 +6,7 @@ const { debug } = require('../lib/debug');
 const { directorySchema } = require('../../schemas');
 const security = require('../lib/gestalt/securityclient');
 
-exports.command = 'create-directory [file]';
+exports.command = 'create-directory [file] [org]';
 exports.description = 'Create LDAP directory';
 
 exports.builder = {

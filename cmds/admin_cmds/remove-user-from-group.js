@@ -2,7 +2,7 @@ const cmd = require('../lib/cmd-base');
 const gestalt = require('../lib/gestalt');
 const ui = require('../lib/gestalt-ui')
 
-exports.command = 'remove-user-from-group';
+exports.command = 'remove-user-from-group [user] [group]';
 exports.description = 'Remove user from group';
 exports.builder = {
     user: {

@@ -2,7 +2,7 @@ const cmd = require('../lib/cmd-base');
 const gestalt = require('../lib/gestalt');
 const ui = require('../lib/gestalt-ui')
 
-exports.command = 'add-user-to-group';
+exports.command = 'add-user-to-group [user] [group]';
 exports.description = 'Add user to group';
 exports.builder = {
     user: {

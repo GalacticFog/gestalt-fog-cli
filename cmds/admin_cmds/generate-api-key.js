@@ -4,17 +4,17 @@ const out = console.log;
 const util = require('../lib/util');
 const { debug } = require('../lib/debug');
 
-exports.command = 'generate-api-key';
+exports.command = 'generate-api-key [user]';
 
 exports.description = 'Generate Gestalt Security API key';
 
 exports.builder = {
-    org: {
-        definition: 'Org to create directory against',
-        required: true
-    },
     user: {
         definition: 'User',
+        required: true
+    },
+    org: {
+        definition: 'Org to create directory against',
         required: true
     },
     key: {

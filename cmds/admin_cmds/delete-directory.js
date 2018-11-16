@@ -6,7 +6,7 @@ const { debug } = require('../lib/debug');
 const { directorySchema } = require('../../schemas');
 const security = require('../lib/gestalt/securityclient');
 
-exports.command = 'delete-directory [name]';
+exports.command = 'delete-directory [name] [org]';
 exports.description = 'Delete LDAP directory';
 
 exports.builder = {

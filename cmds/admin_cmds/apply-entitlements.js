@@ -4,31 +4,35 @@ const util = require('../lib/util');
 const gestalt = require('../lib/gestalt');
 const chalk = require('../lib/chalk');
 
-exports.command = 'apply-entitlements'
+exports.command = 'apply-entitlements [path]'
 exports.desc = 'Apply entitlements from file'
 exports.builder = {
     file: {
         alias: 'f',
         description: 'Entitlements definition file',
+        required: true
     },
     group: {
         description: 'Group to apply entitlements to',
     },
-    // TODO: user: {
-    //     description: 'User to apply entitlements to',
-    // },
+    user: {
+        description: 'User to apply entitlements to',
+    },
     path: {
         description: 'Context path to apply entitlements to',
     },
     'dry-run': {
         description: 'Do not actually update entitlements',
-    }
+    },
+    'ignore-errors': {
+        description: 'Ignore errors',
+    },
 }
 
 exports.handler = cmd.handler(async function (argv) {
     if (!argv.file) throw Error('missing --file parameter');
-    if (!argv.group) throw Error('missing --group parameter');
     if (!argv.path) throw Error('missing --path parameter');
+    if (!argv.group && !arv.user) throw Error('Must have one of --user --group parameter');
 
     const { actions, scope } = util.loadObjectFromFile(argv.file);
     validate(actions);
@@ -36,10 +40,20 @@ exports.handler = cmd.handler(async function (argv) {
     const context = await cmd.resolveContextPath(argv.path);
     validateContextScope(context, scope);
 
-    // Query for groups
-    const groups = await gestalt.fetchGroups();
-    const group = groups.find(g => g.name == argv.group)
-    if (!group) throw Error(`Group '${argv.group}' not found`);
+    // Query for identity
+    const identity = null;
+    if (argv.group) {
+        const groups = await gestalt.fetchGroups();
+        const group = groups.find(g => g.name == argv.group)
+        if (!group) throw Error(`Group '${argv.group}' not found`);
+        identity = group;
+    } else if ( argv.user) {
+        const users = await gestalt.fetchUsers();
+        const user = users.find(u => u.name == argv.user)
+        if (!user) throw Error(`User '${argv.user}' not found`);
+        identity = user;
+    }
+    if (!identity) throw Error(`Identity not found`);
 
     // Query for entitlements
     const entitlements = await gestalt.fetchEntitlements(context);
@@ -67,8 +81,8 @@ exports.handler = cmd.handler(async function (argv) {
 
         if (index > -1) {
             // Add identity (if doesn't exist)
-            if (e.properties.identities.indexOf(group.id) == -1) {
-                e.properties.identities.push(group.id);
+            if (e.properties.identities.indexOf(identity.id) == -1) {
+                e.properties.identities.push(identity.id);
                 entitlementsToUpdate.push(e);
 
                 summary[action] = '+';
@@ -80,14 +94,14 @@ exports.handler = cmd.handler(async function (argv) {
             entitlementsLeftToProcess.splice(index, 1);
         } else {
             // remove identity (if exits)
-            const index = e.properties.identities.indexOf(group.id);
+            const index = e.properties.identities.indexOf(identity.id);
             if (index > -1) {
                 e.properties.identities.splice(index, 1);
                 entitlementsToUpdate.push(e);
-                // console.log(`Group '${group.name}' exists for entitlement '${e.properties.action}', will remove from entitlement`)
+                // console.log(`Identity '${identity.name}' exists for entitlement '${e.properties.action}', will remove from entitlement`)
                 summary[action] = '-';
             } else {
-                // console.log(`Group '${group.name}' doesn't exist for entitlement '${e.properties.action}', won't modify entitlement`)
+                // console.log(`Identity '${identity.name}' doesn't exist for entitlement '${e.properties.action}', won't modify entitlement`)
                 summary[action] = ' ';
             }
         }
@@ -100,7 +114,7 @@ exports.handler = cmd.handler(async function (argv) {
         errors++;
     }
 
-    if (errors) {
+    if (errors && !argv['ignore-errors']) {
         throw Error(`Aborting due to ${errors} errors`)
     }
 
@@ -118,6 +132,9 @@ exports.handler = cmd.handler(async function (argv) {
 
     // Apply actions
     if (argv['dry-run']) {
+        for (let e of entitlementsToUpdate) {
+            console.log('Would update entitlement ' + e.properties.action);
+        }
         console.error(`Skipping update due to --dry-run`);
     } else {
         for (let e of entitlementsToUpdate) {
