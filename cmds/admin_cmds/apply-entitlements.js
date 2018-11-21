@@ -41,7 +41,7 @@ exports.handler = cmd.handler(async function (argv) {
     validateContextScope(context, scope);
 
     // Query for identity
-    const identity = null;
+    let identity = null;
     if (argv.group) {
         const groups = await gestalt.fetchGroups();
         const group = groups.find(g => g.name == argv.group)
