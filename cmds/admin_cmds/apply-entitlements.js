@@ -27,6 +27,9 @@ exports.builder = {
     'ignore-errors': {
         description: 'Ignore errors',
     },
+    'add-only': {
+        description: 'Only adds entitlements, does not remove them',
+    },
 }
 
 exports.handler = cmd.handler(async function (argv) {
@@ -47,7 +50,7 @@ exports.handler = cmd.handler(async function (argv) {
         const group = groups.find(g => g.name == argv.group)
         if (!group) throw Error(`Group '${argv.group}' not found`);
         identity = group;
-    } else if ( argv.user) {
+    } else if (argv.user) {
         const users = await gestalt.fetchUsers();
         const user = users.find(u => u.name == argv.user)
         if (!user) throw Error(`User '${argv.user}' not found`);
@@ -96,10 +99,15 @@ exports.handler = cmd.handler(async function (argv) {
             // remove identity (if exits)
             const index = e.properties.identities.indexOf(identity.id);
             if (index > -1) {
-                e.properties.identities.splice(index, 1);
-                entitlementsToUpdate.push(e);
-                // console.log(`Identity '${identity.name}' exists for entitlement '${e.properties.action}', will remove from entitlement`)
-                summary[action] = '-';
+                if (argv['add-only']) {
+                    console.error(`Will skip remove of '${action}' from '${identity.name}'`);
+                    summary[action] = ' ';
+                } else {
+                    e.properties.identities.splice(index, 1);
+                    entitlementsToUpdate.push(e);
+                    // console.log(`Identity '${identity.name}' exists for entitlement '${e.properties.action}', will remove from entitlement`)
+                    summary[action] = '-';
+                }
             } else {
                 // console.log(`Identity '${identity.name}' doesn't exist for entitlement '${e.properties.action}', won't modify entitlement`)
                 summary[action] = ' ';
