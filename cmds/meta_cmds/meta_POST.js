@@ -17,13 +17,10 @@ exports.builder = {
 exports.handler = cmd.handler(async function (argv) {
     const urlPath = argv.path;
 
-    if (!argv.file) {
-        throw Error('missing --file parameter');
+    const spec = {};
+    if (argv.file) {
+        spec = await renderResourceTemplate(argv.file, {}, undefined);
     }
-
-    // Resolve parameters
-    const spec = await renderResourceTemplate(argv.file, {}, undefined);
-
     const response = await meta.POST(urlPath, spec);
     try {
         console.log(JSON.stringify(response, null, 2));
