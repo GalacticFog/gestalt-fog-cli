@@ -3,9 +3,30 @@ const ui = require('../../lib/gestalt-ui')
 const cmd = require('../../lib/cmd-base');
 const selectHierarchy = require('../../lib/selectHierarchy');
 const gestaltContext = require('../../lib/gestalt-context');
+const chalk = require('../../lib/chalk');
+const displayContext = require('../../lib/displayContext');
+const builder = {
+    raw: {
+        description: 'Show in raw JSON format'
+    },
+    output: {
+        alias: 'o',
+        description: 'json, raw, yaml, list'
+    },
+    more: {
+        description: 'Show additional output fields (not applicable for json/raw/yaml/list output types)'
+    },
+    name: {
+        description: 'Filters the resource by the specific name'
+    },
+    'context_path': {
+        description: "Specify the context path (/<org>/<workspace>/<environment>)"
+    }
+};
 
 module.exports = {
-    buildCommand
+    buildCommand,
+    builder
 };
 
 function buildCommand(type) {
@@ -13,18 +34,7 @@ function buildCommand(type) {
     const command = {
         command: type + ' [context_path]',
         description: `Show ${type}`,
-        builder: {
-            raw: {
-                description: 'Show in raw JSON format'
-            },
-            output: {
-                alias: 'o',
-                description: 'json, raw, yaml, list'
-            },
-            'context_path': {
-                description: "Specify the context path (/<org>/<workspace>/<environment>)"
-            }
-        },
+        builder: builder,
         handler: cmd.handler(getHandler(type))
     };
 
@@ -109,7 +119,13 @@ function getHandler(type) {
     }
 
     async function doShowEnvironmentResources(type, context, argv) {
-        const resources = await gestalt.fetchEnvironmentResources(type, context);
-        ui.displayResources(resources, argv, context);
+        try {
+            const resources = await gestalt.fetchEnvironmentResources(type, context);
+            ui.displayResources(resources, argv, context);
+        } catch (err) {
+            console.error(displayContext.contextString(context) + ':')
+            console.error(chalk.red('  ' + err.error));
+            console.error();
+        }
     }
 }

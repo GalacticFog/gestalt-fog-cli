@@ -1,5 +1,5 @@
 const displayContext = require('./displayContext');
-const displayResource = require('./displayResourceUI').run;
+const doDisplayResource = require('./displayResourceUI').run;
 const yaml = require('js-yaml');
 const util = require('./util');
 
@@ -24,6 +24,10 @@ const fmap = {
 
 exports.run = (resources, options, context) => {
 
+    if (options.name) {
+        resources = resources.filter(r => r.name == options.name);
+    }
+
     if (options && options.raw) {
         console.log(JSON.stringify(resources, null, 2));
     } else if (options && options.output) {
@@ -39,7 +43,7 @@ exports.run = (resources, options, context) => {
     } else if (Array.isArray(resources)) {
         if (resources.length == 0) {
             // console.log(getContextMessage('(No Resources)', context));
-            console.log('No resources.');
+            console.error('No resources.');
             // console.log();
         } else if (resources[0].resource_type) {
             const resourceType = resources[0].resource_type;
@@ -60,6 +64,14 @@ exports.run = (resources, options, context) => {
     }
 }
 
+function displayResource(opts, resources) {
+    if (opts.more) {
+        opts.headers.push('ID');
+        opts.fields.push('id');
+    }
+    doDisplayResource(opts, resources);
+}
+
 function getContextMessage(message, context) {
     return context ? `${displayContext.contextString(context)} / ${message}` : message;
 }
@@ -67,18 +79,19 @@ function getContextMessage(message, context) {
 function displayLambdas(resources, opts, context) {
     const options = {
         message: getContextMessage('Lambdas', context),
-        headers: ['Lambda', 'Runtime', 'Public', /*'FQON',*/ 'Type', 'Owner', 'ID', 'Provider ID'],
-        fields: ['name', 'properties.runtime', 'properties.public', /*'org.properties.fqon',*/ 'properties.code_type', 'owner.name', 'id', 'properties.provider.id'],
+        headers: ['Lambda', 'Runtime', 'Public', /*'FQON',*/ 'Type', 'Owner', 'Provider ID'],
+        fields: ['name', 'properties.runtime', 'properties.public', /*'org.properties.fqon',*/ 'properties.code_type', 'owner.name', 'properties.provider.id'],
         sortField: 'name',
     }
+
     displayResource(Object.assign(options, opts), resources);
 }
 
 function displayContainers(containers, opts, context) {
     const options = {
         message: getContextMessage('Containers', context),
-        headers: ['Container', 'Description', 'Status', 'Image', 'Instances', 'Owner', /*'FQON', 'ENV',*/ 'Provider', 'ID'],
-        fields: ['name', 'description', 'properties.status', 'properties.image', 'running_instances', 'owner.name', /*'org.properties.fqon', 'environment.name',*/ 'properties.provider.name', 'id'],
+        headers: ['Container', 'Description', 'Status', 'Image', 'CPU', 'Memory', 'Instances', 'Owner', /*'FQON', 'ENV',*/ 'Provider'],
+        fields: ['name', 'description', 'properties.status', 'properties.image', 'properties.cpus', 'properties.memory', 'running_instances', 'owner.name', /*'org.properties.fqon', 'environment.name',*/ 'properties.provider.name'],
         sortField: 'name',
     }
 
@@ -106,7 +119,7 @@ function displayContainerInstances(resources, opts, context) {
         sortField: 'description',
     }
 
-    displayResource(Object.assign(options, opts), containers);
+    displayResource(Object.assign(options, opts), resources);
 }
 
 function displayApis(resources, opts, context) {
@@ -116,13 +129,11 @@ function displayApis(resources, opts, context) {
             'API',
             //'FQON',
             'Owner',
-            'ID'
         ],
         fields: [
             'name',
             //'org.properties.fqon',
             'owner.name',
-            'id'
         ],
         sortField: 'description',
     }
@@ -133,8 +144,8 @@ function displayApis(resources, opts, context) {
 function displayEnvironments(resources, opts, context) {
     const options = {
         message: getContextMessage('Environments', context),
-        headers: ['Environment', 'Description', 'Type', 'Org', 'Workspace', 'Owner', 'ID'],
-        fields: ['name', 'description', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name', 'id'],
+        headers: ['Environment', 'Description', 'Type', 'Org', 'Workspace', 'Owner'],
+        fields: ['name', 'description', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name'],
         sortField: 'name',
     }
     displayResource(Object.assign(options, opts), resources);
@@ -163,8 +174,8 @@ function displayOrgs(resources, opts, context) {
 function displayUsers(resources, opts, context) {
     const options = {
         message: getContextMessage('Users', context),
-        headers: ['User', 'Description', 'Org', 'Owner', 'ID', 'Groups', 'Created'],
-        fields: ['name', 'description', 'org.properties.fqon', 'owner.name', 'id', 'properties.groups', 'created.timestamp'],
+        headers: ['User', 'Description', 'Org', 'Owner', 'Groups', 'Created'],
+        fields: ['name', 'description', 'org.properties.fqon', 'owner.name', 'properties.groups', 'created.timestamp'],
         sortField: 'name',
     }
     displayResource(Object.assign(options, opts), resources);
@@ -173,8 +184,8 @@ function displayUsers(resources, opts, context) {
 function displayGroups(resources, opts, context) {
     const options = {
         message: getContextMessage('Groups', context),
-        headers: ['Group', 'ID', 'Description', 'Org', 'Owner', 'Users', 'ID'],
-        fields: ['name', 'id', 'description', 'org.properties.fqon', 'owner.name', 'properties.num_users', 'id'],
+        headers: ['Group', 'ID', 'Description', 'Org', 'Owner', 'Users'],
+        fields: ['name', 'id', 'description', 'org.properties.fqon', 'owner.name', 'properties.num_users'],
         sortField: 'name',
     }
     resources = util.cloneObject(resources);
@@ -222,8 +233,8 @@ function displayApiEndpoints(resources, opts, context) {
 function displayProviders(resources, opts, context) {
     const options = {
         message: getContextMessage('Providers', context),
-        headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'Parent', /*'Parent Type',*/ 'UID'/*'Created'*/],
-        fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'properties.parent.name', /*'properties.parent.typeId',*/ 'id'/*'created.timestamp'*/],
+        headers: ['Provider', 'Description', 'Type', 'Org', 'Owner', 'Parent', /*'Parent Type', 'Created'*/],
+        fields: ['name', 'description', 'resource_type', 'org.properties.fqon', 'owner.name', 'properties.parent.name', /*'properties.parent.typeId', created.timestamp'*/],
         sortField: 'name',
     }
     resources = util.cloneObject(resources);
@@ -251,8 +262,8 @@ function displayVolumes(resources, opts, context) {
 function displayPolicies(resources, opts, context) {
     const options = {
         message: getContextMessage('Policies', context),
-        headers: ['Policy', 'Description', 'Rules', 'ID'],
-        fields: ['name', 'description', 'num_rules', 'id'],
+        headers: ['Policy', 'Description', 'Rules'],
+        fields: ['name', 'description', 'num_rules'],
         sortField: 'name',
     }
 
@@ -267,8 +278,8 @@ function displayPolicies(resources, opts, context) {
 function displayPolicyRules(resources, opts, context) {
     const options = {
         message: getContextMessage('Policy Rules', context),
-        headers: ['Policy', 'Policy Rule', 'Description', 'Type', 'ID'],
-        fields: ['properties.parent.name', 'name', 'description', 'resource_type', 'id'],
+        headers: ['Policy', 'Policy Rule', 'Description', 'Type'],
+        fields: ['properties.parent.name', 'name', 'description', 'resource_type'],
         sortField: 'properties.parent.name',
     }
 
