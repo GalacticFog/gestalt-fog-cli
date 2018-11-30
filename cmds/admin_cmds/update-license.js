@@ -32,5 +32,5 @@ exports.handler = cmd.handler(async function (argv) {
     const spec = util.loadObjectFromFile(argv.file);
 
     const res = await meta.POST('/root/licenses', spec);
-    console.log("Gestalt Platform license udpated.")
+    console.log("Gestalt Platform license updated.")
 });

@@ -154,6 +154,7 @@ const directiveHandlers = {
     Lambda: resolveLambda,
     Container: resolveContainer,
     Api: resolveApi,
+    Policy: resolvePolicy,
     LambdaSource: resolveBase64File,
 }
 
@@ -227,6 +228,16 @@ async function resolveApi(apiName, param = 'id') {
     }
     throw Error(`Unable to resolve API with name '${apiName}'`);
 }
+
+async function resolvePolicy(name, param = 'id') {
+    const resources = await gestalt.fetchEnvironmentPolicies(state.context);
+    const res = resources.find(r => r.name == name);
+    if (res) {
+        return res[param];
+    }
+    throw Error(`Unable to resolve Policy with name '${res}'`);
+}
+
 
 async function resolveBase64File(file) {
     const contents = util.readFileAsText(file);

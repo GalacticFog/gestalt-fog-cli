@@ -13,6 +13,8 @@ const resourceTypeToUrlType = {
     'Gestalt::Resource::Volume': 'volumes',
     'Gestalt::Resource::Policy': 'policies',
     'Gestalt::Resource::ApiEndpoint': 'apiendpoints',
+    'Gestalt::Resource::Rule::Event': 'rules',
+    'Gestalt::Resource::Rule::Limit': 'rules',
 };
 
 /**
@@ -43,6 +45,9 @@ const resourceTypesRequiringPatchUpdate = [
     'Gestalt::Resource::ApiEndpoint',
     'Gestalt::Resource::Group',
     'Gestalt::Resource::User',
+    'Gestalt::Resource::Policy',
+    'Gestalt::Resource::Rule::Event',
+    'Gestalt::Resource::Rule::Limit',
 ];
 
 const hierarchyResources = [

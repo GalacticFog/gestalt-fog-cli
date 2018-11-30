@@ -122,14 +122,19 @@ exports.handler = cmd.handler(async function (argv) {
             }
         }
 
-        console.error(`Succeeded:`)
-        for (let item of succeeded) {
-            console.error(`  ${item.resource.name} (${item.file})`);
+        if (succeeded.length > 0) {
+            console.error();
+            console.error(`${succeeded.length} / ${succeeded.length + failed.length} succeeded:`)
+            for (let item of succeeded) {
+                console.error(`  ${item.resource.name} (${item.file})`);
+            }
         }
-        console.error();
-        console.error(`Failed:`)
-        for (let item of failed) {
-            console.error(`  ${item.resource.name} (${item.file})`);
+        if (failed.length > 0) {
+            console.error();
+            console.error(`${failed.length} / ${succeeded.length + failed.length} failed:`)
+            for (let item of failed) {
+                console.error(`  ${item.resource.name} (${item.file})`);
+            }
         }
 
         // Check for failures, return error if so

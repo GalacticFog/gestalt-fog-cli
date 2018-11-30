@@ -200,9 +200,13 @@ function createResource(spec, context) {
     if (!spec) throw Error(`createResource: spec is '${spec}'`);
     if (!spec.resource_type) throw Error(`createResource: spec.resource_type is '${spec.resource_type}'`);
 
+    debug(`createResource(${spec.resource_type})`)
+
     // Special cases
     if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
         return createApiEndpoint(spec, context);
+    } else if (spec.resource_type.indexOf('Gestalt::Resource::Rule::Event') == 0) {
+        return createPolicyRule(spec, context);
     } else if (spec.resource_type == 'Gestalt::Resource::Organization') {
         return createOrg(spec, context);
     }
@@ -263,6 +267,36 @@ function createApiEndpoint(spec, context) {
     return meta.POST(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints`, spec);
 }
 
+
+/**
+ * Creates a PolicyRule resource.  The ApiEndpoint requires a parent API object, which either
+ * needs to provided in the Context (context.policy) or embedded in the spec (spec.context.policy).
+ * @param {*} spec ApiEndpoint spec
+ * @param {*} providedContext Context to create the ApiEndpoint resource.
+ */
+function createPolicyRule(spec, context) {
+    if (!spec) throw Error('missing spec');
+    if (!spec.name) throw Error('missing spec.name');
+    // TODO: Other required parameters
+
+    if (!context) throw Error("missing context.org");
+    if (!context.org) throw Error("missing context.org");
+    if (!context.org.fqon) throw Error("missing context.org.fqon");
+    if (!context.policy) {
+        if (!spec.context) throw Error("no context.policy, missing spec.context");
+        if (!spec.context.policy) throw Error("no context.policy, missing spec.context.policy");
+        if (!spec.context.policy.id) throw Error("no context.policy, missing spec.context.policy.id");
+        context = util.cloneObject(context);
+        context.policy = spec.context.policy;
+    }
+    if (!context.policy) throw Error("missing context.policy");
+    if (!context.policy.id) throw Error("missing context.policy.id");
+
+    spec = util.cloneObject(spec);
+    // delete spec.resource_type; // Otherwise {"code":500,"message":"Failed parsing JSON: {\"obj.resource_type\":[{\"msg\":[\"error.expected.uuid\"],\"args\":[]}]}"}
+    delete spec.context;
+    return meta.POST(`/${context.org.fqon}/policies/${context.policy.id}/rules`, spec);
+}
 
 async function fetchResource(type, spec, context) {
     if (!type) throw Error('No type')
