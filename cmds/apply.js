@@ -106,15 +106,36 @@ exports.handler = cmd.handler(async function (argv) {
             console.error();
         }
 
+        const succeeded = [];
+        const failed = [];
+
         // Process groups
         for (let group of groups) {
             for (let item of group.items) {
                 try {
                     await processFile(item.file, argv, config, context);
+                    succeeded.push(item);
                 } catch (err) {
                     console.error(chalk.red(err));
+                    failed.push(item);
                 }
             }
+        }
+
+        console.error(`Succeeded:`)
+        for (let item of succeeded) {
+            console.error(`  ${item.resource.name} (${item.file})`);
+        }
+        console.error();
+        console.error(`Failed:`)
+        for (let item of failed) {
+            console.error(`  ${item.resource.name} (${item.file})`);
+        }
+
+        // Check for failures, return error if so
+        if (failed.length > 0) {
+            const message = `There were ${failed.length} failures during 'apply' (${succeeded.length} / ${succeeded.length + failed.length} resources succeeded)`;
+            throw Error(message);
         }
     } else {
         throw Error('--file or --directory parameter required');
