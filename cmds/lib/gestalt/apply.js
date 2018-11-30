@@ -39,7 +39,7 @@ async function applyResource(spec, context) {
     if (!spec.resource_type) throw Error('missing spec.resource_type');
     if (!context) throw Error("missing context");
 
-    let type = resourceTypeToUrlType[spec.resource_type];
+    const type = resourceTypeToUrlType[spec.resource_type];
     const resourceType = spec.resource_type;
 
     if (resourceType.indexOf('Fog::') == 0) {
@@ -114,6 +114,8 @@ async function applyResource(spec, context) {
             return doPatch(type, context, spec, targetResource);
         }
 
+        // TODO: Determine if resource actually needs to be updated via PUT by comparing spec to targetResource
+
         debug(`  Will update '${spec.name}' via PUT`);
 
         // Otherwise, perform PUT update
@@ -151,6 +153,11 @@ async function doPatch(type, context, spec, targetResource) {
             delete spec.properties;
             delete targetResource.properties;
         }
+    }
+
+    if (resourceType == 'Gestalt::Resource::ApiEndpoint') {
+        delete targetResource.properties.public_url;
+        delete targetResource.properties.upstream_url;
     }
 
     if (resourceType == 'Gestalt::Resource::Group') {
@@ -198,10 +205,7 @@ async function doPatch(type, context, spec, targetResource) {
 
     if (patches.length > 0) {
 
-        console.log(spec)
-        console.log(JSON.stringify(targetResource, null, 2))
-    
-
+        // console.log(JSON.stringify(patches, null, 2))
 
         const res = await meta.PATCH(`/${context.org.fqon}/${type}/${spec.id}`, patches);
         const result = {

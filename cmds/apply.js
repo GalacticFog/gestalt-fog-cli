@@ -10,7 +10,7 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const chalk = require('./lib/chalk');
 const jsonPatch = require('fast-json-patch');
-exports.command = 'apply';
+exports.command = 'apply [context]';
 exports.description = 'Apply resource';
 exports.builder = {
     file: {
@@ -79,6 +79,9 @@ exports.handler = cmd.handler(async function (argv) {
         files = files.filter(f => {
             return (f.endsWith('.json') || f.endsWith('.yaml')) ? true : false;
         })
+        files = files.filter(f => {
+            return (!f.startsWith('_'));
+        })
 
         // Load files into resources
         const filesAndResources = files.map(f => {
@@ -113,9 +116,12 @@ exports.handler = cmd.handler(async function (argv) {
         for (let group of groups) {
             for (let item of group.items) {
                 try {
-                    await processFile(item.file, argv, config, context);
+                    const result = await processFile(item.file, argv, config, context);
+                    console.error(result.status);
+                    item.status = result.status;
                     succeeded.push(item);
                 } catch (err) {
+                    item.status = err;
                     console.error(chalk.red(err));
                     failed.push(item);
                 }
@@ -126,14 +132,14 @@ exports.handler = cmd.handler(async function (argv) {
             console.error();
             console.error(`${succeeded.length} / ${succeeded.length + failed.length} succeeded:`)
             for (let item of succeeded) {
-                console.error(`  ${item.resource.name} (${item.file})`);
+                console.error(`  ${item.status} (${item.file})`);
             }
         }
         if (failed.length > 0) {
             console.error();
             console.error(`${failed.length} / ${succeeded.length + failed.length} failed:`)
             for (let item of failed) {
-                console.error(`  ${item.resource.name} (${item.file})`);
+                console.error(`  ${item.status} (${item.file})`);
             }
         }
 
@@ -255,7 +261,6 @@ async function processFile(file, params, config, context) {
             console.log(JSON.stringify(resourceSpec, null, 2));
         }
     } else {
-        const result = await gestalt.applyResource(resourceSpec, context);
-        console.log(result.status);
+        return gestalt.applyResource(resourceSpec, context);
     }
 }
