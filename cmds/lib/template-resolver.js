@@ -2,6 +2,7 @@ const debug = require('./debug').debug;
 const contextResolver = require('../lib/context-resolver');
 const gestalt = require('../lib/gestalt');
 const util = require('../lib/util');
+// const path = require('path');
 
 // -----------OLD Method - traversing an object --------------------------------------------------------------------
 // exports.renderResourceTemplate = async function (template, config, context) {
@@ -30,6 +31,7 @@ const util = require('../lib/util');
 exports.renderResourceTemplate = async function (templateFile, config, context) {
     state.config = util.cloneObject(config);
     state.context = util.cloneObject(context);
+    state.templateFile = templateFile;
 
     debug(`Loading temmplate from '${templateFile}'`);
     const template = util.readFileAsText(templateFile);
@@ -48,7 +50,8 @@ exports.renderResourceTemplate = async function (templateFile, config, context) 
 const state = {
     config: undefined,
     context: undefined,
-    directivesCache: {}
+    directivesCache: {},
+    templateFile: undefined
 };
 
 
@@ -151,6 +154,7 @@ const directiveHandlers = {
     Lambda: resolveLambda,
     Container: resolveContainer,
     Api: resolveApi,
+    LambdaSource: resolveBase64File,
 }
 
 async function resolveProvider(path, param = 'id') {
@@ -224,6 +228,12 @@ async function resolveApi(apiName, param = 'id') {
     throw Error(`Unable to resolve API with name '${apiName}'`);
 }
 
+async function resolveBase64File(file) {
+    const contents = util.readFileAsText(file);
+    const buf = Buffer.from(contents, 'utf8');
+    const code = buf.toString('base64');
+    return code;
+}
 
 // //TODO: implement
 // async function resolveLambda(lambdaName, param = 'id') {
