@@ -198,7 +198,7 @@ async function chooseOrgWorkspaceEnvironment(options) {
 
     gestalt.setCurrentWorkspace(workspace);
 
-    const environment = await selectEnvironment.run(options.environment);
+    const environment = await selectEnvironment.run(options.environment, null, gestaltContext.getContext());
     if (!environment) {
         // console.log("No selection, exiting.");
         return {

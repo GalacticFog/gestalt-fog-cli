@@ -15,7 +15,7 @@ exports.handler = cmd.handler(async function (argv) {
         // Command mode
 
         if (!argv.container_name) throw Error('missing container_name')
-        if (!argv.num_instances) throw Error('missing num_instances')
+        if (argv.num_instances == undefined) throw Error('missing num_instances')
 
         const context = await cmd.resolveEnvironment();
 
@@ -24,7 +24,7 @@ exports.handler = cmd.handler(async function (argv) {
         const container = await gestalt.fetchContainer({ name: argv.container_name }, context);
 
         container.properties.num_instances = argv.num_instances;
-        const response = await gestalt.updateContainer(container);
+        const response = await gestalt.updateContainer(container, context);
         console.log(`Container '${container.name}' scale to ${argv.num_instances} initiated.`);
     } else {
 
@@ -58,7 +58,7 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 function validate(num_instances) {
-    if (!num_instances) {
+    if (num_instances == undefined) {
         throw Error(`Invalid input: num_instances is '${num_instances}', aborting.`);
     }
     if (!Number.isInteger(Number(num_instances))) {

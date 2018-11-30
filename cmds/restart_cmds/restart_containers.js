@@ -18,12 +18,12 @@ exports.handler = cmd.handler(async function (argv) {
         // Scale down
         container.properties.num_instances = 0;
         console.log(`Scaling down from ${instances} instances...`);
-        await gestalt.updateContainer(container);
+        await gestalt.updateContainer(container, context);
         console.log(`Scaling back up to ${instances} instances...`);
 
         // Scale up
         container.properties.num_instances = instances;
-        await gestalt.updateContainer(container);
+        await gestalt.updateContainer(container, context);
         console.log('Done.')
     }
 });
