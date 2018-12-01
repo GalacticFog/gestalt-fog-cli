@@ -5,7 +5,20 @@ exports.run = (context) => {
     console.log(this.contextString(context));
 }
 
-exports.contextString = (context) => {
+exports.contextString = (context, opts) => {
+    if (opts && opts.raw) {
+        let s = ''
+        if (context && context.org) {
+            s += `/${context.org.fqon}`;
+            if (context.workspace) {
+                s += `/${context.workspace.name}`;
+            }
+            if (context.environment) {
+                s += `/${context.environment.name}`;
+            }
+        }
+        return s;    
+    }
 
     let s = `${chalk.bold.green(gestalt.getHost())}`
     if (context && context.org) {

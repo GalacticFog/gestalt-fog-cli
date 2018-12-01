@@ -24,6 +24,9 @@ exports.builder = {
     config: {
         description: 'config file'
     },
+    'ignore-config': {
+        description: 'Ignore config file if present'
+    },
     name: {
         description: 'resource name (overrides name in resource file)'
     },
@@ -36,6 +39,9 @@ exports.builder = {
     context: {
         description: "Target context path for resource creation. Overrides the current context if specified"
     },
+    'ignore-context': {
+        description: 'Ignore context file if present'
+    },
     'render-only': {
         description: 'Render only'
     }
@@ -46,30 +52,45 @@ exports.handler = cmd.handler(async function (argv) {
         // Use context from the command line
         context = await cmd.resolveContextPath(argv.context);
     } else {
-        // look for a special file
-        if (argv.directory && fs.existsSync(`${argv.directory}/context`)) {
-            const contextFile = `${argv.directory}/context`;
-            const contextPath = util.readFileAsText(contextFile);
-            console.log('CONTEXT PATH: ' + contextPath)
-            context = await cmd.resolveContextPath(contextPath);
+        if (argv['ignore-context']) {
+            console.error('Ignoring context file (if present) due to --ignore-context');
         } else {
-            // Use saved context
-            context = gestaltContext.getContext();
+            // look for a special file
+            if (argv.directory && fs.existsSync(`${argv.directory}/context`)) {
+                const contextFile = `${argv.directory}/context`;
+                const contextPath = util.readFileAsText(contextFile);
+                console.error('CONTEXT PATH: ' + contextPath)
+                context = await cmd.resolveContextPath(contextPath);
+            }
         }
+        // Default to saved context
+        context = context || gestaltContext.getContext();
     }
 
-    console.log('Using context: ' + ui.getContextString(context));
+    console.error('Using context: ' + ui.getContextString(context));
 
     let config = {};
     if (argv.config) {
         debug(`Loading config from file ${argv.config}`);
         config = util.loadObjectFromFile(argv.config);
+    } else {
+        if (argv['ignore-config']) {
+            console.error('Ignoring config file (if present) due to --ignore-config');
+        } else {
+            // look for a special file
+            if (argv.directory && fs.existsSync(`${argv.directory}/config`)) {
+                const configFile = `${argv.directory}/config`;
+                config = util.loadObjectFromFile(configFile, 'yaml');
+                console.error('Loaded config from: ' + configFile)
+            }
+        }
     }
 
     if (argv.file && argv.directory) {
         throw Error(`Can't specify both --file and --directory`);
     } else if (argv.file) {
-        await processFile(argv.file, argv, config, context);
+        const result = await processFile(argv.file, argv, config, context);
+        console.error(result.status);
     } else if (argv.directory) {
         if (argv.description) throw Error(`Can't specify --description with --directory`);
         if (argv.name) throw Error(`Can't specify --description with --name`);

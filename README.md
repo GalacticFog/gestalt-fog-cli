@@ -225,6 +225,7 @@ fog context <command>
   fog context select-org              Change org
   fog context select-workspace        Change workspace
   fog context set [path]              Set context
+  fog context show                    Shows the current context
 
 fog create <command>
   fog create api-endpoint [name]   Create API Endpoint

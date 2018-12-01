@@ -24,7 +24,11 @@ function loadObjectFromString(str, type) {
   return JSON.parse(str);
 }
 
-function loadObjectFromFile(file) {
+function loadObjectFromFile(file, hint) {
+  if (hint == 'yaml') {
+    return loadYAMLFromFile(file);
+  }
+
   if (file.endsWith('.yaml') || file.endsWith('.yml')) {
     return loadYAMLFromFile(file);
   }

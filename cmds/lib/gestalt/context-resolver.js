@@ -25,6 +25,9 @@ module.exports = {
  * @param {*} path An absolute context path specifiying a target org, workspace, or environment
  */
 async function resolveContextPath(path) {
+
+    path = path.replace(/\n$/, '')
+
     const [unused, orgName, workspaceName, environmentName] = path.split('/');
     debug('Context path: ', path);
 
