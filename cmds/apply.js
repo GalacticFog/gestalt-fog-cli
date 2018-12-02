@@ -63,38 +63,8 @@ exports.handler = cmd.handler(async function (argv) {
     const context = await obtainContext(argv);
     console.error('Using context: ' + ui.getContextString(context));
 
-    let config = {};
-    if (argv.config) {
-        debug(`Loading config from file ${argv.config}`);
-        config = util.loadObjectFromFile(argv.config);
-    } else {
-        if (argv['ignore-config']) {
-            console.error('Ignoring config file (if present) due to --ignore-config');
-        } else {
-            const dir = argv.directory || path.dirname(argv.file)
-
-            debug(`dir = ${dir}`);
-
-            // look for a special file
-            if (dir && fs.existsSync(`${dir}/config`)) {
-                const configFile = `${dir}/config`;
-                config = util.loadObjectFromFile(configFile, 'yaml');
-                console.error('Loaded config from: ' + configFile)
-            }
-        }
-    }
-
-    // Process params
-    if (argv.params) {
-        for (let a of argv.params) {
-            const arg = a.split('=');
-            if (arg[1] == undefined) {
-                throw Error(`No value specified for '${arg[0]}', use '${arg[0]}=<value>'`)
-            } else {
-                config[arg[0]] = arg[1];
-            }
-        }
-    }
+    const config = obtainConfig(argv);
+    debug('Using config: ' + JSON.stringify(config, null, 2));
 
     if (argv.file && argv.directory) {
         throw Error(`Can't specify both --file and --directory`);
@@ -131,11 +101,11 @@ exports.handler = cmd.handler(async function (argv) {
         }
 
         // Display plan
-        console.error(`Deployment plan:`)
+        console.error(chalk.dim.blue(`Deployment plan:`));
         for (let group of groups) {
-            console.error(`  ${group.type}`);
+            console.error(chalk.dim.blue(`  ${group.type}`));
             for (let item of group.items) {
-                console.error(`    ${item.file}`);
+                console.error(chalk.dim.blue(`    ${item.file}`));
             }
             console.error();
         }
@@ -213,6 +183,42 @@ async function obtainContext(argv) {
     if (JSON.stringify(context) == '{}') console.error(`Warning: No default context found`);
 
     return context;
+}
+
+function obtainConfig(argv) {
+    let config = {};
+    if (argv.config) {
+        debug(`Loading config from file ${argv.config}`);
+        config = util.loadObjectFromFile(argv.config);
+    } else {
+        if (argv['ignore-config']) {
+            console.error('Ignoring config file (if present) due to --ignore-config');
+        } else {
+            const dir = argv.directory || path.dirname(argv.file)
+
+            debug(`dir = ${dir}`);
+
+            // look for a special file
+            if (dir && fs.existsSync(`${dir}/config`)) {
+                const configFile = `${dir}/config`;
+                config = util.loadObjectFromFile(configFile, 'yaml');
+                console.error('Loaded config from: ' + configFile)
+            }
+        }
+    }
+
+    // Process params
+    if (argv.params) {
+        for (let a of argv.params) {
+            const arg = a.split('=');
+            if (arg[1] == undefined) {
+                throw Error(`No value specified for '${arg[0]}', use '${arg[0]}=<value>'`)
+            } else {
+                config[arg[0]] = arg[1];
+            }
+        }
+    }
+    return config;
 }
 
 function prioritize(filesAndResources) {

@@ -78,11 +78,11 @@ async function applyResource(spec, context) {
     if (spec.resource_type == 'Gestalt::Resource::Organization') {
         resources = await meta.GET(`/orgs?expand=true`);
         targetResource = resources.find(r => r.properties.fqon == spec.properties.fqon);
-        delete spec.properties;
+        onlyEnv(spec);
     } else if (spec.resource_type == 'Gestalt::Resource::Workspace') {
         resources = await fetchOrgResources('workspaces', [context.org.fqon]);
         targetResource = resources.find(r => r.name == spec.name);
-        delete spec.properties;
+        onlyEnv(spec);
     } else if (spec.resource_type == 'Gestalt::Resource::Environment') {
         resources = await fetchWorkspaceResources('environments', context);
         targetResource = resources.find(r => r.name == spec.name);
@@ -139,11 +139,25 @@ async function applyResource(spec, context) {
 }
 
 /**
+ * Deletes spec.properties except for spec.properties.env
+ */
+function onlyEnv(o) {
+    if (o.properties && o.properties.env) {
+        o.properties = { env: o.properties.env };
+    } else {
+        o.properties = {}
+    }
+}
+
+/**
  * Special cases function for resources requiring PATH udpate.
  * Deletes metadata in the spec and targetResource that would otherwise
  * cause the comparison to generate unnecessary patches.
  */
 async function doPatch(type, context, spec, targetResource) {
+
+    // console.log(JSON.stringify(spec, null, 2))
+    // console.log(JSON.stringify(targetResource, null, 2))
 
     const resourceType = spec.resource_type;
 
@@ -152,14 +166,45 @@ async function doPatch(type, context, spec, targetResource) {
             delete spec.properties.workspace;
             delete targetResource.properties.workspace;
         } else {
-            delete spec.properties;
-            delete targetResource.properties;
+            onlyEnv(spec);
+            onlyEnv(targetResource);
+
+            // TODO: if Workspace properties.env doesn't exist, the env from the parent org is rendered
+            // This causes problems with patch, since it attempts to remove a variable that isn't present.
+            // PATCH http://localhost:31112/meta/training1/workspaces/7ec324dc-9c8f-496b-b908-719afd5d05fc 
+            // [
+            //   {
+            //     "op": "remove",
+            //     "path": "/properties/env/TEST4"
+            //   },
+            //   {
+            //     "op": "remove",
+            //     "path": "/properties/env/TEST3"
+            //   },
+            //   {
+            //     "op": "remove",
+            //     "path": "/properties/env/TEST1"
+            //   },
+            //   {
+            //     "op": "add",
+            //     "path": "/properties/env/one",
+            //     "value": "one"
+            //   }
+            // ] 
+            // StatusCodeError: 500 - {"code":500,"message":"/properties/env/TEST4 does not exist."}
+
+            if (spec.properties && !spec.properties.env) {
+                if (targetResource.properties) {
+                    delete targetResource.properties.env;
+                }
+            }
         }
     }
 
     if (resourceType == 'Gestalt::Resource::ApiEndpoint') {
         delete targetResource.properties.public_url;
         delete targetResource.properties.upstream_url;
+        delete targetResource.properties.location_id;
     }
 
     if (resourceType == 'Gestalt::Resource::Group') {
@@ -202,13 +247,25 @@ async function doPatch(type, context, spec, targetResource) {
         delete targetResource[s];
     }
 
-    const patches = jsonPatch.compare(targetResource, spec);
+    // console.log(JSON.stringify(spec, null, 2))
+    // console.log(JSON.stringify(targetResource, null, 2))
+
+    let patches = jsonPatch.compare(targetResource, spec);
     debug(`  ${patches.length} patches`);
 
+    patches = patches.filter(p => {
+        if (p.op == 'remove') {
+            debug(`Warning: not removing environment variable: ${JSON.stringify(p)}`);
+            if (p.path.startsWith('/properties/env/')) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    debug(`  ${patches.length} patches after filter`);
+
     if (patches.length > 0) {
-
-        // console.log(JSON.stringify(patches, null, 2))
-
         const res = await meta.PATCH(`/${context.org.fqon}/${type}/${spec.id}`, patches);
         const result = {
             status: `${resourceType} '${res.name}' updated (PATCH).`,
@@ -223,7 +280,6 @@ async function doPatch(type, context, spec, targetResource) {
         };
     }
 }
-
 
 function applyFogResource(spec, context) {
     if (spec.resource_type == 'Fog::GroupMembership') {
