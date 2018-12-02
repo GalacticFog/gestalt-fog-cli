@@ -205,7 +205,7 @@ function createResource(spec, context) {
     // Special cases
     if (spec.resource_type == 'Gestalt::Resource::ApiEndpoint') {
         return createApiEndpoint(spec, context);
-    } else if (spec.resource_type.indexOf('Gestalt::Resource::Rule::Event') == 0) {
+    } else if (spec.resource_type.indexOf('Gestalt::Resource::Rule::') == 0) {
         return createPolicyRule(spec, context);
     } else if (spec.resource_type == 'Gestalt::Resource::Organization') {
         return createOrg(spec, context);
