@@ -26,6 +26,8 @@ module.exports = {
  */
 async function resolveContextPath(path) {
 
+    if (typeof path != 'string') throw Error(`'typeof path' is invalid: expected 'string' but was '${typeof path}'`);
+
     path = path.replace(/\n$/, '')
 
     const [unused, orgName, workspaceName, environmentName] = path.split('/');

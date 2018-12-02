@@ -24,7 +24,7 @@ const fmap = {
 
 exports.run = (resources, options, context) => {
 
-    if (options.name) {
+    if (options && options.name) {
         resources = resources.filter(r => r.name == options.name);
     }
 

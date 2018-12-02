@@ -3,13 +3,12 @@ const gestaltContext = require('./lib/gestalt-context')
 const cmd = require('./lib/cmd-base');
 const ui = require('./lib/gestalt-ui');
 const { renderResourceTemplate } = require('./lib/template-resolver');
-const out = console.log;
 const util = require('./lib/util');
 const { debug } = require('./lib/debug');
 const yaml = require('js-yaml');
 const fs = require('fs');
 const chalk = require('./lib/chalk');
-const jsonPatch = require('fast-json-patch');
+const path = require('path');
 exports.command = 'apply [context]';
 exports.description = 'Apply resource';
 exports.builder = {
@@ -23,6 +22,10 @@ exports.builder = {
     },
     config: {
         description: 'config file'
+    },
+    params: {
+        type: 'array',
+        description: 'config params'
     },
     'ignore-config': {
         description: 'Ignore config file if present'
@@ -44,29 +47,20 @@ exports.builder = {
     },
     'render-only': {
         description: 'Render only'
-    }
+    },
+    //TODO: 'add-only': {
+    //     description: 'Only add resources, don\'t update existing resources'
+    // }
 }
 exports.handler = cmd.handler(async function (argv) {
-    let context = null;
-    if (argv.context) {
-        // Use context from the command line
-        context = await cmd.resolveContextPath(argv.context);
-    } else {
-        if (argv['ignore-context']) {
-            console.error('Ignoring context file (if present) due to --ignore-context');
-        } else {
-            // look for a special file
-            if (argv.directory && fs.existsSync(`${argv.directory}/context`)) {
-                const contextFile = `${argv.directory}/context`;
-                const contextPath = util.readFileAsText(contextFile);
-                console.error('CONTEXT PATH: ' + contextPath)
-                context = await cmd.resolveContextPath(contextPath);
-            }
-        }
-        // Default to saved context
-        context = context || gestaltContext.getContext();
+
+    if (argv.file && argv.directory) {
+        throw Error(`Can't specify both --file and --directory`);
+    } else if (!argv.file && !argv.directory) {
+        throw Error(`Must specify one of --file or --directory`);
     }
 
+    const context = await obtainContext(argv);
     console.error('Using context: ' + ui.getContextString(context));
 
     let config = {};
@@ -77,11 +71,27 @@ exports.handler = cmd.handler(async function (argv) {
         if (argv['ignore-config']) {
             console.error('Ignoring config file (if present) due to --ignore-config');
         } else {
+            const dir = argv.directory || path.dirname(argv.file)
+
+            debug(`dir = ${dir}`);
+
             // look for a special file
-            if (argv.directory && fs.existsSync(`${argv.directory}/config`)) {
-                const configFile = `${argv.directory}/config`;
+            if (dir && fs.existsSync(`${dir}/config`)) {
+                const configFile = `${dir}/config`;
                 config = util.loadObjectFromFile(configFile, 'yaml');
                 console.error('Loaded config from: ' + configFile)
+            }
+        }
+    }
+
+    // Process params
+    if (argv.params) {
+        for (let a of argv.params) {
+            const arg = a.split('=');
+            if (arg[1] == undefined) {
+                throw Error(`No value specified for '${arg[0]}', use '${arg[0]}=<value>'`)
+            } else {
+                config[arg[0]] = arg[1];
             }
         }
     }
@@ -174,6 +184,37 @@ exports.handler = cmd.handler(async function (argv) {
     }
 });
 
+async function obtainContext(argv) {
+    let context = null;
+    if (argv.context) {
+        // Use context from the command line
+        context = await cmd.resolveContextPath(argv.context);
+    } else {
+        if (argv['ignore-context']) {
+            console.error('Ignoring context file (if present) due to --ignore-context');
+        } else {
+
+            const dir = argv.directory || path.dirname(argv.file)
+
+            debug(`dir = ${dir}`);
+
+            // look for a special file
+            if (dir && fs.existsSync(`${dir}/context`)) {
+                const contextFile = `${dir}/context`;
+                const contextPath = util.readFileAsText(contextFile);
+                console.error('CONTEXT PATH: ' + contextPath)
+                context = await cmd.resolveContextPath(contextPath);
+            }
+        }
+        // Default to saved context
+        context = context || gestaltContext.getContext();
+    }
+
+    if (JSON.stringify(context) == '{}') console.error(`Warning: No default context found`);
+
+    return context;
+}
+
 function prioritize(filesAndResources) {
     const resourceOrder = [
         // Hierarchy first
@@ -253,11 +294,19 @@ function sortBy(arr, key) {
     })
 }
 
-async function processFile(file, params, config, context) {
+async function processFile(file, params, config, defaultContext) {
 
-    const resourceSpec = await renderResourceTemplate(file, config, context);
+    const resourceSpec = await renderResourceTemplate(file, config, defaultContext);
 
     debug(`Finished processing resource template.`)
+
+    debug(`resourceSpec: ${JSON.stringify(resourceSpec)}`);
+
+    const context = resourceSpec.contextPath ? await cmd.resolveContextPath(resourceSpec.contextPath) : defaultContext;
+
+    delete resourceSpec.contextPath;
+
+    debug(`Using context: ${JSON.stringify(context)}`);
 
     // Override resource name if specified
     if (params.name) resourceSpec.name = params.name;

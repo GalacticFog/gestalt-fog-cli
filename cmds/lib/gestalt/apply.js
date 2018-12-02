@@ -34,7 +34,7 @@ module.exports = {
  * @param {*} context Context to update or create the resource in.
  */
 async function applyResource(spec, context) {
-    debug(`applyResource(${spec.name}, ${context})`);
+    debug(`applyResource(${spec.name}, ${JSON.stringify(context)})`);
     if (!spec) throw Error('missing spec');
     if (!spec.resource_type) throw Error('missing spec.resource_type');
     if (!context) throw Error("missing context");
@@ -64,10 +64,12 @@ async function applyResource(spec, context) {
     }
 
     if (hierarchyResources.includes(spec.resource_type)) {
-        debug(`Using context from hierarchy resource: ${spec.context}`);
-        context = await resolveContextPath(spec.context);
-        debug(`Using context from hierarchy resource: ${JSON.stringify(context, null, 2)}`);
-        delete spec.context;
+        if (spec.contextPath) {
+            debug(`Using context path from hierarchy resource: ${spec.contextPath}`);
+            context = await resolveContextPath(spec.contextPath);
+            debug(`Using context from hierarchy resource: ${JSON.stringify(context, null, 2)}`);
+            delete spec.contextPath;
+        }
     }
 
     let resources = null;

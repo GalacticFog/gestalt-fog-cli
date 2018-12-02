@@ -227,9 +227,12 @@ async function resolveResourceByPath(resourceType, resourcePath) {
     if (cache) {
         const resource = cache.find(r => r.name == resourceName);
 
-        debug(`Returning cached provider value for path '${resourcePath}'`);
+        debug(`Returning cached ${resourceType} value for path '${resourcePath}'`);
+        console.error(chalk.dim.blue(`Returning cached ${resourceType} value for path '${resourcePath}'`));
         return resource;
     } else {
+        console.error(chalk.dim.blue(`Resolving ${resourceType} value for path '${resourcePath}'`));
+
         // const resources = await gestalt.fetchProviders(context);
         const resources = await gestalt.fetchResources(resourceType, context);
 

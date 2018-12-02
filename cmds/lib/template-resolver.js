@@ -2,7 +2,8 @@ const debug = require('./debug').debug;
 const contextResolver = require('../lib/context-resolver');
 const gestalt = require('../lib/gestalt');
 const util = require('../lib/util');
-// const path = require('path');
+const path = require('path');
+const chalk = require('../lib/chalk');
 
 // -----------OLD Method - traversing an object --------------------------------------------------------------------
 // exports.renderResourceTemplate = async function (template, config, context) {
@@ -175,6 +176,7 @@ async function resolveLambda(pathOrName, param = 'id') {
             throw Error('Lambda not found for path: ' + pathOrName);
         }
     } else {
+        console.error(chalk.dim.blue(`Resolving environment lambda '${pathOrName}'`));
         const lambdas = await gestalt.fetchEnvironmentLambdas(state.context);
         lambda = lambdas.find(l => l.name == pathOrName);
         if (!lambda) {
@@ -240,6 +242,11 @@ async function resolvePolicy(name, param = 'id') {
 
 
 async function resolveBase64File(file) {
+
+    // Calculate path relative to the template file
+    const sourcePath = path.dirname(state.templateFile);
+    file = path.join(sourcePath, file);
+
     const contents = util.readFileAsText(file);
     const buf = Buffer.from(contents, 'utf8');
     const code = buf.toString('base64');
