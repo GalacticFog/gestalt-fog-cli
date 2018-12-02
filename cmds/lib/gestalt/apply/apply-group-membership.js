@@ -109,7 +109,8 @@ async function applyFogGroupMembership(spec, context) {
     }
 
     return {
-        status: `OK`,
+        status: `updated`,
+        message: 'OK',
         resource: {}
     };
 }

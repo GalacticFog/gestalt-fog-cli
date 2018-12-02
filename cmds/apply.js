@@ -70,7 +70,7 @@ exports.handler = cmd.handler(async function (argv) {
         throw Error(`Can't specify both --file and --directory`);
     } else if (argv.file) {
         const result = await processFile(argv.file, argv, config, context);
-        console.error(result.status);
+        console.error(result.message);
     } else if (argv.directory) {
         if (argv.description) throw Error(`Can't specify --description with --directory`);
         if (argv.name) throw Error(`Can't specify --description with --name`);
@@ -101,16 +101,20 @@ exports.handler = cmd.handler(async function (argv) {
         }
 
         // Display plan
-        console.error(chalk.dim.blue(`Deployment plan:`));
+        console.error(chalk.blue.dim(`Deployment plan:`));
         for (let group of groups) {
-            console.error(chalk.dim.blue(`  ${group.type}`));
+            console.error(chalk.blue.dim(`  ${group.type}`));
             for (let item of group.items) {
-                console.error(chalk.dim.blue(`    ${item.file}`));
+                console.error(chalk.blue.dim(`    ${item.file}`));
             }
             console.error();
         }
 
-        const succeeded = [];
+        const succeeded = {
+            updated: [],
+            created: [],
+            unchanged: []
+        };
         const failed = [];
 
         // Process groups
@@ -118,37 +122,48 @@ exports.handler = cmd.handler(async function (argv) {
             for (let item of group.items) {
                 try {
                     const result = await processFile(item.file, argv, config, context);
-                    console.error(result.status);
+                    console.error(result.message);
                     item.status = result.status;
-                    succeeded.push(item);
+                    item.message = result.message;
+                    succeeded[item.status].push(item);
                 } catch (err) {
                     item.status = err;
+                    item.message = err;
                     console.error(chalk.red(err));
                     failed.push(item);
                 }
             }
         }
 
-        if (succeeded.length > 0) {
-            console.error();
-            console.error(`${succeeded.length} / ${succeeded.length + failed.length} succeeded:`)
-            for (let item of succeeded) {
-                console.error(`  ${item.status} (${item.file})`);
+        const totalSucceeded = succeeded.updated.length + succeeded.created.length + succeeded.unchanged.length;
+        for (let cat of ['updated', 'created', 'unchanged']) {
+            const arr = succeeded[cat];
+            if (arr.length > 0) {
+                console.error();
+                console.error(chalk.green(`${arr.length} ${cat}:`))
+                for (let item of arr) {
+                    console.error(chalk.green(`  ${item.message} (${item.file})`));
+                }
             }
         }
+
         if (failed.length > 0) {
             console.error();
-            console.error(`${failed.length} / ${succeeded.length + failed.length} failed:`)
+            console.error(chalk.red(`${failed.length}/${totalSucceeded + failed.length} failed:`))
             for (let item of failed) {
-                console.error(`  ${item.status} (${item.file})`);
+                console.error(chalk.red(`  ${item.message} (${item.file})`));
             }
         }
 
         // Check for failures, return error if so
         if (failed.length > 0) {
-            const message = `There were ${failed.length} failures during 'apply' (${succeeded.length} / ${succeeded.length + failed.length} resources succeeded)`;
+            const message = `There were ${failed.length} failures during 'apply' (${succeeded.length}/${succeeded.length + failed.length} resources succeeded)`;
             throw Error(message);
         }
+
+        console.error();
+        console.error(`Summary: ${totalSucceeded}/${totalSucceeded + failed.length} resources succeessfully applied, ${failed.length} failed to apply.`);
+
     } else {
         throw Error('--file or --directory parameter required');
     }
@@ -252,7 +267,7 @@ function prioritize(filesAndResources) {
     for (let item of filesAndResources) {
         let resource = item.resource;
         if (!resource.resource_type) {
-            console.error(`Will not process ${item.file}, no resource_type found`);
+            console.error(chalk.yellow(`Warning: Will not process ${item.file}, no resource_type found`));
         } else {
 
             let key = null;

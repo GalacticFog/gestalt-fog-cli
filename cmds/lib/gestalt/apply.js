@@ -124,7 +124,8 @@ async function applyResource(spec, context) {
         delete spec.resource_type; // Updates don't need (and may not accep the resource_type field)
         const res = await meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);
         return {
-            status: `${resourceType} '${res.name}' updated (PUT).`,
+            status: 'updated',
+            message: `${resourceType} '${res.name}' updated (PUT).`,
             resource: res
         };
     } else {
@@ -132,7 +133,8 @@ async function applyResource(spec, context) {
         // Create
         const res = await createResource(spec, context);
         return {
-            status: `${resourceType} '${spec.name}' created.`,
+            status: 'created',
+            message: `${resourceType} '${spec.name}' created.`,
             resource: res
         };
     }
@@ -266,16 +268,23 @@ async function doPatch(type, context, spec, targetResource) {
     debug(`  ${patches.length} patches after filter`);
 
     if (patches.length > 0) {
+
+        debug(JSON.stringify(spec, null, 2))
+        debug(JSON.stringify(patches, null, 2))
+        debug(JSON.stringify(targetResource, null, 2))
+
         const res = await meta.PATCH(`/${context.org.fqon}/${type}/${spec.id}`, patches);
         const result = {
-            status: `${resourceType} '${res.name}' updated (PATCH).`,
+            status: 'updated',
+            message: `${resourceType} '${res.name}' updated (PATCH).`,
             resource: patches
         };
         return result;
     } else {
         // Nothing to apply
         return {
-            status: `${resourceType} '${targetResource.name}' unchanged.`,
+            status: 'unchanged',
+            message: `${resourceType} '${targetResource.name}' unchanged.`,
             resource: targetResource
         };
     }
