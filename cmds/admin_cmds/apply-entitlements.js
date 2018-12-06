@@ -35,7 +35,7 @@ exports.builder = {
 exports.handler = cmd.handler(async function (argv) {
     if (!argv.file) throw Error('missing --file parameter');
     if (!argv.path) throw Error('missing --path parameter');
-    if (!argv.group && !arv.user) throw Error('Must have one of --user --group parameter');
+    if (!argv.group && !argv.user) throw Error('Must have one of --user --group parameter');
 
     const { actions, scope } = util.loadObjectFromFile(argv.file);
     validate(actions);

@@ -64,7 +64,7 @@ exports.handler = cmd.handler(async function (argv) {
     console.error('Using context: ' + ui.getContextString(context));
 
     const config = obtainConfig(argv);
-    debug('Using config: ' + JSON.stringify(config, null, 2));
+    console.error('Using config: ' + JSON.stringify(config, null, 2));
 
     if (argv.file && argv.directory) {
         throw Error(`Can't specify both --file and --directory`);
@@ -195,7 +195,7 @@ async function obtainContext(argv) {
         context = context || gestaltContext.getContext();
     }
 
-    if (JSON.stringify(context) == '{}') console.error(`Warning: No default context found`);
+    if (JSON.stringify(context) == '{}') console.error(chalk.yellow(`Warning: No default context found`));
 
     return context;
 }
