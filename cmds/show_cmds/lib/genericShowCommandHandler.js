@@ -21,7 +21,11 @@ const builder = {
     },
     'context_path': {
         description: "Specify the context path (/<org>/<workspace>/<environment>)"
-    }
+    },
+    fields: {
+        type: 'string',
+        description: "Specify display fields.  Comma separated, and prefix with '+' to display fields in addition to default fields (e.g. '+id,name' vs 'id,name')"
+    },
 };
 
 module.exports = {

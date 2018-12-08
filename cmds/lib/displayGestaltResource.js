@@ -64,12 +64,33 @@ exports.run = (resources, options, context) => {
     }
 }
 
-function displayResource(opts, resources) {
+function displayResource(options, opts, resources) {
+
     if (opts.more) {
-        opts.headers.push('ID');
-        opts.fields.push('id');
+        options.headers.push('ID');
+        options.fields.push('id');
     }
-    doDisplayResource(opts, resources);
+
+    if (opts['fields']) {
+        let add = false;
+        let fields = null;
+        if (opts['fields'].startsWith('+')) {
+            add = true
+            fields = opts['fields'].slice(1).split(',');
+        } else {
+            fields = opts['fields'].split(',');
+        }
+
+        if (add) {
+            options.fields = options.fields.concat(fields);
+            options.headers = options.headers.concat(fields);
+        } else {
+            options.fields = fields;
+            options.headers = fields;
+        }
+    }
+
+    doDisplayResource(Object.assign(opts, options), resources);
 }
 
 function getContextMessage(message, context) {
@@ -84,10 +105,10 @@ function displayLambdas(resources, opts, context) {
         sortField: 'name',
     }
 
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
-function displayContainers(containers, opts, context) {
+function displayContainers(resources, opts, context) {
     const options = {
         message: getContextMessage('Containers', context),
         headers: ['Container', 'Description', 'Status', 'Image', 'CPU', 'Memory', 'Instances', 'Owner', /*'FQON', 'ENV',*/ 'Provider'],
@@ -96,7 +117,7 @@ function displayContainers(containers, opts, context) {
     }
 
     // Transform for display
-    for (let item of containers) {
+    for (let item of resources) {
         if (item.description) {
             if (item.description.length > 20) {
                 item.description = item.description.substring(0, 20) + '...';
@@ -106,7 +127,7 @@ function displayContainers(containers, opts, context) {
         item.running_instances = `${item.properties.tasks_running || 0} / ${item.properties.num_instances}`;
     }
 
-    displayResource(Object.assign(options, opts), containers);
+    displayResource(options, opts, resources);
 }
 
 exports.displayContainerInstances = displayContainerInstances;
@@ -119,7 +140,7 @@ function displayContainerInstances(resources, opts, context) {
         sortField: 'description',
     }
 
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayApis(resources, opts, context) {
@@ -138,7 +159,7 @@ function displayApis(resources, opts, context) {
         sortField: 'description',
     }
 
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayEnvironments(resources, opts, context) {
@@ -148,7 +169,7 @@ function displayEnvironments(resources, opts, context) {
         fields: ['name', 'description', 'properties.environment_type', 'org.properties.fqon', 'properties.workspace.name', 'owner.name'],
         sortField: 'name',
     }
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayWorkspaces(resources, opts, context) {
@@ -158,7 +179,7 @@ function displayWorkspaces(resources, opts, context) {
         fields: ['name', 'description', 'org.properties.fqon', 'owner.name'],
         sortField: 'name',
     }
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayOrgs(resources, opts, context) {
@@ -168,7 +189,7 @@ function displayOrgs(resources, opts, context) {
         fields: ['fqon', 'name', 'description', 'owner.name'],
         sortField: 'fqon',
     }
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayUsers(resources, opts, context) {
@@ -178,7 +199,7 @@ function displayUsers(resources, opts, context) {
         fields: ['name', 'description', 'org.properties.fqon', 'owner.name', 'properties.groups', 'created.timestamp'],
         sortField: 'name',
     }
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayGroups(resources, opts, context) {
@@ -193,7 +214,7 @@ function displayGroups(resources, opts, context) {
         r.properties.num_users = String(r.properties.users.length);
     });
 
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayApiEndpoints(resources, opts, context) {
@@ -227,7 +248,7 @@ function displayApiEndpoints(resources, opts, context) {
         r.properties.api_path = `/${r.properties.parent.name}${r.properties.resource}`
     });
 
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayProviders(resources, opts, context) {
@@ -246,7 +267,7 @@ function displayProviders(resources, opts, context) {
             }
         }
     }
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayVolumes(resources, opts, context) {
@@ -256,7 +277,7 @@ function displayVolumes(resources, opts, context) {
         fields: ['name', 'properties.size', 'properties.config', 'properties.external_id'],
         sortField: 'name',
     }
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayPolicies(resources, opts, context) {
@@ -272,7 +293,7 @@ function displayPolicies(resources, opts, context) {
         r.num_rules = `(${r.properties.rules.length} rules)`
     })
 
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
 
 function displayPolicyRules(resources, opts, context) {
@@ -288,5 +309,5 @@ function displayPolicyRules(resources, opts, context) {
         r.resource_type = r.resource_type.replace(/Gestalt::Resource::Rule::/, '')
     })
 
-    displayResource(Object.assign(options, opts), resources);
+    displayResource(options, opts, resources);
 }
