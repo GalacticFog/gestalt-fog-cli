@@ -90,6 +90,8 @@ function displayResource(options, opts, resources) {
         }
     }
 
+    // Clone so not to mutate
+    opts = util.cloneObject(opts);
     doDisplayResource(Object.assign(opts, options), resources);
 }
 
