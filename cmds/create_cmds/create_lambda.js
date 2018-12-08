@@ -92,7 +92,7 @@ async function doCreateLambda(argv, spec) {
 
 exports.handler = cmd.handler(async function (argv) {
     if (argv.file) {
-        console.log(`Loading resource spec from file ${argv.file}`);
+        console.error(`Loading resource spec from file ${argv.file}`);
         let spec = cmd.loadObjectFromFile(argv.file);
         await doCreateLambda(argv, spec);
 

@@ -17,10 +17,7 @@ exports.builder = {
 exports.handler = cmd.handler(async function (argv) {
     const urlPath = argv.path;
 
-    const spec = {};
-    if (argv.file) {
-        spec = await renderResourceTemplate(argv.file, {}, undefined);
-    }
+    const spec = argv.file ? await renderResourceTemplate(argv.file, {}, undefined) : {};
     const response = await meta.POST(urlPath, spec);
     try {
         console.log(JSON.stringify(response, null, 2));

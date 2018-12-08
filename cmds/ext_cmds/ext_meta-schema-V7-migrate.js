@@ -25,7 +25,7 @@ exports.handler = cmd.handler(async function (argv) {
     context = { org: { fqon: 'root' } };
     path = '/migrate';
 
-    console.log(`Loading resource spec from file ${argv.file}`);
+    console.error(`Loading resource spec from file ${argv.file}`);
     let spec = cmd.loadObjectFromFile(argv.file);
 
     // Resolve environment context from command line args
