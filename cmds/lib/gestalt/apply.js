@@ -6,6 +6,7 @@ const util = require('../util');
 
 const {
     createResource,
+    deleteResource,
     fetchOrgResources,
     fetchWorkspaceResources,
     fetchResources
@@ -33,7 +34,7 @@ module.exports = {
  * @param {*} spec Resource Spec to create or update
  * @param {*} context Context to update or create the resource in.
  */
-async function applyResource(spec, context) {
+async function applyResource(spec, context, options) {
     debug(`applyResource(${spec.name}, ${JSON.stringify(context)})`);
     if (!spec) throw Error('missing spec');
     if (!spec.resource_type) throw Error('missing spec.resource_type');
@@ -104,39 +105,59 @@ async function applyResource(spec, context) {
     debug(`  ${resources.length} resources to process`);
 
     if (targetResource) {
-        debug(`  Target resource exists, will update`);
-        // Update
-        spec.id = targetResource.id;
+        if (!options.delete) {
+            debug(`  Target resource exists, will update`);
+            // Update
+            spec.id = targetResource.id;
 
-        // Special case for resources requiring PATCH rather than PUT
-        if (resourceTypesRequiringPatchUpdate.includes(resourceType)) {
+            // Special case for resources requiring PATCH rather than PUT
+            if (resourceTypesRequiringPatchUpdate.includes(resourceType)) {
 
-            debug(`  Special case, will PATCH`);
+                debug(`  Special case, will PATCH`);
 
-            return doPatch(type, context, spec, targetResource);
+                return doPatch(type, context, spec, targetResource);
+            }
+
+            // TODO: Determine if resource actually needs to be updated via PUT by comparing spec to targetResource
+
+            debug(`  Will update '${spec.name}' via PUT`);
+
+            // Otherwise, perform PUT update
+            delete spec.resource_type; // Updates don't need (and may not accep the resource_type field)
+            const res = await meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);
+            return {
+                status: 'updated',
+                message: `${resourceType} '${res.name}' updated (PUT).`,
+                resource: res
+            };
+        } else {
+            debug(`  Target resource exists, will delete`);
+            await deleteResource(type, targetResource, { force: options.force });
+            return {
+                status: 'deleted',
+                message: `${resourceType} '${targetResource.name}' deleted.`,
+                resource: targetResource
+            };
         }
-
-        // TODO: Determine if resource actually needs to be updated via PUT by comparing spec to targetResource
-
-        debug(`  Will update '${spec.name}' via PUT`);
-
-        // Otherwise, perform PUT update
-        delete spec.resource_type; // Updates don't need (and may not accep the resource_type field)
-        const res = await meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);
-        return {
-            status: 'updated',
-            message: `${resourceType} '${res.name}' updated (PUT).`,
-            resource: res
-        };
     } else {
-        debug(`  Will create '${spec.name}'`);
-        // Create
-        const res = await createResource(spec, context);
-        return {
-            status: 'created',
-            message: `${resourceType} '${spec.name}' created.`,
-            resource: res
-        };
+
+        if (!options.delete) {
+            debug(`  Will create '${spec.name}'`);
+
+            // Create
+            const res = await createResource(spec, context);
+            return {
+                status: 'created',
+                message: `${resourceType} '${spec.name}' created.`,
+                resource: res
+            };
+        } else {
+            return {
+                status: 'unchanged',
+                message: `${resourceType} '${spec.name}' doesn't exist.`,
+                resource: spec
+            };
+        }
     }
 }
 

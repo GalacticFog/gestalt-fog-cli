@@ -48,6 +48,12 @@ exports.builder = {
     'render-only': {
         description: 'Render only'
     },
+    'delete': {
+        description: 'Delete resources'
+    },
+    'force': {
+        description: 'Force delete resources (use with --delete)'
+    },
     //TODO: 'add-only': {
     //     description: 'Only add resources, don\'t update existing resources'
     // }
@@ -58,6 +64,10 @@ exports.handler = cmd.handler(async function (argv) {
         throw Error(`Can't specify both --file and --directory`);
     } else if (!argv.file && !argv.directory) {
         throw Error(`Must specify one of --file or --directory`);
+    }
+
+    if (argv.force) {
+        if (!argv.delete) throw Error(`Must specify --delete when using --force`);
     }
 
     const context = await obtainContext(argv);
@@ -95,6 +105,10 @@ exports.handler = cmd.handler(async function (argv) {
         // Prioritize resources by type
         const groups = prioritize(filesAndResources);
 
+        if (argv.delete) {
+            groups.reverse();
+        }
+
         debug(`Processing groups in this order:`);
         for (let group of groups) {
             debug(`  ${group.type}`);
@@ -113,7 +127,8 @@ exports.handler = cmd.handler(async function (argv) {
         const succeeded = {
             updated: [],
             created: [],
-            unchanged: []
+            unchanged: [],
+            deleted: [],
         };
         const failed = [];
 
@@ -317,7 +332,7 @@ function sortBy(arr, key) {
 
 async function processFile(file, params, config, defaultContext) {
 
-    const resourceSpec = await renderResourceTemplate(file, config, defaultContext);
+    const resourceSpec = await renderResourceTemplate(file, config, defaultContext, { delete: params.delete });
 
     debug(`Finished processing resource template.`)
 
@@ -352,6 +367,6 @@ async function processFile(file, params, config, defaultContext) {
             console.log(JSON.stringify(resourceSpec, null, 2));
         }
     } else {
-        return gestalt.applyResource(resourceSpec, context);
+        return gestalt.applyResource(resourceSpec, context, { delete: params.delete, force: params.force });
     }
 }

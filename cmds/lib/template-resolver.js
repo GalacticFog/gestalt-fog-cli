@@ -29,10 +29,11 @@ const chalk = require('../lib/chalk');
 // }
 // -----------OLD Method - traversing an object --------------------------------------------------------------------
 
-exports.renderResourceTemplate = async function (templateFile, config, context) {
+exports.renderResourceTemplate = async function (templateFile, config, context, options) {
     state.config = util.cloneObject(config);
     state.context = util.cloneObject(context);
     state.templateFile = templateFile;
+    state.options = options || {};
 
     debug(`Loading temmplate from '${templateFile}'`);
     const template = util.readFileAsText(templateFile);
@@ -52,7 +53,8 @@ const state = {
     config: undefined,
     context: undefined,
     directivesCache: {},
-    templateFile: undefined
+    templateFile: undefined,
+    options: {}
 };
 
 
@@ -80,8 +82,20 @@ async function doDarseFieldForDirectives(value, func) {
                 const directive = value.substring(start + startToken.length, end);
                 debug(`Directive: ${directive}`)
 
-                const replacementValue = await func(directive);
-                debug(`Resolved: ${replacementValue}`)
+                let replacementValue = 'NOT_RESOLVED';
+
+                if (state.options.delete) {
+                    if (directive.startsWith('Config ') || directive.startsWith('Api ')) {
+                        replacementValue = await func(directive);
+                        debug(`Resolved: ${replacementValue}`)
+                    } else {
+                        debug(`Skipping resolution since options specify this resource will be deleted`)
+                        debug(`Not Resolved: ${replacementValue}`)
+                    }
+                } else {
+                    replacementValue = await func(directive);
+                    debug(`Resolved: ${replacementValue}`)
+                }
 
                 value = value.replace(`${startToken}${directive}${endToken}`, replacementValue);
                 start = -1; //reset
