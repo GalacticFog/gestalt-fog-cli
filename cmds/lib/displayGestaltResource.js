@@ -22,7 +22,7 @@ const fmap = {
     'Gestalt::Resource::Rule::': displayPolicyRules,
 }
 
-exports.run = (resources, options, context) => {
+exports.run = (resources, options = {}, context) => {
 
     if (options && options.name) {
         resources = resources.filter(r => r.name == options.name);
@@ -64,7 +64,7 @@ exports.run = (resources, options, context) => {
     }
 }
 
-function displayResource(options, opts, resources) {
+function displayResource(options, opts = {}, resources) {
 
     if (opts.more) {
         options.headers.push('ID');

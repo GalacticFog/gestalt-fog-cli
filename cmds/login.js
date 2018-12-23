@@ -100,6 +100,7 @@ function doLogin(gestalt_url, creds) {
     } else {
       console.error(chalk.red(`Login failed: ${formatError(err)}\n`));
       console.error('Please check the Gestalt URL endpoint and credentials and try again.');
+      process.exit(1);
     }
     // Clear the current context
     gestaltContext.clearContext();
