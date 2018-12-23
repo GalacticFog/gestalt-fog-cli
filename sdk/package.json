@@ -1,0 +1,22 @@
+{
+  "name": "gestalt-fog-sdk",
+  "version": "1.0.0",
+  "description": "Gestalt Fog SDK",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.3.1",
+    "fast-json-patch": "^2.0.7",
+    "glob": "^7.1.3",
+    "js-yaml": "^3.12.0",
+    "lodash": "^4.17.11",
+    "request": "^2.83.0",
+    "request-promise-native": "^1.0.5",
+    "yamljs": "^0.3.0",
+    "yup": "^0.26.6"
+  }
+}
