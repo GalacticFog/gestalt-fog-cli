@@ -133,6 +133,12 @@ exports.handler = cmd.handler(async function (argv) {
 });
 
 async function obtainContext(argv) {
+
+    if (argv['render-bundle']) {
+        console.error(`Skipping context resolution since --render-bundle specified`)
+        return {};
+    }
+
     let context = null;
     if (argv.context) {
         // Use context from the command line
