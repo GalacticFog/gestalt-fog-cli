@@ -125,12 +125,44 @@ exports.handler = cmd.handler(async function (argv) {
             }
             console.log(JSON.stringify(bundle, null, 2));
         } else {
-            await actions.applyResources(context, partiallyResolvedResources, argv, config);
+            const { succeeded, failed } = await actions.applyResources(context, partiallyResolvedResources, argv, config);
+            displaySummary(succeeded, failed);
         }
     } else {
         throw Error('--file or --directory parameter required');
     }
 });
+
+function displaySummary(succeeded, failed) {
+    const totalSucceeded = succeeded.updated.length + succeeded.created.length + succeeded.unchanged.length;
+    for (let cat of ['updated', 'created', 'unchanged']) {
+        const arr = succeeded[cat];
+        if (arr.length > 0) {
+            console.error();
+            console.error(chalk.green(`${arr.length} ${cat}:`))
+            for (let item of arr) {
+                console.error(chalk.green(`  ${item.message} (${item.name})`));
+            }
+        }
+    }
+
+    if (failed.length > 0) {
+        console.error();
+        console.error(chalk.red(`${failed.length}/${totalSucceeded + failed.length} failed:`))
+        for (let item of failed) {
+            console.error(chalk.red(`  ${item.message} (${item.name})`));
+        }
+    }
+
+    // Check for failures, return error if so
+    if (failed.length > 0) {
+        const message = `There were ${failed.length} failures during 'apply' (${succeeded.length}/${succeeded.length + failed.length} resources succeeded)`;
+        throw Error(message);
+    }
+
+    console.error();
+    console.error(`Summary: ${totalSucceeded}/${totalSucceeded + failed.length} resources succeessfully applied, ${failed.length} failed to apply.`);
+}
 
 async function obtainContext(argv) {
 

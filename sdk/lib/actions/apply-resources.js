@@ -68,34 +68,10 @@ async function applyResources(context, resources, opts, config) {
         }
     }
 
-    const totalSucceeded = succeeded.updated.length + succeeded.created.length + succeeded.unchanged.length;
-    for (let cat of ['updated', 'created', 'unchanged']) {
-        const arr = succeeded[cat];
-        if (arr.length > 0) {
-            console.error();
-            console.error(chalk.green(`${arr.length} ${cat}:`))
-            for (let item of arr) {
-                console.error(chalk.green(`  ${item.message} (${item.name})`));
-            }
-        }
-    }
-
-    if (failed.length > 0) {
-        console.error();
-        console.error(chalk.red(`${failed.length}/${totalSucceeded + failed.length} failed:`))
-        for (let item of failed) {
-            console.error(chalk.red(`  ${item.message} (${item.name})`));
-        }
-    }
-
-    // Check for failures, return error if so
-    if (failed.length > 0) {
-        const message = `There were ${failed.length} failures during 'apply' (${succeeded.length}/${succeeded.length + failed.length} resources succeeded)`;
-        throw Error(message);
-    }
-
-    console.error();
-    console.error(`Summary: ${totalSucceeded}/${totalSucceeded + failed.length} resources succeessfully applied, ${failed.length} failed to apply.`);
+    return {
+        succeeded,
+        failed
+    };
 }
 
 function prioritize(resources) {
