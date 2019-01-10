@@ -2,7 +2,7 @@
 const { debug } = require('./debug');
 const contextResolver = require('./context-resolver');
 const util = require('./util');
-const gestaltContext = require('./gestalt-context');
+const { gestaltContext } = require('gestalt-fog-sdk');
 const chalk = require('./chalk');
 
 module.exports = {

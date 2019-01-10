@@ -1,5 +1,5 @@
 const cmd = require('../lib/cmd-base');
-const gestaltContext = require('../lib/gestalt-context');
+const { gestaltContext } = require('gestalt-fog-sdk');
 
 exports.command = 'reset'
 exports.desc = 'Reset context'

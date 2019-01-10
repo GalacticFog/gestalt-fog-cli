@@ -1,7 +1,6 @@
 'use strict';
 const inquirer = require('inquirer');
-const gestaltContext = require('./lib/gestalt-context');
-const { gestalt } = require('gestalt-fog-sdk');
+const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
 const chalk = require('./lib/chalk');
 const cmd = require('./lib/cmd-base');
 

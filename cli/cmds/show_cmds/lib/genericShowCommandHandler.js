@@ -1,8 +1,7 @@
-const { gestalt } = require('gestalt-fog-sdk');
+const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
 const ui = require('../../lib/gestalt-ui')
 const cmd = require('../../lib/cmd-base');
 const selectHierarchy = require('../../lib/selectHierarchy');
-const gestaltContext = require('../../lib/gestalt-context');
 const chalk = require('../../lib/chalk');
 const displayContext = require('../../lib/displayContext');
 const builder = {

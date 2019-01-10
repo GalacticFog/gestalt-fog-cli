@@ -1,8 +1,5 @@
-const { contextResolver } = require('gestalt-fog-sdk');
-
+const { contextResolver, gestaltContext } = require('gestalt-fog-sdk');
 const { resolveContextPath } = contextResolver;
-
-const gestaltContext = require('./gestalt-context');
 const selectHierarchy = require('../lib/selectHierarchy');
 
 module.exports = {

@@ -1,8 +1,7 @@
 const cmd = require('../lib/cmd-base');
-const { gestalt } = require('gestalt-fog-sdk')
+const { gestaltContext } = require('gestalt-fog-sdk');
 const ui = require('../lib/gestalt-ui')
 const selectHierarchy = require('../lib/selectHierarchy');
-const gestaltContext = require('../lib/gestalt-context');
 
 exports.command = 'set [path]'
 exports.desc = 'Set context'
@@ -35,10 +34,9 @@ exports.handler = cmd.handler(async function (argv) {
 
 
 // const cmd = require('../lib/cmd-base');
-// const { gestalt } = require('gestalt-fog-sdk')
+// const { gestalt, gestaltContext } = require('gestalt-fog-sdk')
 // const ui = require('../lib/gestalt-ui')
 // const selectHierarchy = require('../lib/selectHierarchy');
-// const gestaltContext = require('../lib/gestalt-context');
 
 // exports.command = 'set [path]'
 // exports.desc = 'Set context'

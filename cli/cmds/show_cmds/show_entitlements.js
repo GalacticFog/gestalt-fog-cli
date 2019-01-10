@@ -1,7 +1,6 @@
-const { gestalt } = require('gestalt-fog-sdk')
+const { gestalt, gestaltContext } = require('gestalt-fog-sdk')
 const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
-const gestaltContext = require('../lib/gestalt-context');
 const { builder } = require('./lib/genericShowCommandHandler');
 exports.command = 'entitlements [context_path]'
 exports.desc = 'Show entitlements'

@@ -1,4 +1,4 @@
-const gestaltContext = require('./gestalt-context');
+const { gestaltContext } = require('gestalt-fog-sdk');
 const os = require('os');
 const fs = require('fs');
 

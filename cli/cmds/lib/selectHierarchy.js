@@ -1,9 +1,8 @@
 'use strict';
-const { gestalt } = require('gestalt-fog-sdk');
+const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
 const selectOrg = require('./selectOrg');
 const selectWorkspace = require('./selectWorkspace');
 const selectEnvironment = require('./selectEnvironment');
-const gestaltContext = require('./gestalt-context');
 const chalk = require('./chalk');
 
 exports.resolveOrg = () => {

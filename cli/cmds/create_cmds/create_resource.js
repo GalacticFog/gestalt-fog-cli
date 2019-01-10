@@ -1,5 +1,4 @@
-const { gestalt, renderResourceTemplate } = require('gestalt-fog-sdk')
-const gestaltContext = require('../lib/gestalt-context')
+const { gestalt, renderResourceTemplate, gestaltContext } = require('gestalt-fog-sdk')
 const cmd = require('../lib/cmd-base');
 const ui = require('../lib/gestalt-ui');
 const out = console.log;
