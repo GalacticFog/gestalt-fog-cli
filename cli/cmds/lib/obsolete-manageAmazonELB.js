@@ -1,5 +1,5 @@
 // #!/usr/bin/env node
-// const gestaltContext = require('./gestalt-context');
+// const { gestaltContext } = require('gestalt-fog-sdk');
 // const AmazonClient = require('./amazon');
 // const fs = require('fs');
 

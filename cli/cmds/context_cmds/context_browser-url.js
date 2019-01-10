@@ -1,6 +1,6 @@
 'use strict';
 const cmd = require('../lib/cmd-base');
-const gestaltContext = require('../lib/gestalt-context');
+const { gestaltContext } = require('gestalt-fog-sdk');
 const chalk = require('../lib/chalk');
 exports.command = 'get-browser-url [path]'
 exports.desc = 'get-browser-url'

@@ -12,7 +12,7 @@ exports.builder = {
 }
 exports.handler = cmd.handler(async function (argv) {
     const { gestalt } = require('gestalt-fog-sdk');
-    const gestaltContext = require('../lib/gestalt-context');
+    const { gestaltContext } = require('gestalt-fog-sdk');
     const displayResource = require('../lib/displayResourceUI');
     const selectResource = require('../lib/selectResourceUI');
     const displayAmazon = require('../lib/displayAmazon');

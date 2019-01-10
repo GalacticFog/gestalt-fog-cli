@@ -1,6 +1,5 @@
-const gestaltContext = require('../lib/gestalt-context');
 const GestaltKubeClient = require('../lib/gestalt-kube-client');
-const { gestalt } = require('gestalt-fog-sdk')
+const { gestalt, gestaltContext } = require('gestalt-fog-sdk')
 const selectContainerInstance = require('../lib/selectContainerInstance');
 const selectContainer = require('../lib/selectContainer');
 const selectHierarchy = require('../lib/selectHierarchy');

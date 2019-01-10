@@ -1,5 +1,5 @@
 const cmd = require('../lib/cmd-base');
-const gestaltContext = require('../lib/gestalt-context');
+const { gestaltContext } = require('gestalt-fog-sdk');
 const yaml = require('js-yaml');
 
 exports.command = 'view'

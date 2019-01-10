@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-const { gestalt } = require('gestalt-fog-sdk');
-const gestaltContext = require('./gestalt-context');
+const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
 const CONFIG_FILE = 'services-config.json';
 const LOCAL_SERVICES_FILE = 'service_configs.local';
 const CACHED_SERVICES_FILE = 'service_configs.cached';

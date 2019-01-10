@@ -1,6 +1,6 @@
 'use strict';
 const cmd = require('./lib/cmd-base');
-const gestaltContext = require('./lib/gestalt-context');
+const { gestaltContext } = require('gestalt-fog-sdk');
 const ui = require('./lib/gestalt-ui');
 
 exports.command = 'status'

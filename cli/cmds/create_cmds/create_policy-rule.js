@@ -1,5 +1,4 @@
-const { gestalt, renderResourceTemplate} = require('gestalt-fog-sdk')
-const gestaltContext = require('../lib/gestalt-context')
+const { gestalt, renderResourceTemplate, gestaltContext } = require('gestalt-fog-sdk')
 const cmd = require('../lib/cmd-base');
 const ui = require('../lib/gestalt-ui');
 const out = console.log;
@@ -24,7 +23,7 @@ exports.builder = {
 exports.handler = cmd.handler(async function (argv) {
 
     let context = null;
-    if (argv.context) { 
+    if (argv.context) {
         context = await cmd.resolveContextPath(argv.context);
     } else {
         context = gestaltContext.getContext();
