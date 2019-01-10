@@ -5,6 +5,7 @@ module.exports = {
     ...require('./api-endpoint'),
     ...require('./apply'),
     ...require('./auth'),
+    ...require('./configure'),
     ...require('./container'),
     ...require('./context'),
     ...require('./context-resolver'),
