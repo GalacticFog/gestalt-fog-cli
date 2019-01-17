@@ -40,6 +40,7 @@ async function applyResources(context, resources, opts, config) {
         deleted: [],
     };
     const failed = [];
+    const errors = [];
 
     // Process groups
     for (let group of groups) {
@@ -60,9 +61,10 @@ async function applyResources(context, resources, opts, config) {
                     succeeded[item.status].push(item);
                 }
             } catch (err) {
-                item.status = err;
-                item.message = err;
+                item.status = 'failed';
+                item.message = err.message;
                 console.error(chalk.red(err));
+                errors.push(err.message);
                 failed.push(item);
             }
         }
@@ -70,7 +72,8 @@ async function applyResources(context, resources, opts, config) {
 
     return {
         succeeded,
-        failed
+        failed,
+        errors
     };
 }
 
