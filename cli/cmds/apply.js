@@ -60,6 +60,7 @@ exports.builder = {
     //     description: 'Only add resources, don\'t update existing resources'
     // }
 }
+
 exports.handler = cmd.handler(async function (argv) {
     if (argv.file && argv.directory) {
         throw Error(`Can't specify both --file and --directory`);
@@ -68,7 +69,9 @@ exports.handler = cmd.handler(async function (argv) {
     }
 
     if (argv.force) {
-        if (!argv.delete) throw Error(`Must specify --delete when using --force`);
+        if (!argv.delete) {
+            throw Error(`Must specify --delete when using --force`);
+        }
     }
 
     const context = await obtainContext(argv);
@@ -80,48 +83,26 @@ exports.handler = cmd.handler(async function (argv) {
     if (argv.file && argv.directory) {
         throw Error(`Can't specify both --file and --directory`);
     } else if (argv.file) {
+        // TODO: Combine this with multiple resources approach
         const result = await processFile(argv.file, argv, config, context);
         console.error(result.message);
     } else if (argv.directory) {
         if (argv.description) throw Error(`Can't specify --description with --directory`);
         if (argv.name) throw Error(`Can't specify --description with --name`);
 
-        // Read files from target directory, and filter for JSON and YAML
-        let files = fs.readdirSync(argv.directory);
-        files = files.filter(f => {
-            return (f.endsWith('.json') || f.endsWith('.yaml')) ? true : false;
-        })
-        files = files.filter(f => {
-            return (!f.startsWith('_'));
-        })
-
-        // Load files into resources
-        const filesAndResources = files.map(f => {
-            return {
-                file: argv.directory + '/' + f,
-                resource: util.loadObjectFromFile(argv.directory + '/' + f)
-            };
-        })
-
-        const resources = filesAndResources.map(item => item.resource);
+        const resources = loadResourcesFromDirectory(argv.directory);
 
         // Partially resolve resources (LambdaSources and Config settings)
-        const partiallyResolvedResources = []
-        for (let resource of resources) {
-            resource = await renderResourceObject(resource, config, {}, {
-                onlyPrebundle: true,
-                bundleDirectory: argv.directory
-            })
-            partiallyResolvedResources.push(resource);
-        }
+        const partiallyResolvedResources = partiallyResolveResources(resources);
 
         if (argv['render-bundle']) {
             const bundle = {
                 context: context,
                 config: config,
-                options: JSON.parse(JSON.stringify(argv)),
                 resources: partiallyResolvedResources
             }
+
+            // Render to STDOUT
             console.log(JSON.stringify(bundle, null, 2));
         } else {
             const { succeeded, failed } = await actions.applyResources(context, partiallyResolvedResources, argv, config);
@@ -131,6 +112,40 @@ exports.handler = cmd.handler(async function (argv) {
         throw Error('--file or --directory parameter required');
     }
 });
+
+function loadResourcesFromDirectory(directory) {
+    // Read files from target directory, and filter for JSON and YAML
+    let files = fs.readdirSync(directory);
+    files = files.filter(f => {
+        return (f.endsWith('.json') || f.endsWith('.yaml')) ? true : false;
+    })
+    files = files.filter(f => {
+        return (!f.startsWith('_'));
+    })
+
+    // Load files into resources
+    const filesAndResources = files.map(f => {
+        return {
+            file: directory + '/' + f,
+            resource: util.loadObjectFromFile(directory + '/' + f)
+        };
+    })
+
+    const resources = filesAndResources.map(item => item.resource);
+    return resources;
+}
+
+function partiallyResolveResources(resources) {
+    const partiallyResolvedResources = []
+    for (let resource of resources) {
+        resource = await renderResourceObject(resource, config, {}, {
+            onlyPrebundle: true,
+            bundleDirectory: argv.directory
+        })
+        partiallyResolvedResources.push(resource);
+    }
+    return partiallyResolvedResources;
+}
 
 function displaySummary(succeeded, failed) {
     const totalSucceeded = succeeded.updated.length + succeeded.created.length + succeeded.unchanged.length;
@@ -236,86 +251,9 @@ function obtainConfig(argv) {
     return config;
 }
 
-// function prioritize(filesAndResources) {
-//     const resourceOrder = [
-//         // Hierarchy first
-//         'Gestalt::Resource::Organization',
-//         'Gestalt::Resource::Workspace',
-//         'Gestalt::Resource::Environment',
-
-//         // Users, groups
-//         'Gestalt::Resource::User',
-//         'Gestalt::Resource::Group',
-
-//         // Providers next
-//         'Gestalt::Configuration::Provider',
-
-//         // Next, resources that don't depend on other resources (except providers)
-//         'Gestalt::Resource::Api',
-//         'Gestalt::Resource::Container',
-//         'Gestalt::Resource::Node::Lambda',
-//         'Gestalt::Resource::Policy',
-
-//         // Next, resources that depend on other resources
-//         'Gestalt::Resource::ApiEndpoint', // Depends on API and Container or Lambda
-//         'Gestalt::Resource::Rule', // Depends on Policy
-//     ];
-
-//     const groups = {};
-
-//     // Break into groups
-//     for (let item of filesAndResources) {
-//         let resource = item.resource;
-//         if (!resource.resource_type) {
-//             console.error(chalk.yellow(`Warning: Will not process ${item.file}, no resource_type found`));
-//         } else {
-
-//             let key = null;
-//             if (resource.resource_type.indexOf("Gestalt::Configuration::Provider::") == 0) {
-//                 key = 'Gestalt::Configuration::Provider';
-//             } else {
-//                 key = resource.resource_type;
-//             }
-
-//             groups[key] = groups[key] || {
-//                 type: key,
-//                 items: []
-//             };
-//             groups[key].items.push(item);
-//         }
-//     }
-
-//     const sorted = [];
-
-//     // Ensure the correct order for the specified resource types
-//     for (let key of resourceOrder) {
-//         if (groups[key]) {
-//             sortBy(groups[key].items, 'file');  // sorts in place
-//             sorted.push(groups[key]);
-//             delete groups[key];
-//         }
-//     }
-
-//     // Append the rest of types not specified in the resource ordering
-//     for (let key of Object.keys(groups)) {
-//         sortBy(groups[key].items, 'file');  // sorts in place
-//         sorted.push(groups[key]);
-//     }
-
-//     return sorted;
-// }
-
-// function sortBy(arr, key) {
-//     return arr.sort((a, b) => {
-//         if (a == null) return 1;
-//         if (b == null) return -1;
-//         if (a[key] < b[key]) { return -1; }
-//         if (a[key] > b[key]) { return 1; }
-//         return 0;
-//     })
-// }
-
+// TODO: Combine this with apply-resources.js from SDK
 async function processFile(file, params, config, defaultContext) {
+    console.error(`Processing ${file}...`)
 
     const resourceSpec = await renderResourceTemplate(file, config, defaultContext, { delete: params.delete });
 
