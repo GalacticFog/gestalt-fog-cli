@@ -79,37 +79,37 @@ exports.handler = cmd.handler(async function (argv) {
 
     const config = obtainConfig(argv);
     console.error('Using config: ' + JSON.stringify(config, null, 2));
+    let resources = null;
 
     if (argv.file && argv.directory) {
         throw Error(`Can't specify both --file and --directory`);
     } else if (argv.file) {
-        // TODO: Combine this with multiple resources approach
-        const result = await processFile(argv.file, argv, config, context);
-        console.error(result.message);
+        resources = [util.loadObjectFromFile(argv.file)]
     } else if (argv.directory) {
         if (argv.description) throw Error(`Can't specify --description with --directory`);
         if (argv.name) throw Error(`Can't specify --description with --name`);
 
-        const resources = loadResourcesFromDirectory(argv.directory);
+        resources = loadResourcesFromDirectory(argv.directory);
 
-        // Partially resolve resources (LambdaSources and Config settings)
-        const partiallyResolvedResources = partiallyResolveResources(resources);
-
-        if (argv['render-bundle']) {
-            const bundle = {
-                context: context,
-                config: config,
-                resources: partiallyResolvedResources
-            }
-
-            // Render to STDOUT
-            console.log(JSON.stringify(bundle, null, 2));
-        } else {
-            const { succeeded, failed } = await actions.applyResources(context, partiallyResolvedResources, argv, config);
-            displaySummary(succeeded, failed);
-        }
     } else {
         throw Error('--file or --directory parameter required');
+    }
+
+    // Partially resolve resources (LambdaSources and Config settings)
+    const partiallyResolvedResources = await partiallyResolveResources(resources, config, argv.directory || path.dirname(argv.file));
+
+    if (argv['render-bundle']) {
+        const bundle = {
+            context: context,
+            config: config,
+            resources: partiallyResolvedResources
+        }
+
+        // Render to STDOUT
+        console.log(JSON.stringify(bundle, null, 2));
+    } else {
+        const { succeeded, failed } = await actions.applyResources(context, partiallyResolvedResources, argv, config);
+        displaySummary(succeeded, failed);
     }
 });
 
@@ -123,24 +123,26 @@ function loadResourcesFromDirectory(directory) {
         return (!f.startsWith('_'));
     })
 
-    // Load files into resources
-    const filesAndResources = files.map(f => {
-        return {
-            file: directory + '/' + f,
-            resource: util.loadObjectFromFile(directory + '/' + f)
-        };
-    })
+    // // Load files into resources
+    // const filesAndResources = files.map(f => {
+    //     return {
+    //         file: directory + '/' + f,
+    //         resource: util.loadObjectFromFile(directory + '/' + f)
+    //     };
+    // })
 
-    const resources = filesAndResources.map(item => item.resource);
+    // const resources = filesAndResources.map(item => item.resource);
+
+    const resources = files.map(f => util.loadObjectFromFile(directory + '/' + f));
     return resources;
 }
 
-function partiallyResolveResources(resources) {
+async function partiallyResolveResources(resources, config, directory) {
     const partiallyResolvedResources = []
     for (let resource of resources) {
         resource = await renderResourceObject(resource, config, {}, {
             onlyPrebundle: true,
-            bundleDirectory: argv.directory
+            bundleDirectory: directory
         })
         partiallyResolvedResources.push(resource);
     }

@@ -42,31 +42,79 @@ async function applyResources(context, resources, opts, config) {
     const failed = [];
     const errors = [];
 
-    // Process groups
+    const toRender = [];
+
+    // Process groups - First iteration - render resource
     for (let group of groups) {
         for (let item of group.items) {
             try {
-                const ret = await processResource(item.resource, opts, config, context);
-                if (opts['render-only']) {
-                    if (opts['render-only'] == 'yaml') {
-                        console.log(yaml.dump(ret.spec));
-                    } else {
-                        console.log(JSON.stringify(ret.spec, null, 2));
-                    }
-                } else {
-                    const result = await gestalt.applyResource(ret.spec, ret.context, { delete: opts.delete, force: opts.force });
-                    console.error(result.message);
-                    item.status = result.status;
-                    item.message = result.message;
-                    succeeded[item.status].push(item);
-                }
+                item.renderedResource = await processResource(item.resource, opts, config, context);
             } catch (err) {
+                console.error(chalk.red(err));
                 item.status = 'failed';
                 item.message = err.message;
-                console.error(chalk.red(err));
-                errors.push(err.message);
-                failed.push(item);
+
+                if (opts.abortOnFailure) {
+                    console.error(chalk.red('Aborting due to failure'));
+
+                    // Only capture items here if aborting on failure.
+                    failed.push(item);
+                    errors.push(err.message);
+
+                    return {
+                        succeeded,
+                        failed,
+                        errors
+                    };
+                }
             }
+        }
+    }
+
+    // Process groups - Second iteration - 
+    for (let group of groups) {
+        for (let item of group.items) {
+            if (item.status == 'failed') {
+                failed.push(item);
+                errors.push(item.message);
+            } else {
+                try {
+                    const ret = item.renderedResource;
+                    if (opts['render-only']) {
+                        toRender.push(ret.spec);
+                    } else {
+                        const result = await gestalt.applyResource(ret.spec, ret.context, { delete: opts.delete, force: opts.force });
+                        console.error(result.message);
+                        item.status = result.status;
+                        item.message = result.message;
+                        succeeded[item.status].push(item);
+                    }
+                } catch (err) {
+                    console.error(chalk.red(err));
+                    item.status = 'failed';
+                    item.message = err.message;
+                    errors.push(err.message);
+                    failed.push(item);
+
+                    if (opts.abortOnFailure) {
+                        console.error(chalk.red('Aborting due to failure'));
+                        return {
+                            succeeded,
+                            failed,
+                            errors
+                        };
+                    }    
+                }
+            }
+        }
+    }
+
+    // Render only
+    if (opts['render-only']) {
+        if (opts['render-only'] == 'yaml') {
+            console.log(yaml.dump(toRender));
+        } else {
+            console.log(JSON.stringify(toRender, null, 2));
         }
     }
 
