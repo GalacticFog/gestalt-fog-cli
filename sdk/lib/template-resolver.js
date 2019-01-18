@@ -214,7 +214,7 @@ async function resolveTemplateDirective(directiveString) {
 
         const handler = directiveHandlers[directive]
         if (handler) {
-            const calculatedValue = /*await*/ handler.apply(handler, tokens)
+            const calculatedValue = await handler.apply(handler, tokens)
 
             // Save back to cache
             state.directivesCache[directiveString] = calculatedValue;
