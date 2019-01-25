@@ -120,7 +120,8 @@ function loadResourcesFromDirectory(directory) {
         return (f.endsWith('.json') || f.endsWith('.yaml')) ? true : false;
     })
     files = files.filter(f => {
-        return (!f.startsWith('_'));
+        // ignore files that start with dot or underscore
+        return (!f.startsWith('_') && !f.startsWith('.'));
     })
 
     // // Load files into resources
