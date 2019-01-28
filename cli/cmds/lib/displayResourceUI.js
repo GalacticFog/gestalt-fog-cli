@@ -23,10 +23,12 @@ exports.run = (options, resources) => {
         })
     }
 
-    function formatLine(item) {
+    function formatLine(item, spaces) {
         let fields = options.fields;
         let sep = '     ';
         let returnString = '';
+
+        spaces == spaces == undefined ? "  " : spaces;
 
         // Calculate padding for all except last column
         for (let i in fields) {
@@ -52,7 +54,7 @@ exports.run = (options, resources) => {
             }
         }
 
-        return "  " + returnString; // indent some with appended spaces
+        return spaces + returnString; // indent some with appended spaces
     }
 
     function formatHeaders() {
@@ -116,24 +118,30 @@ exports.run = (options, resources) => {
         });
     })
 
-    // Account for field headers
-    for (let i in options.fields) {
-        widths[options.fields[i]] = Math.max(widths[options.fields[i]], options.headers[i].length);
-    }
+    if (options['no-headers']) {
+        displayResources.map(item => {
+            console.log(formatLine(item, ''));
+        });
+    } else {
 
+        // Account for field headers
+        for (let i in options.fields) {
+            widths[options.fields[i]] = Math.max(widths[options.fields[i]], options.headers[i].length);
+        }
 
-    // Display
-    console.log();
-    if (options.message) {
-        console.log(chalk.bold(options.message));
-        console.log()
-    }
-    console.log(formatHeaders());
-    // console.log();
-    displayResources.map(item => {
-        // console.log(item)
-        console.log(formatLine(item));
+        // Display
+        console.log();
+        if (options.message) {
+            console.log(chalk.bold(options.message));
+            console.log()
+        }
+        console.log(formatHeaders());
         // console.log();
-    });
+        displayResources.map(item => {
+            // console.log(item)
+            console.log(formatLine(item));
+            // console.log();
+        });
+    }
     console.log();
 }
