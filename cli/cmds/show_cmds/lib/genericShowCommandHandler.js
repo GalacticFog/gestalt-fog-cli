@@ -25,6 +25,10 @@ const builder = {
         type: 'string',
         description: "Specify display fields.  Comma separated, and prefix with '+' to display fields in addition to default fields (e.g. '+id,name' vs 'id,name')"
     },
+    'no-headers': {
+        type: 'boolean',
+        description: "If specified, suppresses display of column headers"
+    }
 };
 
 module.exports = {
