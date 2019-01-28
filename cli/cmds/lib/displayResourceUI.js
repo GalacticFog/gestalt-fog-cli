@@ -23,12 +23,10 @@ exports.run = (options, resources) => {
         })
     }
 
-    function formatLine(item, spaces) {
+    function formatLine(item) {
         let fields = options.fields;
         let sep = '     ';
         let returnString = '';
-
-        spaces == spaces == undefined ? "  " : spaces;
 
         // Calculate padding for all except last column
         for (let i in fields) {
@@ -54,7 +52,7 @@ exports.run = (options, resources) => {
             }
         }
 
-        return spaces + returnString; // indent some with appended spaces
+        return "  " + returnString; // indent some with appended spaces
     }
 
     function formatHeaders() {
@@ -120,7 +118,7 @@ exports.run = (options, resources) => {
 
     if (options['no-headers']) {
         displayResources.map(item => {
-            console.log(formatLine(item, ''));
+            console.log(formatLine(item));
         });
     } else {
 
