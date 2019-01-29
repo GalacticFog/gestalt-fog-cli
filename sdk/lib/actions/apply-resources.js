@@ -93,6 +93,7 @@ function prioritize(resources) {
         'Gestalt::Resource::Container',
         'Gestalt::Resource::Node::Lambda',
         'Gestalt::Resource::Policy',
+        'Gestalt::Resource::Configuration::DataFeed',
 
         // Next, resources that depend on other resources
         'Gestalt::Resource::ApiEndpoint', // Depends on API and Container or Lambda

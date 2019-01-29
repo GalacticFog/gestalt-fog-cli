@@ -15,6 +15,8 @@ const resourceTypeToUrlType = {
     'Gestalt::Resource::ApiEndpoint': 'apiendpoints',
     'Gestalt::Resource::Rule::Event': 'rules',
     'Gestalt::Resource::Rule::Limit': 'rules',
+    'Gestalt::Resource::Configuration::DataFeed': 'datafeeds',
+    'Gestalt::Resource::Spec::StreamSpec': 'streamspecs',
 };
 
 /**
@@ -31,6 +33,8 @@ const typesNotAllowingResourceTypeFieldOnCreation = [
     'Gestalt::Resource::Organization',
     'Gestalt::Resource::Workspace',
     'Gestalt::Resource::Environment',
+    'Gestalt::Resource::Configuration::DataFeed',
+    'Gestalt::Resource::Spec::StreamSpec',
 ];
 
 /**
@@ -48,6 +52,8 @@ const resourceTypesRequiringPatchUpdate = [
     'Gestalt::Resource::Policy',
     'Gestalt::Resource::Rule::Event',
     'Gestalt::Resource::Rule::Limit',
+    'Gestalt::Resource::Configuration::DataFeed',
+    'Gestalt::Resource::Spec::StreamSpec',
 ];
 
 const hierarchyResources = [

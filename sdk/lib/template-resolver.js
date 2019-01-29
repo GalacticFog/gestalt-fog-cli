@@ -241,6 +241,7 @@ const directiveHandlers = {
     Api: resolveApi,
     Policy: resolvePolicy,
     LambdaSource: resolveBase64File,
+    Datafeed: resolveDatafeed,
 }
 
 async function resolveProvider(path, param = 'id') {
@@ -322,6 +323,25 @@ async function resolvePolicy(name, param = 'id') {
         return res[param];
     }
     throw Error(`Unable to resolve Policy with name '${res}'`);
+}
+
+async function resolveDatafeed(pathOrName, param = 'id') {
+    let datafeed = null;
+    if (pathOrName[0] == '/') {
+        datafeed = await contextResolver.resolveResourceByPath('datafeeds', pathOrName);
+        if (!datafeed) {
+            throw Error('Datafeed not found for path: ' + pathOrName);
+        }
+    } else {
+        console.error(chalk.dim.blue(`Resolving environment datafeed '${pathOrName}'`));
+        const lambdas = await gestalt.fetchEnvironmentResources('datafeeds', state.context);
+        datafeed = lambdas.find(l => l.name == pathOrName);
+        if (!datafeed) {
+            throw Error('Datafeed not found for path: ' + pathOrName);
+        }
+    }
+    debug(`Found Datafeed '${datafeed.name}'`);
+    return datafeed[param];
 }
 
 
