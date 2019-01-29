@@ -106,6 +106,7 @@ async function doDarseFieldForDirectives(value, func) {
     let lastDeep = -1;
     while (true) {
         start = getDeepestTokenPosition(startToken, value, lastDeep);
+        // console.log(`start=${start}`)
 
         // Use last deep as a way to back off processing a directive again if it was unresolve
         // a previous iteration
@@ -138,7 +139,9 @@ async function doDarseFieldForDirectives(value, func) {
                     }
                 }
 
-                value = value.replace(`${startToken}${directive}${endToken}`, replacementValue);
+                // Construct the new string, replacing the token with the replacement value
+                const token = `${startToken}${directive}${endToken}`
+                value = value.substring(0, start) + replacementValue + value.substring(start + token.length );
                 start = -1; //reset
                 // debug(`New Value: ${value}`)
             } else {
@@ -153,14 +156,19 @@ async function doDarseFieldForDirectives(value, func) {
 }
 
 function getDeepestTokenPosition(token, stringValue, lastDeep) {
+    // console.log(`getDeepestTokenPosition(${token}, ${stringValue}, ${lastDeep})`)
     let start = -1;
     let pos = 0;
     while (true) {
         pos = stringValue.indexOf(token, start + 1);
+        // console.log(`pos=${pos}`)
 
         // Use last deep as a way to back off processing a directive again if it was unresolve
         // a previous iteration.  lastDeep initializes at -1
-        if (lastDeep > 0 && pos >= lastDeep) break;
+        if (lastDeep > 0 && pos >= lastDeep) {
+            // console.log(`pos=${pos} >= lastDeep=${lastDeep} ... breaking`)
+            break;
+        }
 
         if (pos > -1) {
             start = pos;
