@@ -6,14 +6,19 @@ const chalk = require('../lib/chalk');
 
 module.exports = {
     doExportHierarchy,
-    doExportEnviornmentResources
+    doExportEnviornmentResources,
+    getDefaultExportDirectory
 }
 
 // Public functions
 
+function getDefaultExportDirectory(raw = false) {
+    return toSlugAllowingDots(gestalt.getHost()) + (raw ? '-raw' : '')
+}
+
 async function doExportHierarchy(context, resourceTypes, basePath, format = 'yaml', raw = false) {
 
-    basePath = basePath || toSlugAllowingDots(gestalt.getHost());
+    basePath = basePath || getDefaultExportDirectory(raw);
 
     const dirs = [basePath];
 
@@ -123,7 +128,7 @@ async function exportSingleEnvironmentResource(envContext, res, basePath, format
     }
 
     // Next, Write the resources to the filesystem (Note: a resource may be more than one file)
-    writeResourceToFilesystem(res, basePath, format);
+    writeResourceToFilesystem(res, basePath, format, raw);
 }
 
 function getWorkspaceContext(orgContext, ws) {
@@ -168,6 +173,8 @@ async function makeResourcePortable(res, context) {
     res = stripEnvironmentSpecificInfo(res);
 
     res = await dereferenceProviders(res, context);
+    res = await dereferenceLambdas(res, context);
+    res = await dereferenceApis(res, context);
 
     return res;
 }
@@ -175,6 +182,7 @@ async function makeResourcePortable(res, context) {
 function stripEnvironmentSpecificInfo(res) {
     // Clone object
     res = JSON.parse(JSON.stringify(res));
+
 
     delete res.resource_state;
     delete res.id;
@@ -184,8 +192,20 @@ function stripEnvironmentSpecificInfo(res) {
     delete res.modified;
     if (res.properties) {
         delete res.properties.parent;
+        stripTypeSpecificInfo(res);
+    }
+    return res;
+}
 
-        // Container properties
+function stripTypeSpecificInfo(res) {
+    stripContainerInfo(res);
+    stripEventRuleInfo(res);
+    stripApiEndpointInfo(res);
+    stripPolicyInfo(res);
+}
+
+function stripContainerInfo(res) {
+    if (getResourceType(res) == 'container') {
         delete res.properties.instances;
         delete res.properties.age;
         delete res.properties.status;
@@ -194,6 +214,8 @@ function stripEnvironmentSpecificInfo(res) {
         delete res.properties.tasks_running;
         delete res.properties.tasks_staged;
         delete res.properties.external_id;
+        delete res.properties.status_detail;
+        delete res.properties.events;
         if (res.properties.port_mappings) {
             for (const pm of res.properties.port_mappings) {
                 if (pm.service_address) {
@@ -202,7 +224,30 @@ function stripEnvironmentSpecificInfo(res) {
             }
         }
     }
-    return res;
+}
+
+function stripEventRuleInfo(res) {
+    if (getResourceType(res) == 'eventrule') {
+        delete res.properties.defined_at;
+        if (res.properties.lambda) {
+            delete res.properties.lambda.href
+        }
+    }
+}
+
+function stripApiEndpointInfo(res) {
+    if (getResourceType(res) == 'apiendpoint') {
+        delete res.properties.upstream_url;
+        delete res.properties.public_url;
+    }
+}
+
+function stripPolicyInfo(res) {
+    if (getResourceType(res) == 'policy') {
+        // delete the referenced child rules, because when creating resources
+        // the reference starts from the rule to the policy
+        delete res.properties.rules;
+    }
 }
 
 async function dereferenceProviders(res, context) {
@@ -210,26 +255,45 @@ async function dereferenceProviders(res, context) {
     res = JSON.parse(JSON.stringify(res));
 
     if (res.properties && res.properties.provider && res.properties.provider.id) {
-
-        const providerName = await getProviderName(res.properties.provider.id, context);
-        if (providerName) {
-            modifyProviderPayload(res, providerName);
-        } else {
-            console.error(chalk.yellow(`Warning: Resource '${res.name}': Could not resolve provider '${res.properties.provider.name}' with ID ${res.properties.provider.id}`));
-            if (res.properties.provider.name) {
-                // Use the provider name
-                modifyProviderPayload(res, res.properties.provider.name);
-            }
-        }
+        await modifyProviderPayload(res, context);
     }
 
     return res;
 }
 
-function modifyProviderPayload(res, value) {
-    res.properties.provider.id = `#{Provider ${value}}`;
-    delete res.properties.provider.name;
-    delete res.properties.provider.resource_type;
+async function modifyProviderPayload(res, context) {
+    const providerName = await getProviderName(res.properties.provider.id, context);
+    if (providerName) {
+        res.properties.provider.id = `#{Provider ${providerName}}`;
+        delete res.properties.provider.name;
+        delete res.properties.provider.resource_type;
+    } else {
+        console.error(chalk.yellow(`Warning: Resource '${res.name}': Could not resolve provider '${res.properties.provider.name}' with ID ${res.properties.provider.id}`));
+        if (res.properties.provider.name) {
+            // Use the provider name
+            res.properties.provider.id = `#{Provider ${res.properties.provider.name}}`;
+            delete res.properties.provider.name;
+            delete res.properties.provider.resource_type;
+        }
+    }
+
+    if (res.properties.provider.locations) {
+
+        // Just clear out locations - they aren't necessary
+        res.properties.provider.locations = [];
+
+        // // dereference locations
+
+        // for (let i = 0; i < res.properties.provider.locations.length; i++) {
+        //     const id = res.properties.provider.locations[i];
+        //     const providerName = await getProviderName(id, context);
+        //     if (providerName) {
+        //         res.properties.provider.locations[i] = `#{Provider ${providerName}}`;
+        //     } else {
+        //         console.error(chalk.yellow(`Warning: Resource '${res.name}': Could not resolve provider location with ID ${id}`));
+        //     }
+        // }
+    }
 }
 
 // in-memory providers cache, so providers are only looked up once per export run
@@ -252,23 +316,95 @@ async function getProviderName(id, context) {
     return null;
 }
 
-// function writeResourcesToFilesystem(resources, basePath, format) {
-//     for (res of resources) {
-//         writeResourceToFilesystem(res, basePath, format);
-//     }
-// }
+// in-memory providers cache, so providers are only looked up once per export run
+let lambdasCache = null;
 
-function writeResourceToFilesystem(res, basePath, format = 'yaml') {
+async function getLambdas() {
+    if (!lambdasCache) {
+        lambdasCache = await gestalt.fetchOrgLambdas(await gestalt.fetchOrgFqons());
+    }
+    return lambdasCache;
+}
+
+async function dereferenceLambdas(res, context) {
+    // Clone object
+    res = JSON.parse(JSON.stringify(res));
+
+    if (res.resource_type == 'Gestalt::Resource::Rule::Event') {
+        if (res.properties && res.properties.lambda && res.properties.lambda.id) {
+            res.properties.lambda.id = await dereferenceLambdaId(res.properties.lambda.id);
+            delete res.properties.lambda.typeId;
+            delete res.properties.lambda.name;
+        }
+    }
+
+    if (res.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+        if (res.properties && res.properties.implementation_type == 'lambda') {
+            res.properties.implementation_id = await dereferenceLambdaId(res.properties.implementation_id);
+            delete res.properties.location_id;
+        }
+    }
+
+    return res;
+}
+
+async function dereferenceLambdaId(id) {
+    const lambdas = await getLambdas();
+    const lambda = lambdas.find(l => l.id == id);
+    if (lambda) {
+        return `#{Lambda ${lambda.name}}`;
+    } else {
+        console.error(chalk.yellow(`Warning: Could not dereference Lambda ID ${id}`));
+        return id;
+    }
+}
+
+// in-memory providers cache, so providers are only looked up once per export run
+let apisCache = null;
+
+async function getApis() {
+    if (!apisCache) {
+        apisCache = await gestalt.fetchOrgApis(await gestalt.fetchOrgFqons());
+    }
+    return apisCache;
+}
+
+async function dereferenceApis(res, context) {
+    // Clone object
+    res = JSON.parse(JSON.stringify(res));
+
+    if (getResourceType(res) == 'apiendpoint') {
+        if (res.context && res.context.api && res.context.api.id) {
+            res.context.api.id = await dereferenceApiId(res.context.api.id);
+        }
+    }
+    return res;
+}
+
+async function dereferenceApiId(id) {
+    const apis = await getApis();
+    const api = apis.find(a => a.id == id);
+    if (api) {
+        return `#{Api ${api.name}}`;
+    } else {
+        console.error(chalk.yellow(`Warning: Could not dereference Api ID ${id}`));
+        return id;
+    }
+}
+
+function writeResourceToFilesystem(res, basePath, format = 'yaml', raw = false) {
 
     basePath = basePath || '.';
 
     const filename = buildFilename(res) + '.' + format;
 
-    const additionalExports = processResource(res);
+    if (!raw) {
+        const additionalExports = processResource(res);
 
-    // Write any exports the file may have
-    for (const data of additionalExports) {
-        writeFile(basePath + path.sep + data.basePath, data.filename, data.contents);
+        // Write any exports the file may have
+        for (const data of additionalExports) {
+            writeFile(basePath + path.sep + data.basePath, data.filename, data.contents);
+        }
     }
 
     // Write the main file
@@ -341,7 +477,7 @@ function getResourceType(resource) {
         'Gestalt::Resource::Configuration::DataFeed': 'datafeed',
         'Gestalt::Resource::Spec::StreamSpec': 'streamspec',
         'Gestalt::Resource::Secret': 'secret',
-        'Gestalt::Configuration::AppDeployment': 'appdeployment'
+        'Gestalt::Configuration::AppDeployment': 'appdeployment',
     };
 
     if (!resource.resource_type) {

@@ -24,18 +24,20 @@ exports.builder = {
 }
 
 exports.handler = cmd.handler(async function (argv) {
-    let envContext = null;
+    let envContext = {};
     if (argv.context_path) {
         envContext = await cmd.resolveContextPath(argv.context_path);
     }
-    if (!envContext.org || !envContext.workspace || !envContext.environment) {
-        if (!envContext.environment.id || !envContext.environment.name) {
-            envContext = await ui.resolveEnvironment();
-        }
+    if (!envContext.org || !envContext.workspace || !envContext.environment || !envContext.environment.id || !envContext.environment.name) {
+        envContext = await ui.resolveEnvironment();
     }
     let types = gestalt.getEnvironmentResourceTypes();
     if (!argv.all) {
         types = await ui.selectOptions('Resources to export', types);
+    }
+
+    if (!argv.output) {
+        if (argv.raw) argv.output = 'json';
     }
 
     // Do the export of resources from the specified environment

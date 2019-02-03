@@ -2,7 +2,7 @@
 
 module.exports = {
     ...require('./api'),
-    ...require('./api-endpoint'),
+    ...require('./apiendpoint'),
     ...require('./apply'),
     ...require('./auth'),
     ...require('./configure'),
@@ -18,7 +18,7 @@ module.exports = {
     ...require('./lambda'),
     ...require('./org'),
     ...require('./policy'),
-    ...require('./policy-rule'),
+    ...require('./policyrule'),
     ...require('./provider'),
     ...require('./provider-container'),
     ...require('./secret'),
