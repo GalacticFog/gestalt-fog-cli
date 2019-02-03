@@ -32,12 +32,12 @@ exports.getResourceIdCache = (type) => {
 
 // Context functions
 
-exports.saveContext = (s) => {
-    let context = this.getContext();
-    Object.assign(context, s); // merge in context
-    const contents = `${JSON.stringify(context, null, 2)}\n`;
-    writeFile('context.json.cached', contents);
-}
+// exports.saveContext = (s) => {
+//     let context = this.getContext();
+//     Object.assign(context, s); // merge in context
+//     const contents = `${JSON.stringify(context, null, 2)}\n`;
+//     writeFile('context.json.cached', contents);
+// }
 
 exports.setContext = (s) => {
     const contents = `${JSON.stringify(s, null, 2)}\n`;

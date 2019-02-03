@@ -17,7 +17,7 @@ exports.fetchProviders = (context, type) => {
         }
         return fetchOrgProviders([context.org.fqon], type);
     }
-    throw Error(`Context doesn't contain org info`);
+    throw Error(`fetchProviders: Context doesn't contain org info`);
 }
 
 function fetchOrgProviders(fqonList, type) {
