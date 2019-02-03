@@ -9,6 +9,7 @@ fog <command>
 
 Commands:
   fog admin <command>       Admin commands
+  fog apply [context]       Apply resource
   fog clone <command>       Clone resources of specified type
   fog completion <command>  Shell completion commands
   fog config <command>      Config commands
@@ -32,6 +33,8 @@ Options:
   --version  Show version number                                       [boolean]
   --help     Show help                                                 [boolean]
 
+
+
 ```
 
 ## Run from Source
@@ -39,7 +42,7 @@ Options:
 `fog` requires node and npm for running from source.
 
 ```sh
-cd gestalt-fog-cli
+cd gestalt-fog-cli/cli
 npm install
 ./fog
 ```
@@ -184,20 +187,38 @@ fog delete containers
 
 ```
 
+## Exporting resources
+```sh
+fog export resources                       # Export the current environment's resources to the current directory 
+
+fog export resources --all -d export1      # Export the current environment's resources to the 'export1' directory 
+
+fog export hierarchy / --all         # Export everything as portable resources (including Orgs, Workspaces, Environments)
+
+fog export hierarchy / --all --raw   # Export "raw" - don't dereference resource IDs or strip environment-specific info
+
+fog export hierarchy /engineering    # Export the 'engineering' org
+
+fog export hierarchy /engineering/myworkspace -d ../Export1   # Export to the ../Export1 directory
+
+```
+
 # Commands List
 ```
 fog admin <command>
-  fog admin add-user-to-group               Add user to group
-  fog admin apply-entitlements              Apply entitlements from file
+  fog admin add-user-to-group [user]        Add user to group
+  [group]
+  fog admin apply-entitlements [path]       Apply entitlements from file
   fog admin create-account-store [file]     Create Account Store
-  fog admin create-directory [file]         Create LDAP directory
+  fog admin create-directory [file] [org]   Create LDAP directory
   fog admin create-group [name]             Create group
   [description]
-  fog admin delete-directory [name]         Delete LDAP directory
-  fog admin generate-api-key                Generate Gestalt Security API key
+  fog admin delete-directory [name] [org]   Delete LDAP directory
+  fog admin generate-api-key [user]         Generate Gestalt Security API key
   fog admin list-entitlements               List entitlement actions at the
   [context_path]                            specified context
-  fog admin remove-user-from-group          Remove user from group
+  fog admin remove-user-from-group [user]   Remove user from group
+  [group]
   fog admin show-account-stores [org]       Show account stores
   fog admin show-directories [org]          Show LDAP directories
   fog admin show-directory-accounts [name]  Show LDAP directories
@@ -228,27 +249,33 @@ fog context <command>
   fog context show                    Shows the current context
 
 fog create <command>
-  fog create api-endpoint [name]   Create API Endpoint
   fog create api [name]            Create API
+  fog create apiendpoint [name]    Create API Endpoint
   fog create container [name]      Create container
   fog create environment [name]    Create environment
   fog create lambda [name]         Create lambda
   fog create org [name]            Create org
-  fog create policy-rule           Create policy rule
+  fog create policyrule            Create policy rule
   fog create resource [name]       Create resource
   fog create resources [files...]  Create resources
   fog create workspace [name]      Create workspace
 
 fog delete <command>
+  fog delete api [api_name]              Delete api
   fog delete container [container_name]  Delete container
   fog delete containers                  Delete containers
+  fog delete environment [context_path]  Delete environment
+  fog delete group [name]                Delete group
   fog delete lambda [lambda_name]        Delete lambda
   fog delete lambdas                     Delete lambdas
+  fog delete org [fqon]                  Delete org
   fog delete policy [policy_name]        Delete policy
+  fog delete user [name]                 Delete user
+  fog delete workspace [context_path]    Delete workspace
 
 fog export <command>
-  fog export environment  Export environment
-  fog export root         Export root
+  fog export hierarchy [context_path]  Export hierarchy
+  fog export resources [context_path]  Export environment resources
 
 fog login               Log in to Gestalt Platform Instance
 
@@ -277,33 +304,36 @@ fog scale <command>
   fog scale container [container_name]      Scale container
 
 fog security <command>
+  fog security DELETE [path]        HTTP functions
   fog security GET [path]           HTTP functions
   fog security PATCH [path] [file]  HTTP functions
+  fog security POST [path]          HTTP functions
+  fog security PUT [path]           HTTP functions
 
 fog service <command>
   fog service deploy   Deploy a Service
   fog service package  Package a Service
 
 fog show <command>
-  fog show api-endpoints [context_path]  List API endpoints
-  fog show apis [context_path]           Show apis
-  fog show containers [context_path]     Show containers
-  fog show datafeeds [context_path]      Show datafeeds
-  fog show entitlements [context_path]   Show entitlements
-  fog show environments [context_path]   List enviornments
-  fog show group-members                 List group members
-  fog show groups                        List groups
-  fog show hierarchy                     Show the hierarchy
-  fog show lambdas [context_path]        Show lambdas
-  fog show orgs                          List orgs
-  fog show policies [context_path]       Show policies
-  fog show policy-rules [context_path]   List policy rules
-  fog show providers [context_path]      List providers
-  fog show secrets [context_path]        Show secrets
-  fog show streamspecs [context_path]    Show streamspecs
-  fog show users                         List users
-  fog show volumes [context_path]        Show volumes
-  fog show workspaces [context_path]     List workspaces
+  fog show apiendpoints [context_path]  Show apiendpoints
+  fog show apis [context_path]          Show apis
+  fog show containers [context_path]    Show containers
+  fog show datafeeds [context_path]     Show datafeeds
+  fog show entitlements [context_path]  Show entitlements
+  fog show environments [context_path]  List enviornments
+  fog show group-members                List group members
+  fog show groups                       List groups
+  fog show hierarchy                    Show the hierarchy
+  fog show lambdas [context_path]       Show lambdas
+  fog show orgs                         List orgs
+  fog show policies [context_path]      Show policies
+  fog show policyrules [context_path]   Show policyrules
+  fog show providers [context_path]     List providers
+  fog show secrets [context_path]       Show secrets
+  fog show streamspecs [context_path]   Show streamspecs
+  fog show users                        List users
+  fog show volumes [context_path]       Show volumes
+  fog show workspaces [context_path]    List workspaces
 
 fog status              Show Status
 ```

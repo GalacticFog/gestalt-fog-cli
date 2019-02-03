@@ -4,7 +4,7 @@ const cmd = require('../lib/cmd-base');
 const { doExportEnviornmentResources } = require('./exportHelper');
 
 exports.command = 'resources [context_path]'
-exports.desc = 'Export environment'
+exports.desc = 'Export environment resources'
 exports.builder = {
     context_path: {
         description: 'Context path'
