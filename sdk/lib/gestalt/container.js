@@ -20,7 +20,7 @@ exports.fetchContainers = (context) => {
         // Have to iteratively fetch containers from all environments in org
         return fetchResourcesFromOrgEnvironments('containers', fqonList);
     }
-    throw Error(`Context doesn't contain org info`);
+    throw Error(`fetchContainers: Context doesn't contain org info`);
 }
 
 exports.fetchOrgContainers = (fqonList) => {

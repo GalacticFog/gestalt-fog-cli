@@ -17,6 +17,7 @@ const resourceTypeToUrlType = {
     'Gestalt::Resource::Rule::Limit': 'rules',
     'Gestalt::Resource::Configuration::DataFeed': 'datafeeds',
     'Gestalt::Resource::Spec::StreamSpec': 'streamspecs',
+    'Gestalt::Resource::Secret' : 'secrets',
 };
 
 /**

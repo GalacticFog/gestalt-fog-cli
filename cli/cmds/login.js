@@ -103,5 +103,5 @@ function formatError(error) {
         return 'Invalid username or password';
     }
 
-    return error || 'Unknown authentication error';
+    return error.message || 'Unknown authentication error';
 }

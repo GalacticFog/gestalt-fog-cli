@@ -46,7 +46,7 @@ function fetchResources(type, context) {
         }
         return fetchOrgResources(type, [context.org.fqon]);
     }
-    throw Error(`Context doesn't contain org info`);
+    throw Error(`fetchResources: Context doesn't contain org info`);
 }
 
 async function fetchOrgResources(type, fqonList, type2) {
