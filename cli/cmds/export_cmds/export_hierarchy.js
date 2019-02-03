@@ -1,7 +1,8 @@
 const { gestalt, gestaltContext } = require('gestalt-fog-sdk')
 const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
-const { doExportHierarchy } = require('./exportHelper');
+const { doExportHierarchy, getDefaultExportDirectory } = require('./exportHelper');
+const fs = require('fs');
 
 exports.command = 'hierarchy [context_path]'
 exports.desc = 'Export hierarchy'
@@ -12,16 +13,43 @@ exports.builder = {
     directory: {
         alias: 'd',
         description: 'Export directory'
+    },
+    output: {
+        alias: 'o',
+        description: 'Export format (yaml, json)'
+    },
+    raw: {
+        type: 'boolean',
+        description: 'Output raw resources'
     }
 }
 
 exports.handler = cmd.handler(async function (argv) {
     const context = await resolveContext(argv);
 
-    const resourceTypes = await getResourceTypes(argv);
+    const basePath = argv.directory || getDefaultExportDirectory(argv.raw);
 
-    await doExportHierarchy(context, resourceTypes, argv.directory, argv.output, argv.raw);
+    if (await checkIfDirectoryExists(basePath)) {
+
+        const resourceTypes = await getResourceTypes(argv);
+
+        if (!argv.output) {
+            if (argv.raw) argv.output = 'json';
+        }
+    
+        await doExportHierarchy(context, resourceTypes, basePath, argv.output, argv.raw);
+    } else {
+        console.log('Aborted.');
+    }
 });
+
+async function checkIfDirectoryExists(basePath) {
+    if (fs.existsSync(basePath)) {
+        return ui.promptToContinue(`Directory '${basePath}' exists, files may be overwritten. Proceed to export?`, false);
+    }
+    // Directory doesn't exist, proceed
+    return true;
+}
 
 
 async function getResourceTypes(argv) {

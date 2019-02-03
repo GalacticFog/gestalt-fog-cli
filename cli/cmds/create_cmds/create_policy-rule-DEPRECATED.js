@@ -6,7 +6,7 @@ const util = require('../lib/util');
 const { debug } = require('../lib/debug');
 
 exports.command = 'policy-rule';
-exports.description = 'Create policy rule';
+exports.desc = false; //Hidden
 exports.builder = {
     file: {
         alias: 'f',
@@ -21,6 +21,10 @@ exports.builder = {
     }
 }
 exports.handler = cmd.handler(async function (argv) {
+
+    console.log()
+    console.log(`'policy-rule' is deprecated, please use 'policyrule'`);
+    console.log()
 
     let context = null;
     if (argv.context) {

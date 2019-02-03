@@ -5,7 +5,7 @@ const inputValidation = require('../lib/inputValidation');
 const cmd = require('../lib/cmd-base');
 const debug = cmd.debug;
 exports.command = 'api-endpoint [name]'
-exports.desc = 'Create API Endpoint'
+exports.desc = false; //Hidden
 exports.builder = {
     template: {
         alias: 't',
@@ -17,6 +17,11 @@ exports.builder = {
     }
 }
 exports.handler = cmd.handler(async function (argv) {
+
+    console.log()
+    console.log(`'api-endpoint' is deprecated, please use 'apiendpoint'`);
+    console.log()
+
     if (argv.file) {
         console.error(`Loading resource spec from file ${argv.file}`);
         let spec = cmd.loadObjectFromFile(argv.file);

@@ -42,7 +42,7 @@ exports.run = (resources, options = {}, context) => {
         }
     } else if (Array.isArray(resources)) {
         if (resources.length == 0) {
-            // console.log(getContextMessage('(No Resources)', context));
+            console.log(getContextMessage('', context));
             console.error('No resources.');
             // console.log();
         } else if (resources[0].resource_type) {

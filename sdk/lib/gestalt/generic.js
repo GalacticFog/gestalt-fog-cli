@@ -138,12 +138,9 @@ function fetchEnvironmentResources(type, context, filterType) {
 
     // Special case
     if (type == 'Gestalt::Resource::ApiEndpoint' || type == 'apiendpoints') {
-
-        if (!context.api) throw Error("missing context.api");
-        if (!context.api.id) throw Error("missing context.api.id");
-
-        const res = meta.GET(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints?expand=true`)
-        return res;
+        return fetchEnvironmentApiEndpoints(context);
+    } else if (type.startsWith('Gestalt::Resource::Rule::') || type == 'policyrules') {
+        return fetchEnvironmentPolicyRules(context);
     }
 
     type = resourceTypeToUrlType[type] || type;
@@ -154,6 +151,51 @@ function fetchEnvironmentResources(type, context, filterType) {
     let url = `/${context.org.fqon}/environments/${context.environment.id}/${type}?expand=true`;
     if (filterType) url += `&type=${filterType}`
     return meta.GET(url);
+}
+
+async function fetchEnvironmentApiEndpoints(context) {
+    // See if the context contains an api resource, otherwise, fetch all apis from environment and
+    // iterate through them
+    if (context.api && context.api.id) {
+        const res = meta.GET(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints?expand=true`)
+        
+        decorateApiEndpointsWithApiContext(res, context.api);
+        
+        return res;
+    } else {
+        // First fetch apis
+        let apiendpoints = []
+        const apis = await fetchEnvironmentResources('apis', context);
+        for (const api of apis) {
+            const res = await meta.GET(`/${context.org.fqon}/apis/${api.id}/apiendpoints?expand=true`)
+            decorateApiEndpointsWithApiContext(res, api);
+            apiendpoints = apiendpoints.concat(res);
+        }
+        return apiendpoints;
+    }
+}
+
+// HACK, since API endpoint doesn't have an association back to the API
+function decorateApiEndpointsWithApiContext(apiendpoints, api) {
+    for (const e of apiendpoints) {
+        e.context = {
+            api: {
+                id: api.id
+            }
+        }
+    }
+}
+
+async function fetchEnvironmentPolicyRules(context) {
+    // fetch all policies from the current environment, and 
+    let policyrules = []
+    const policies = await fetchEnvironmentResources('policies', context);
+    for (const policy of policies) {
+        // console.log(chalk.yellow(`policy: ${policy.name}`));
+        const rules = await meta.GET(`/${context.org.fqon}/policies/${policy.id}/rules?expand=true`);
+        policyrules = policyrules.concat(rules);
+    }
+    return policyrules;
 }
 
 function createEnvironmentResource(group, spec, context) {
