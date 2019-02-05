@@ -68,7 +68,7 @@ function runInteractiveConfigure() {
         try {
             config = gestaltContext.loadConfigFile(CONFIG_FILE);
         } catch (err) {
-            console.error(`Warning: failed to load ${CONFIG_FILE}`);
+            console.error(chalk.yellow(`Warning: failed to load ${CONFIG_FILE}`));
         }
     }
 

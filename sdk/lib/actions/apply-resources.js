@@ -63,6 +63,7 @@ async function applyResources(context, resources, opts, config) {
                 item.status = err;
                 item.message = err;
                 console.error(chalk.red(err));
+                debug(err.stack);
                 failed.push(item);
             }
         }

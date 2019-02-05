@@ -91,8 +91,13 @@ async function applyResource(spec, context, options) {
         resources = await fetchResources('apiendpoints', context);
         targetResource = resources.find(r => r.properties.resource == spec.properties.resource);
     } else if (spec.resource_type.indexOf('Gestalt::Resource::Rule::') == 0) {
-        resources = await meta.GET(`/${context.org.fqon}/policies/${spec.context.policy.id}/rules?expand=true`);
-        targetResource = resources.find(r => r.name == spec.name);
+        if (spec.context && spec.context.policy && spec.context.policy.id) {
+            // Policy context is embedded in the policy rule
+            resources = await meta.GET(`/${context.org.fqon}/policies/${spec.context.policy.id}/rules?expand=true`);
+            targetResource = resources.find(r => r.name == spec.name);
+        } else {
+            throw Error(`Can't handle type ${spec.resource_type}, policy info not present`);
+        }
     } else {
         // Special cases
         if (type == 'groups' || type == 'users') {

@@ -213,8 +213,8 @@ async function chooseOrgWorkspaceEnvironment(options) {
     gestalt.setCurrentEnvironment(environment);
 
     return {
-        org: org,
-        workspace: workspace,
-        environment: environment
+        org: { id: org.id, name: org.name, description: org.description, fqon: org.properties.fqon },
+        workspace: { id: workspace.id, name: workspace.name, description: workspace.description },
+        environment: { id: environment.id, name: environment.name, description: environment.description }
     };
 }

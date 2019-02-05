@@ -84,7 +84,7 @@ async function resolveProviderInfoByPath(providerPath) {
     const contextPath = pathElements.join('/')
     const context = await resolveContextPath(contextPath);
 
-    debug('context: ' + context);
+    debug('context: ' + JSON.stringify(context));
 
     // const providerPathCache = resourcePathCache['providers'];
     //    const cachedProviders = providerPathCache[contextPath];
@@ -157,23 +157,29 @@ async function resolveProvider(name, providedContext, optionalType) {
         }
 
         // Not found in cache, look up ID by name
-        let providers = await gestalt.fetchProviders(context, optionalType);
+        const providers = await gestalt.fetchProviders(context, optionalType);
 
-        for (let p of providers) {
+        let numFound = 0;
+        let foundProvider = null;
+        // Search for duplicates
+        for (const p of providers) {
             if (p.name == name) {
-                // found it, write to cache
-                cache[p.name] = p.id;
-                gestaltContext.saveResourceIdCache('provider', cache);
-
-                return {
-                    id: p.id,
-                    name: p.name
-                };
-
-                break; // this is unreachable
+                foundProvider = p;
+                numFound++;
             }
         }
-        throw Error(`Could not find provider with name '${name}'`);
+
+        if (numFound == 0) throw Error(`Could not find provider with name '${name}'`);
+        if (numFound > 1) throw Error(`Found duplicate providers, ${numFound} providers with name='${name}'`);
+
+        // found it, write to cache
+        cache[foundProvider.name] = foundProvider.id;
+        gestaltContext.saveResourceIdCache('provider', cache);
+
+        return {
+            id: foundProvider.id,
+            name: foundProvider.name
+        };
     } else {
         throw Error(`Missing name property`);
     }

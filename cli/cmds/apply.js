@@ -76,6 +76,7 @@ exports.handler = cmd.handler(async function (argv) {
 
     const context = await obtainContext(argv);
     console.error('Using context: ' + ui.getContextString(context));
+    debug(JSON.stringify(context, null, 2));
 
     const config = obtainConfig(argv);
     console.error('Using config: ' + JSON.stringify(config, null, 2));
