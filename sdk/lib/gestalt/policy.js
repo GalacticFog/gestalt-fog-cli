@@ -1,6 +1,7 @@
 const {
     fetchResources,
     fetchEnvironmentResources,
+    fetchOrgResources,
     deleteResource,
     updateResource,
     createEnvironmentResource
@@ -8,6 +9,13 @@ const {
 
 exports.fetchPolicies = (context) => {
     return fetchResources('policies', context);
+}
+
+exports.fetchOrgPolicies = (fqonList) => {
+    // return fetchResourcesFromOrgEnvironments("apis", fqonList);
+    
+    // APIs can be retrieved directly from the org level
+    return fetchOrgResources("policies", fqonList);
 }
 
 exports.fetchEnvironmentPolicies = (providedContext) => {

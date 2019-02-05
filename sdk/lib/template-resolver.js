@@ -141,7 +141,7 @@ async function doDarseFieldForDirectives(value, func) {
 
                 // Construct the new string, replacing the token with the replacement value
                 const token = `${startToken}${directive}${endToken}`
-                value = value.substring(0, start) + replacementValue + value.substring(start + token.length );
+                value = value.substring(0, start) + replacementValue + value.substring(start + token.length);
                 start = -1; //reset
                 // debug(`New Value: ${value}`)
             } else {
@@ -244,13 +244,23 @@ const directiveHandlers = {
     Datafeed: resolveDatafeed,
 }
 
-async function resolveProvider(path, param = 'id') {
-    const provider = await contextResolver.resolveProviderInfoByPath(path);
+async function resolveProvider(pathOrName, param = 'id') {
+    debug(`template-resolver: resolveProvider: path=${path}, context=${JSON.stringify(state.context, null, 2)}`);
+    const provider = await getProvider(pathOrName);
     if (!provider) {
         throw Error('Provider not found for path: ' + path);
     }
     debug(`Found provider '${provider.name}'`);
     return provider[param];
+}
+
+async function getProvider(pathOrName) {
+    if (pathOrName.startsWith('/')) {
+        // treat as an absolute path
+        return contextResolver.resolveProviderInfoByPath(pathOrName);
+    } else {
+        return contextResolver.resolveProvider(pathOrName, state.context);
+    }
 }
 
 async function resolveLambda(pathOrName, param = 'id') {
@@ -265,7 +275,12 @@ async function resolveLambda(pathOrName, param = 'id') {
         const lambdas = await gestalt.fetchEnvironmentLambdas(state.context);
         lambda = lambdas.find(l => l.name == pathOrName);
         if (!lambda) {
-            throw Error('Lambda not found for path: ' + pathOrName);
+            console.error(chalk.yellow(`Warning: lambda not found with name '${pathOrName} in environment, searching all orgs...`));
+            const allLambdas = await gestalt.fetchOrgLambdas(await gestalt.fetchOrgFqons());
+            lambda = allLambdas.find(l => l.name == pathOrName);
+            if (!lambda) {
+                throw Error('Lambda not found with name: ' + pathOrName);
+            }
         }
     }
     debug(`Found lambda '${lambda.name}'`);
@@ -289,7 +304,6 @@ async function resolveContainer(pathOrName, param = 'id') {
     debug(`Found container '${container.name}'`);
     return container[param];
 }
-
 
 async function resolveConfig(key) {
     if (state.config[key]) {
@@ -344,7 +358,6 @@ async function resolveDatafeed(pathOrName, param = 'id') {
     return datafeed[param];
 }
 
-
 async function resolveBase64File(file) {
 
     // Calculate path relative to the template file
@@ -356,10 +369,3 @@ async function resolveBase64File(file) {
     const code = buf.toString('base64');
     return code;
 }
-
-// //TODO: implement
-// async function resolveLambda(lambdaName, param = 'id') {
-//     const lambda = await gestalt.fetchLambda({ name: lambdaName }, state.context);
-//     debug(`Found lambda '${lambda.name}'`);
-//     return lambda[param];
-// }

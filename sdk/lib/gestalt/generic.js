@@ -108,7 +108,8 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
             }
             return res;
         }).catch(err => {
-            console.error('Warning: ' + err.message);
+            console.error(chalk.yellow('Warning: ' + err.message));
+            debug(err.stack)
             return [];
         });
     });
@@ -157,7 +158,7 @@ async function fetchEnvironmentApiEndpoints(context) {
     // See if the context contains an api resource, otherwise, fetch all apis from environment and
     // iterate through them
     if (context.api && context.api.id) {
-        const res = meta.GET(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints?expand=true`)
+        const res = await meta.GET(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints?expand=true`)
         
         decorateApiEndpointsWithApiContext(res, context.api);
         
@@ -186,6 +187,18 @@ function decorateApiEndpointsWithApiContext(apiendpoints, api) {
     }
 }
 
+// HACK, since API endpoint doesn't have an association back to the API
+function decoratePolicyRuleWithPolicyContext(policyrules, policy) {
+    for (const pr of policyrules) {
+        pr.context = {
+            policy: {
+                id: policy.id
+            }
+        }
+    }
+}
+
+
 async function fetchEnvironmentPolicyRules(context) {
     // fetch all policies from the current environment, and 
     let policyrules = []
@@ -193,6 +206,7 @@ async function fetchEnvironmentPolicyRules(context) {
     for (const policy of policies) {
         // console.log(chalk.yellow(`policy: ${policy.name}`));
         const rules = await meta.GET(`/${context.org.fqon}/policies/${policy.id}/rules?expand=true`);
+        decoratePolicyRuleWithPolicyContext(rules, policy); // HACK to decorate policy rule info with policy for export and apply
         policyrules = policyrules.concat(rules);
     }
     return policyrules;

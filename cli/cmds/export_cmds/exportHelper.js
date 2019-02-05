@@ -174,7 +174,9 @@ async function makeResourcePortable(res, context) {
 
     res = await dereferenceProviders(res, context);
     res = await dereferenceLambdas(res, context);
+    res = await dereferenceContainers(res, context);
     res = await dereferenceApis(res, context);
+    res = await dereferencePolicies(res, context);
 
     return res;
 }
@@ -199,9 +201,9 @@ function stripEnvironmentSpecificInfo(res) {
 
 function stripTypeSpecificInfo(res) {
     stripContainerInfo(res);
-    stripEventRuleInfo(res);
     stripApiEndpointInfo(res);
     stripPolicyInfo(res);
+    stripPolicyRuleInfo(res);
 }
 
 function stripContainerInfo(res) {
@@ -226,7 +228,11 @@ function stripContainerInfo(res) {
     }
 }
 
-function stripEventRuleInfo(res) {
+function stripPolicyRuleInfo(res) {
+    if (getResourceType(res) == 'limitrule') {
+        delete res.properties.defined_at;
+    }
+
     if (getResourceType(res) == 'eventrule') {
         delete res.properties.defined_at;
         if (res.properties.lambda) {
@@ -326,7 +332,7 @@ async function getLambdas() {
     return lambdasCache;
 }
 
-async function dereferenceLambdas(res, context) {
+async function dereferenceLambdas(res) {
     // Clone object
     res = JSON.parse(JSON.stringify(res));
 
@@ -360,6 +366,41 @@ async function dereferenceLambdaId(id) {
 }
 
 // in-memory providers cache, so providers are only looked up once per export run
+let containersCache = null;
+
+async function getContainers() {
+    if (!containersCache) {
+        containersCache = await gestalt.fetchOrgContainers(await gestalt.fetchOrgFqons());
+    }
+    return containersCache;
+}
+
+async function dereferenceContainers(res) {
+    // Clone object
+    res = JSON.parse(JSON.stringify(res));
+
+    if (res.resource_type == 'Gestalt::Resource::ApiEndpoint') {
+        if (res.properties && res.properties.implementation_type == 'container') {
+            res.properties.implementation_id = await dereferenceContainerId(res.properties.implementation_id);
+            delete res.properties.location_id;
+        }
+    }
+
+    return res;
+}
+
+async function dereferenceContainerId(id) {
+    const containers = await getContainers();
+    const container = containers.find(c => c.id == id);
+    if (container) {
+        return `#{Container ${container.name}}`;
+    } else {
+        console.error(chalk.yellow(`Warning: Could not dereference Container ID ${id}`));
+        return id;
+    }
+}
+
+// in-memory apis cache, so apis are only looked up once per export run
 let apisCache = null;
 
 async function getApis() {
@@ -388,6 +429,39 @@ async function dereferenceApiId(id) {
         return `#{Api ${api.name}}`;
     } else {
         console.error(chalk.yellow(`Warning: Could not dereference Api ID ${id}`));
+        return id;
+    }
+}
+
+// in-memory policies cache, so policies are only looked up once per export run
+let policiesCache = null;
+
+async function getPolicies() {
+    if (!policiesCache) {
+        policiesCache = await gestalt.fetchOrgPolicies(await gestalt.fetchOrgFqons());
+    }
+    return policiesCache;
+}
+
+async function dereferencePolicies(res, context) {
+    // Clone object
+    res = JSON.parse(JSON.stringify(res));
+
+    if (getResourceType(res) == 'eventrule' || getResourceType(res) == 'limitrule') {
+        if (res.context && res.context.policy && res.context.policy.id) {
+            res.context.policy.id = await dereferencePolicyId(res.context.policy.id);
+        }
+    }
+    return res;
+}
+
+async function dereferencePolicyId(id) {
+    const policies = await getPolicies();
+    const pol = policies.find(a => a.id == id);
+    if (pol) {
+        return `#{Policy ${pol.name}}`;
+    } else {
+        console.error(chalk.yellow(`Warning: Could not dereference Policy ID ${id}`));
         return id;
     }
 }
