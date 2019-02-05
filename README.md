@@ -203,6 +203,12 @@ fog export hierarchy /engineering/myworkspace -d ../Export1   # Export to the ..
 
 ```
 
+## Admin Commands
+```sh
+# Generate API key for specified user (typically for service accounts)
+fog admin generate-api-key --user admin --org root --key $rootkey --secret $rootsecret
+```
+
 # Commands List
 ```
 fog admin <command>
