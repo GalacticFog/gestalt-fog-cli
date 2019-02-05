@@ -1,4 +1,4 @@
-const { gestalt } = require('gestalt-fog-sdk')
+const { gestalt, security } = require('gestalt-fog-sdk')
 const cmd = require('../lib/cmd-base');
 const out = console.log;
 const util = require('../lib/util');
@@ -78,7 +78,7 @@ function requestApiKey(org, user, key, secret) {
         }
     }
 
-    return gestalt.securityPost(`/accounts/${user.id}/apiKeys`, payload, opts);
+    return security.POST(`/accounts/${user.id}/apiKeys`, payload, opts);
 }
 
 function getBasicAuthData(key, secret) {
