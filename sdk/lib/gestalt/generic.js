@@ -49,16 +49,29 @@ function fetchResources(type, context) {
     throw Error(`fetchResources: Context doesn't contain org info`);
 }
 
-async function fetchOrgResources(type, fqonList, type2) {
+async function fetchOrgResources(type, fqonList, type2, options = {}) {
     debug(`fetchOrgResources(${type}, ${fqonList}, ${type2})`);
     if (!fqonList) throw Error('missing fqonList')
+
+    let orgs = [];
+    if (type == 'providers' && !options.noProviderFilter) {
+        orgs = await meta.GET('/orgs?expand=true');
+    }
 
     let promises = fqonList.map(fqon => {
         debug(chalk.dim.blue(`Fetching ${type} from ${fqon}...`));
         let url = `/${fqon}/${type}?expand=true`;
         if (type2) url += `&type=${type2}`;
-        const res = meta.GET(url);
-        return res;
+        return meta.GET(url).then(res => {
+            if (type == 'providers' && !options.noProviderFilter) {
+                debug(`fetchOrgResources: Filtering Org providers by fqon '${fqon}'`);
+                const org = orgs.find(o => o.properties.fqon == fqon);
+                const context = { org: { id: org.id, name: org.name, fqon: org.properties.fqon } };
+                return filterProvidersByContext(res, context);
+            }
+            return res;
+        });
+
     });
 
     // return Promise.all(promises).then(results => {
@@ -119,18 +132,21 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
     return resources;
 }
 
-function fetchWorkspaceResources(type, context, filterType) {
+async function fetchWorkspaceResources(type, context, filterType, options = {}) {
     if (!context.org) throw Error("No Org in current context");
     if (!context.org.fqon) throw Error("No FQON in current context");
     if (!context.workspace) throw Error("No Workspace in current context");
     if (!context.workspace.id) throw Error("No Workspace ID in current context");
     let url = `/${context.org.fqon}/workspaces/${context.workspace.id}/${type}?expand=true`;
     if (filterType) url += `&type=${filterType}`;
-    const res = meta.GET(url);
+    const res = await meta.GET(url);
+    if (type == 'providers' && !options.noProviderFilter) {
+        return filterProvidersByContext(res, context);
+    }
     return res;
 }
 
-function fetchEnvironmentResources(type, context, filterType) {
+async function fetchEnvironmentResources(type, context, filterType, options = {}) {
     debug(`fetchEnvironmentResources(${type}, ${context}, ${filterType}`);
 
     if (!context) throw Error("missing context.org");
@@ -151,7 +167,32 @@ function fetchEnvironmentResources(type, context, filterType) {
     if (!context.environment.id) throw Error("No Environment ID in current context");
     let url = `/${context.org.fqon}/environments/${context.environment.id}/${type}?expand=true`;
     if (filterType) url += `&type=${filterType}`
-    return meta.GET(url);
+    const resources = await meta.GET(url);
+    if (type == 'providers' && !options.noProviderFilter) {
+        return filterProvidersByContext(resources, context);
+    }
+    return resources;
+}
+
+function filterProvidersByContext(resources, context) {
+    const filtered = resources.filter(p => {
+        if (context.org) {
+            if (!p.properties.parent || !p.properties.parent.id) {
+                debug(`filterResources: provider ${p.name} has no parent`);
+                return context.org.name == 'root';
+            }
+
+            if (context.workspace) {
+                if (context.environment && context.environment.id) {
+                    return p.properties.parent.id == context.environment.id;
+                }
+                return p.properties.parent.id == context.workspace.id;
+            }
+            return p.properties.parent.id == context.org.id;
+        }
+        return true;
+    });
+    return filtered;
 }
 
 async function fetchEnvironmentApiEndpoints(context) {
@@ -159,9 +200,9 @@ async function fetchEnvironmentApiEndpoints(context) {
     // iterate through them
     if (context.api && context.api.id) {
         const res = await meta.GET(`/${context.org.fqon}/apis/${context.api.id}/apiendpoints?expand=true`)
-        
+
         decorateApiEndpointsWithApiContext(res, context.api);
-        
+
         return res;
     } else {
         // First fetch apis

@@ -3,6 +3,28 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
 const chalk = require('../lib/chalk');
+const debug = require('../lib/debug').debug;
+
+const shortResourceTypes = {
+    'Gestalt::Resource::Node::Lambda': 'lambda',
+    'Gestalt::Resource::Container': 'container',
+    'Gestalt::Resource::Api': 'api',
+    'Gestalt::Resource::Environment': 'environment',
+    'Gestalt::Resource::Workspace': 'workspace',
+    'Gestalt::Resource::Organization': 'org',
+    'Gestalt::Resource::User': 'user',
+    'Gestalt::Resource::Group': 'group',
+    'Gestalt::Resource::Volume': 'volume',
+    'Gestalt::Resource::Policy': 'policy',
+    'Gestalt::Resource::ApiEndpoint': 'apiendpoint',
+    'Gestalt::Resource::Rule::Event': 'eventrule',
+    'Gestalt::Resource::Rule::Limit': 'limitrule',
+    'Gestalt::Resource::Configuration::DataFeed': 'datafeed',
+    'Gestalt::Resource::Spec::StreamSpec': 'streamspec',
+    'Gestalt::Resource::Secret': 'secret',
+    'Gestalt::Configuration::AppDeployment': 'appdeployment',
+    'Fog::GroupMembership': 'groupmembership',
+};
 
 module.exports = {
     doExportHierarchy,
@@ -48,7 +70,8 @@ async function doExportHierarchy(context, resourceTypes, basePath, format = 'yam
                 const orgContext = { org: { fqon: org.properties.fqon } };
                 await doExportOrg(orgContext, org, exportPath, resourceTypes, format, raw);
             } catch (err) {
-                console.error(chalk.red(`Error: ${err.stack}`));
+                console.error(chalk.red(`Error: ${err.error}`));
+                debug(chalk.red(err.stack));
             }
         }
     }
@@ -56,10 +79,14 @@ async function doExportHierarchy(context, resourceTypes, basePath, format = 'yam
 
 async function doExportEnviornmentResources(envContext, resourceTypes, basePath = '.', format = 'yaml', raw = false) {
 
+    if (!raw) {
+        exportContext(basePath, envContext);
+    }
+
     // First, fetch resources of specified types
     const resources = await doFetchResources(envContext, resourceTypes);
 
-    console.log('  (found ' + resources.length + ' resources)');
+    debug('  (found ' + resources.length + ' environment resources)');
 
     for (const r of resources) {
         await exportSingleEnvironmentResource(envContext, r, basePath, format, raw);
@@ -71,19 +98,29 @@ async function doExportEnviornmentResources(envContext, resourceTypes, basePath 
 async function doExportOrg(orgContext, org, basePath, resourceTypes, format = 'yaml', raw = false) {
 
     console.log()
-    console.log(chalk.bold(`Exporting org '${orgContext.org.fqon}'...`));
+    console.log(chalk.bold(`Exporting org '${orgContext.org.fqon}' to '${basePath}'...`));
 
-    // Export the org
+    if (!raw) {
+        exportParentContext(basePath, orgContext);
+    }
+
+    // Export the Org resource
     await exportSingleEnvironmentResource(orgContext, org, basePath, format, raw);
 
+    const orgBasePath = basePath + path.sep + toSlugAllowingDots(orgContext.org.fqon);
+
+    if (orgContext.org.fqon == 'root') {
+        await doExportUsersAndGroups(orgContext, orgBasePath, format, raw);
+    }
+
+    // Export providers
+    exportProviders(orgContext, orgBasePath, format, raw);
+
+    // Export the child workspaces
     const workspaces = await gestalt.fetchOrgWorkspaces([orgContext.org.fqon]);
-
     for (const ws of workspaces) {
-
         const wsContext = getWorkspaceContext(orgContext, ws);
-        const wsBasePath = basePath + path.sep + toSlugAllowingDots(orgContext.org.fqon);
-
-        await doExportWorkspace(wsContext, ws, wsBasePath, resourceTypes, format, raw);
+        await doExportWorkspace(wsContext, ws, orgBasePath, resourceTypes, format, raw);
     }
 }
 
@@ -92,30 +129,44 @@ async function doExportWorkspace(wsContext, ws, basePath, resourceTypes, format 
     console.log()
     console.log(chalk.bold(`Exporting workspace '${wsContext.org.fqon}/${ws.name}'...`));
 
-    // Export the org
+    if (!raw) {
+        exportParentContext(basePath, wsContext);
+    }
+
+    // Export the Workspace resource
     await exportSingleEnvironmentResource(wsContext, ws, basePath, format, raw);
 
+    const wsBasePath = basePath + path.sep + toSlug(ws.name);
+
+    // Export the child providers
+    exportProviders(wsContext, wsBasePath, format, raw);
+
+    // Export the child environments
     const environments = await gestalt.fetchWorkspaceEnvironments(wsContext);
-
     for (const env of environments) {
-
         const envContext = getEnvironmentContext(wsContext, env);
-        const envBasePath = basePath + path.sep + toSlug(ws.name);
-
-        await doExportEnvironment(envContext, env, envBasePath, resourceTypes, format, raw);
+        await doExportEnvironment(envContext, env, wsBasePath, resourceTypes, format, raw);
     }
 }
 
 async function doExportEnvironment(envContext, env, basePath, resourceTypes, format = 'yaml', raw = false) {
 
     console.log()
-    console.log(chalk.bold(`Exporting workspace '${envContext.org.fqon}/${envContext.workspace.name}/${env.name}'...`));
+    console.log(chalk.bold(`Exporting environment '${envContext.org.fqon}/${envContext.workspace.name}/${env.name}'...`));
 
-    // Export the org
+    if (!raw) {
+        exportParentContext(basePath, envContext);
+    }
+
+    // Export the Environment resource
     await exportSingleEnvironmentResource(envContext, env, basePath, format, raw);
 
-    const envBasePath = basePath + path.sep + env.name;
+    const envBasePath = basePath + path.sep + toSlug(env.name);
 
+    // Export the child providers
+    exportProviders(envContext, envBasePath, format, raw);
+
+    // Export the environment's child resources
     await doExportEnviornmentResources(envContext, resourceTypes, envBasePath, format, raw);
 }
 
@@ -129,6 +180,87 @@ async function exportSingleEnvironmentResource(envContext, res, basePath, format
 
     // Next, Write the resources to the filesystem (Note: a resource may be more than one file)
     writeResourceToFilesystem(res, basePath, format, raw);
+}
+
+async function doExportUsersAndGroups(orgContext, basePath, format, raw) {
+    const users = await gestalt.fetchUsers();
+    const groups = await gestalt.fetchGroups();
+
+    // const groupMemberships = createGroupMembershipSpecs(users, groups);
+    // doExportResources(orgContext, groupMemberships, basePath, format, raw);
+
+    doExportResources(orgContext, users, basePath, format, raw);
+    doExportResources(orgContext, groups, basePath, format, raw);
+}
+
+function createGroupMembershipSpecs(users, groups) {
+    const specs = [];
+    for (let group of groups) {
+        const spec = {
+            resource_type: 'Fog::GroupMembership',
+            name: group.name,
+            groups: []
+        }
+
+        if (group.properties && group.properties.users) {
+            const members = group.properties.users.map(u => u.name);
+            spec.groups.push({
+                name: group.name,
+                description: group.description,
+                members: members
+            });
+        }
+
+        specs.push(spec);
+    }
+
+    return specs;
+}
+
+async function exportProviders(context, basePath, format, raw) {
+    const providers = await gestalt.fetchProviders(context, null, {});
+    doExportResources(context, providers, basePath, format, raw);
+}
+
+async function doExportResources(context, resources, basePath, format, raw) {
+    for (let res of resources) {
+        if (!raw) {
+            res = await makeResourcePortable(res, context);
+        }
+        writeResourceToFilesystem(res, basePath, format, raw);
+    }
+}
+
+function exportParentContext(dir, context) {
+    const parentPath = getParentPath(getContextPath(context));
+    writeFile(dir, 'context', parentPath);
+}
+
+function exportContext(dir, context) {
+    writeFile(dir, 'context', getContextPath(context));
+}
+
+function getParentPath(contextPath) {
+    const pathElements = contextPath.split('/');
+    pathElements.pop();
+    const newPath = pathElements.join('/');
+    return newPath == '' ? '/root' : newPath;
+}
+
+function getContextPath(context) {
+    let contents = '/'
+    if (context.org && context.org.fqon) {
+        contents += context.org.fqon
+        if (context.workspace && context.workspace.name) {
+            contents += `/${context.workspace.name}`
+            if (context.environment && context.environment.name) {
+                contents += `/${context.environment.name}`
+            }
+        }
+    } else {
+        contents = '/root'
+    }
+    return contents;
 }
 
 function getWorkspaceContext(orgContext, ws) {
@@ -161,6 +293,7 @@ async function doFetchResources(envContext, resourceTypes) {
             resources = resources.concat(res);
         } catch (err) {
             console.log(chalk.red(`Error: ${err.error}, skipping resource type '${type}'`));
+            debug(chalk.red(err.stack));
         }
     }
 
@@ -173,6 +306,7 @@ async function makeResourcePortable(res, context) {
     res = stripEnvironmentSpecificInfo(res);
 
     res = await dereferenceProviders(res, context);
+    res = await dereferenceLinkedProviders(res, context);
     res = await dereferenceLambdas(res, context);
     res = await dereferenceContainers(res, context);
     res = await dereferenceApis(res, context);
@@ -194,6 +328,8 @@ function stripEnvironmentSpecificInfo(res) {
     delete res.modified;
     if (res.properties) {
         delete res.properties.parent;
+        delete res.properties.children; // for orgs
+        delete res.properties.workspace; // for environments
         stripTypeSpecificInfo(res);
     }
     return res;
@@ -204,6 +340,19 @@ function stripTypeSpecificInfo(res) {
     stripApiEndpointInfo(res);
     stripPolicyInfo(res);
     stripPolicyRuleInfo(res);
+    stripGroupInfo(res);
+}
+
+function stripGroupInfo(res) {
+    if (getResourceType(res) == 'group') {
+        if (res.properties && res.properties.users) {
+            for (let u of res.properties.users) {
+                delete u.typeId;
+                delete u.id;
+                delete u.href;
+            }
+        }
+    }
 }
 
 function stripContainerInfo(res) {
@@ -256,50 +405,60 @@ function stripPolicyInfo(res) {
     }
 }
 
+async function dereferenceLinkedProviders(res, context) {
+    // Clone object
+    res = JSON.parse(JSON.stringify(res));
+    if (res.properties && res.properties.linked_providers) {
+        debug(`${res.name} has ${res.properties.linked_providers.length} linked providers`);
+        for (let link of res.properties.linked_providers) {
+            await dereferenceProviderLink(res.name, link, context);
+        }
+    }
+    return res;
+}
+
+async function dereferenceProviderLink(resName, link, context) {
+    const providerName = await getProviderName(link.id, context);
+    if (providerName) {
+        link.id = `#{Provider ${providerName}}`;
+    } else {
+        console.error(chalk.yellow(`Warning: Resource '${resName}': Could not resolve provider '${link.name}' with ID ${link.id}`));
+        if (link.name) {
+            // Use the provider name
+            link.id = `#{Provider ${link.name}}`;
+        }
+    }
+
+    delete link.resource_type;
+    delete link.location;
+    delete link.type;
+    delete link.typeId;
+
+    if (link.locations) {
+        // Just clear out locations - they aren't necessary
+        link.locations = [];
+    }
+}
+
 async function dereferenceProviders(res, context) {
     // Clone object
     res = JSON.parse(JSON.stringify(res));
 
     if (res.properties && res.properties.provider && res.properties.provider.id) {
-        await modifyProviderPayload(res, context);
+        await dereferenceProviderLink(res.name, res.properties.provider, context);
+        delete res.properties.provider.name; // Also delete provider name
     }
 
-    return res;
-}
-
-async function modifyProviderPayload(res, context) {
-    const providerName = await getProviderName(res.properties.provider.id, context);
-    if (providerName) {
-        res.properties.provider.id = `#{Provider ${providerName}}`;
-        delete res.properties.provider.name;
-        delete res.properties.provider.resource_type;
-    } else {
-        console.error(chalk.yellow(`Warning: Resource '${res.name}': Could not resolve provider '${res.properties.provider.name}' with ID ${res.properties.provider.id}`));
-        if (res.properties.provider.name) {
-            // Use the provider name
-            res.properties.provider.id = `#{Provider ${res.properties.provider.name}}`;
-            delete res.properties.provider.name;
-            delete res.properties.provider.resource_type;
+    // for providers with services
+    if (res.properties && res.properties.services) {
+        for (let svc of res.properties.services) {
+            if (svc.container_spec && svc.container_spec.properties && svc.container_spec.properties.provider) {
+                await dereferenceProviderLink(res.name, svc.container_spec.properties.provider, context);
+            }
         }
     }
 
-    if (res.properties.provider.locations) {
-
-        // Just clear out locations - they aren't necessary
-        res.properties.provider.locations = [];
-
-        // // dereference locations
-
-        // for (let i = 0; i < res.properties.provider.locations.length; i++) {
-        //     const id = res.properties.provider.locations[i];
-        //     const providerName = await getProviderName(id, context);
-        //     if (providerName) {
-        //         res.properties.provider.locations[i] = `#{Provider ${providerName}}`;
-        //     } else {
-        //         console.error(chalk.yellow(`Warning: Resource '${res.name}': Could not resolve provider location with ID ${id}`));
-        //     }
-        // }
-    }
+    return res;
 }
 
 // in-memory providers cache, so providers are only looked up once per export run
@@ -534,28 +693,17 @@ function buildFilename(resource) {
 }
 
 function getResourceType(resource) {
-    const shortResourceTypes = {
-        'Gestalt::Resource::Node::Lambda': 'lambda',
-        'Gestalt::Resource::Container': 'container',
-        'Gestalt::Resource::Api': 'api',
-        'Gestalt::Resource::Environment': 'environment',
-        'Gestalt::Resource::Workspace': 'workspace',
-        'Gestalt::Resource::Organization': 'org',
-        'Gestalt::Resource::User': 'user',
-        'Gestalt::Resource::Group': 'group',
-        'Gestalt::Resource::Volume': 'volume',
-        'Gestalt::Resource::Policy': 'policy',
-        'Gestalt::Resource::ApiEndpoint': 'apiendpoint',
-        'Gestalt::Resource::Rule::Event': 'eventrule',
-        'Gestalt::Resource::Rule::Limit': 'limitrule',
-        'Gestalt::Resource::Configuration::DataFeed': 'datafeed',
-        'Gestalt::Resource::Spec::StreamSpec': 'streamspec',
-        'Gestalt::Resource::Secret': 'secret',
-        'Gestalt::Configuration::AppDeployment': 'appdeployment',
-    };
 
     if (!resource.resource_type) {
         throw Error('Resource is missing resource_type');
+    }
+
+    if (resource.resource_type.startsWith('Gestalt::Configuration::Provider::')) {
+        return 'provider';
+    }
+
+    if (resource.resource_type.startsWith('Gestalt::Action::')) {
+        return 'action';
     }
 
     const type = shortResourceTypes[resource.resource_type];

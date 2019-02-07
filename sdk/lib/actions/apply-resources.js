@@ -24,19 +24,20 @@ async function applyResources(context, resources, opts, config) {
     }
 
     // Display plan
-    console.error(chalk.blue.dim(`Deployment plan:`));
+    debug(chalk.blue.dim(`Deployment plan:`));
     for (let group of groups) {
-        console.error(chalk.blue.dim(`  ${group.type}`));
+        debug(chalk.blue.dim(`  ${group.type}`));
         for (let item of group.items) {
-            console.error(chalk.blue.dim(`    ${item.name}`));
+            debug(chalk.blue.dim(`    ${item.name}`));
         }
-        console.error();
+        debug();
     }
 
     const succeeded = {
         updated: [],
         created: [],
         unchanged: [],
+        skipped: [],
         deleted: [],
     };
     const failed = [];

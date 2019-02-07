@@ -3,6 +3,7 @@ const meta = require('./metaclient')
 const { debug } = require('../debug');
 const jsonPatch = require('fast-json-patch');
 const util = require('../util');
+const chalk = require('../chalk');
 
 const {
     createResource,
@@ -40,7 +41,16 @@ async function applyResource(spec, context, options) {
     if (!spec.resource_type) throw Error('missing spec.resource_type');
     if (!context) throw Error("missing context");
 
-    const type = resourceTypeToUrlType[spec.resource_type];
+    if (willSkip(spec)) {
+        console.error(chalk.yellow(`Warning: skipping resource ${spec.name} (can't handle type '${spec.resource_type}')`));
+        return {
+            status: 'skipped',
+            message: `${spec.resource_type} '${spec.name}' skipped (can't handle type).`,
+            resource: spec
+        };
+    }
+
+    const type = getResourceUrlType(spec);
     const resourceType = spec.resource_type;
 
     if (resourceType.indexOf('Fog::') == 0) {
@@ -77,8 +87,17 @@ async function applyResource(spec, context, options) {
     let targetResource = null;
 
     if (spec.resource_type == 'Gestalt::Resource::Organization') {
+        validateOrgSpec(spec);
+
         resources = await meta.GET(`/orgs?expand=true`);
         targetResource = resources.find(r => r.properties.fqon == spec.properties.fqon);
+
+        // Adjust the context of the org using the FQON
+        if (spec.properties.fqon) {
+            const contextPath = getOrgParentPathFromFqon(spec.properties.fqon);
+            debug(`Found Org ${spec.properties.fqon}, using parent context path of '${contextPath}'`);
+            context = await resolveContextPath(contextPath);
+        }
         onlyEnv(spec);
     } else if (spec.resource_type == 'Gestalt::Resource::Workspace') {
         resources = await fetchOrgResources('workspaces', [context.org.fqon]);
@@ -116,9 +135,9 @@ async function applyResource(spec, context, options) {
             spec.id = targetResource.id;
 
             // Special case for resources requiring PATCH rather than PUT
-            if (resourceTypesRequiringPatchUpdate.includes(resourceType)) {
+            if (resourceRequiresPatch(spec)) {
 
-                debug(`  Special case, will PATCH`);
+                debug(`  ${spec.name} (${resourceType}) requires PATCH`);
 
                 return doPatch(type, context, spec, targetResource);
             }
@@ -128,7 +147,7 @@ async function applyResource(spec, context, options) {
             debug(`  Will update '${spec.name}' via PUT`);
 
             // Otherwise, perform PUT update
-            delete spec.resource_type; // Updates don't need (and may not accep the resource_type field)
+            delete spec.resource_type; // Updates don't need (and may not accept the resource_type field)
             const res = await meta.PUT(`/${context.org.fqon}/${type}/${spec.id}`, spec);
             return {
                 status: 'updated',
@@ -145,7 +164,6 @@ async function applyResource(spec, context, options) {
             };
         }
     } else {
-
         if (!options.delete) {
             debug(`  Will create '${spec.name}'`);
 
@@ -162,6 +180,49 @@ async function applyResource(spec, context, options) {
                 message: `${resourceType} '${spec.name}' doesn't exist.`,
                 resource: spec
             };
+        }
+    }
+}
+
+function willSkip(spec) {
+    return (spec.resource_type.indexOf('Gestalt::Action::') == 0);
+}
+
+function getResourceUrlType(spec) {
+    if (spec.resource_type.indexOf('Gestalt::Configuration::Provider::') == 0) {
+        return 'providers';
+    }
+    const type = resourceTypeToUrlType[spec.resource_type];
+
+    if (type) {
+        return type;
+    }
+    throw Error(`No type found for ${spec.resource_type}`);
+}
+
+function resourceRequiresPatch(spec) {
+    if (resourceTypesRequiringPatchUpdate.includes(spec.resource_type)) {
+        return true;
+    }
+    if (spec.resource_type.indexOf('Gestalt::Configuration::Provider::') == 0) {
+        return true;
+    }
+}
+
+function getOrgParentPathFromFqon(fqon) {
+    let arr = fqon.split('.');
+    arr = arr.splice(0, arr.length - 1);
+    const path = '/' + arr.join('.');
+    return (path == '/') ? '/root' : path;
+}
+
+function validateOrgSpec(org) {
+    if (org.properties && org.properties.fqon) {
+        const fqon = org.properties.fqon;
+        let arr = fqon.split('.');
+        const name = arr[arr.length - 1];
+        if (name != org.name) {
+            throw Error(`Can't process Org '${org.name}' since FQON '${org.properties.fqon}' doesn't reflect name`)
         }
     }
 }
