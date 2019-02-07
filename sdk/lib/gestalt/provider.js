@@ -7,60 +7,31 @@ const {
 
 // const meta = require('./metaclient');
 
-exports.fetchProviders = (context, type) => {
+exports.fetchProviders = (context, type, options) => {
+    options = options || { noProviderFilter: true };
     if (context.org) {
         if (context.workspace) {
             if (context.environment) {
-                return fetchEnvironmentProviders(context, type);
+                return fetchEnvironmentProviders(context, type, options);
             }
-            return fetchWorkspaceProviders(context, type);
+            return fetchWorkspaceProviders(context, type, options);
         }
-        return fetchOrgProviders([context.org.fqon], type);
+        return fetchOrgProviders([context.org.fqon], type, options);
     }
     throw Error(`fetchProviders: Context doesn't contain org info`);
 }
 
-function fetchOrgProviders(fqonList, type) {
-    return fetchOrgResources("providers", fqonList, type);
+function fetchOrgProviders(fqonList, type, options = {}) {
+    return fetchOrgResources("providers", fqonList, type, options);
 }
 
 // TODO: Unsure if this gets all providers
-function fetchEnvironmentProviders(providedContext, type) {
-    return fetchEnvironmentResources('providers', providedContext, type);
-
-    // const context = providedContext || getGestaltContext();
-    // if (!context.org) throw Error("No Org in current context");
-    // if (!context.org.fqon) throw Error("No FQON in current context");
-    // if (!context.environment) throw Error("No Environment in current context");
-    // if (!context.environment.id) throw Error("No Environment ID in current context");
-    // let url = `/${context.org.fqon}/environments/${context.environment.id}/providers?expand=true`;
-    // if (type) url += `&type=${type}`;
-    // return meta.GET(url).then(providers => {
-    //     for (let c of providers) {
-    //         c.environment = context.environment;
-    //         c.workspace = context.workspace;
-    //     }
-    //     return providers;
-    // });
+function fetchEnvironmentProviders(providedContext, type, options = {}) {
+    return fetchEnvironmentResources('providers', providedContext, type, options);
 }
 
-function fetchWorkspaceProviders(providedContext, filterType) {
-    return fetchWorkspaceResources('providers', providedContext, filterType);
-
-    // const context = providedContext || getGestaltContext();
-    // if (!context.org) throw Error("No Org in current context");
-    // if (!context.org.fqon) throw Error("No FQON in current context");
-    // if (!context.workspace) throw Error("No Environment in current context");
-    // if (!context.workspace.id) throw Error("No Environment ID in current context");
-    // let url = `/${context.org.fqon}/workspaces/${context.workspace.id}/providers?expand=true`;
-    // if (type) url += `&type=${type}`;
-    // return meta.GET(url).then(providers => {
-    //     for (let c of providers) {
-    //         // c.environment = context.environment;
-    //         c.workspace = context.workspace;
-    //     }
-    //     return providers;
-    // });
+function fetchWorkspaceProviders(providedContext, filterType, options = {}) {
+    return fetchWorkspaceResources('providers', providedContext, filterType, options);
 }
 
 // exports.createOrgProvider = (provider, parentFqon) => {

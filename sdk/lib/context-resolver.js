@@ -99,7 +99,7 @@ async function resolveProviderInfoByPath(providerPath) {
 
         const providersInfo = {}
         for (let p of providers) {
-            console.error(chalk.dim.blue(`Will cache provider for path '${contextPath + '/' + p.name}'`));
+            debug(chalk.dim.blue(`Will cache provider for path '${contextPath + '/' + p.name}'`));
             providersInfo[contextPath + '/' + p.name] = {
                 id: p.id,
                 name: p.name,
