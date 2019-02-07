@@ -7,9 +7,11 @@ vi package.json # Edit package.json to increment the version number
 
 git add .
 
-git commit -m "Version x.x.x"
+version=`cat package.json | jq -r .version`
 
-git tag x.x.x
+git commit -m "Version $version"
+
+git tag $version
 
 git push --mirror https://github.com/GalacticFog/gestalt-fog-cli
 ```
