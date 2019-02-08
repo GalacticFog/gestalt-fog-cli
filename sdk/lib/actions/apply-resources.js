@@ -4,6 +4,7 @@ const contextResolver = require('../context-resolver')
 const { debug } = require('../debug');
 const yaml = require('js-yaml');
 const chalk = require('chalk');
+const _ = require('lodash');
 
 module.exports = {
     applyResources,
@@ -133,7 +134,13 @@ function prioritize(resources) {
     // Ensure the correct order for the specified resource types
     for (let key of resourceOrder) {
         if (groups[key]) {
-            sortBy(groups[key].items, 'name');  // sorts in place
+            if (key == 'Gestalt::Resource::Organization') {
+                // Sort organizations by FQON
+                sortBy(groups[key].items, 'resource.properties.fqon');  // sorts in place
+            } else {
+                // Otherwise sort by name
+                sortBy(groups[key].items, 'name');  // sorts in place
+            }
             sorted.push(groups[key]);
             delete groups[key];
         }
@@ -152,8 +159,8 @@ function sortBy(arr, key) {
     return arr.sort((a, b) => {
         if (a == null) return 1;
         if (b == null) return -1;
-        if (a[key] < b[key]) { return -1; }
-        if (a[key] > b[key]) { return 1; }
+        if (_.get(a, key) < _.get(b,key)) { return -1; }
+        if (_.get(a, key) > _.get(b,key)) { return 1; }
         return 0;
     })
 }
