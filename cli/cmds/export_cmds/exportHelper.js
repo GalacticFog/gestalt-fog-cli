@@ -431,7 +431,7 @@ async function dereferenceProviderLink(resName, link, context) {
 
     delete link.resource_type;
     delete link.location;
-    delete link.type;
+    // delete link.type;
     delete link.typeId;
 
     if (link.locations) {

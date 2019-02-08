@@ -321,6 +321,12 @@ async function doPatch(type, context, spec, targetResource) {
         }
     }
 
+    if (resourceType.indexOf('Gestalt::Configuration::Provider::') == 0) {
+        if (targetResource.properties) {
+            delete targetResource.properties.linked_providers;
+        }
+    }
+
     // Delete unmodifyable parameters
     for (let s of ['resource_type', 'resource_state', 'owner', 'parent', 'modified', 'created', 'org']) {
         delete spec[s];
