@@ -1,5 +1,5 @@
 const cmd = require('../lib/cmd-base');
-const { gestaltContext } = require('gestalt-fog-sdk');
+const { gestaltSession } = require('gestalt-fog-sdk');
 const util = require('../lib/util');
 const yaml = require('js-yaml');
 
@@ -11,14 +11,11 @@ exports.builder = {
     }
 }
 exports.handler = cmd.handler(async function (argv) {
-    const config = gestaltContext.getConfig();
+    const config = gestaltSession.getGlobalConfig();
 
     if (argv.all) {
-        // Clear everything except url and username
-        gestaltContext.saveConfig({
-            gestalt_url: config.gestalt_url,
-            username: config.username
-        });
+        // Clear everything
+        gestaltSession.saveSessionConfig({});
     } else {
         const args = argv.args;
         if (args) {
@@ -26,11 +23,11 @@ exports.handler = cmd.handler(async function (argv) {
             for (let a of args) {
                 delete config[a];
             }
-            gestaltContext.saveConfig(config);
+            gestaltSession.saveGlobalConfigOptions(config);
         } else {
             throw Error('No args specified - nothing to do.');
         }
     }
 
-    console.log(yaml.dump({ 'Configuration Settings': gestaltContext.getConfig() }));
+    console.log(yaml.dump({ 'Configuration Settings': gestaltSession.getSessionConfig() }));
 });

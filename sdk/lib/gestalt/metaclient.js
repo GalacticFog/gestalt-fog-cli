@@ -5,7 +5,7 @@ const {
     httpPatch,
     httpDelete } = require('./httpclient');
 
-const gestaltContext = require('../gestalt-context');
+const gestaltSession = require('../gestalt-session');
 
 module.exports = {
     GET,
@@ -19,7 +19,7 @@ module.exports = {
 // Functions
 
 function getMetaUrl() {
-    const config = gestaltContext.getConfig();
+    const config = gestaltSession.getSessionConfig();
     if (config['meta_url']) {
         return config['meta_url']
     }

@@ -1,5 +1,5 @@
 // #!/usr/bin/env node
-// const { gestaltContext } = require('gestalt-fog-sdk');
+// const { gestaltSession } = require('gestalt-fog-sdk');
 // const AmazonClient = require('./amazon');
 // const fs = require('fs');
 
@@ -49,7 +49,7 @@
 // }
 
 // function loadClusterConfig(key) {
-//     const f = gestaltContext.getConfigDir() + `/cluster-${key}.json`;
+//     const f = gestaltSession.getSessionDirectory() + `/cluster-${key}.json`;
 //     if (fs.existsSync(f)) {
 //         const contents = fs.readFileSync(f, 'utf8');
 //         return JSON.parse(contents);

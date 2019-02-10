@@ -1,11 +1,11 @@
 'use strict';
 const inquirer = require('inquirer');
-const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
+const { gestalt, gestaltSession } = require('gestalt-fog-sdk');
 const chalk = require('./lib/chalk');
 const cmd = require('./lib/cmd-base');
 
 module.exports = {
-    command: 'login',
+    command: 'login [url]',
     desc: 'Log in to Gestalt Platform Instance',
     builder: {
         url: {
@@ -26,13 +26,7 @@ module.exports = {
 async function handler(argv) {
     // This function is interactive if any parameters missing
 
-    // URL is passed either as first argument, or as --url parameter
-    if (!argv.url && argv._[1]) {
-        // eslint-disable-next-line prefer-destructuring
-        argv.url = argv._[1];
-    }
-
-    const config = gestaltContext.getConfig();
+    const config = gestaltSession.getSessionConfig();
     const questions = [];
 
     if (!argv.url) questions.push({
@@ -53,18 +47,23 @@ async function handler(argv) {
         }
     });
 
+    console.log(`Using session: ${gestaltSession.getSessionConfig().name}`);
+
     const answers = await inquirer.prompt(questions);
     const params = {
         gestalt_url: argv.url,
         username: argv.username,
         ...answers,
     };
+    
+    params.gestalt_url = params.gestalt_url.trim();
+    params.username = params.username.trim();
 
     if (params.gestalt_url.indexOf("://") == -1) {
         params.gestalt_url = 'https://' + params.gestalt_url;
     }
 
-    gestaltContext.saveConfig(Object.assign(config, params));
+    gestaltSession.saveSessionConfig(Object.assign(config, params));
 
     let creds = {
         username: params.username,
@@ -89,6 +88,7 @@ async function handler(argv) {
         console.log(chalk.green(`Authenticated. User ${res.username} logged in to ${params.gestalt_url}.`));
     } catch (err) {
         console.error(chalk.red(`Login failed: ${formatError(err)}\n`));
+        cmd.debug(chalk.red(err.stack));
         console.error('Please check the Gestalt URL endpoint and credentials and try again.');
         process.exit(1);
     }

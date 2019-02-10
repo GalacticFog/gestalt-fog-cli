@@ -1,4 +1,4 @@
-const { gestalt, gestaltContext } = require('gestalt-fog-sdk')
+const { gestalt, gestaltSession } = require('gestalt-fog-sdk')
 const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 const { doExportHierarchy, getDefaultExportDirectory } = require('./exportHelper');
@@ -66,9 +66,9 @@ async function resolveContext(argv) {
     if (argv.context_path) {
         context = await cmd.resolveContextPath(argv.context_path);
     } else {
-        context = gestaltContext.getContext();
+        context = gestaltSession.getContext();
 
-        const config = gestaltContext.getConfig();
+        const config = gestaltSession.getSessionConfig();
         if (config['interactive'] == 'true') {
             if (!context.environment || !context.environment.id) {
                 // No arguments, allow choosing interatively

@@ -98,11 +98,11 @@ async function applyResource(spec, context, options) {
             debug(`Found Org ${spec.properties.fqon}, using parent context path of '${contextPath}'`);
             context = await resolveContextPath(contextPath);
         }
-        onlyEnv(spec);
+        deletePropertiesExceptEnv(spec);
     } else if (spec.resource_type == 'Gestalt::Resource::Workspace') {
         resources = await fetchOrgResources('workspaces', [context.org.fqon]);
         targetResource = resources.find(r => r.name == spec.name);
-        onlyEnv(spec);
+        deletePropertiesExceptEnv(spec);
     } else if (spec.resource_type == 'Gestalt::Resource::Environment') {
         resources = await fetchWorkspaceResources('environments', context);
         targetResource = resources.find(r => r.name == spec.name);
@@ -230,7 +230,7 @@ function validateOrgSpec(org) {
 /**
  * Deletes spec.properties except for spec.properties.env
  */
-function onlyEnv(o) {
+function deletePropertiesExceptEnv(o) {
     if (o.properties && o.properties.env) {
         o.properties = { env: o.properties.env };
     } else {
@@ -255,8 +255,8 @@ async function doPatch(type, context, spec, targetResource) {
             delete spec.properties.workspace;
             delete targetResource.properties.workspace;
         } else {
-            onlyEnv(spec);
-            onlyEnv(targetResource);
+            deletePropertiesExceptEnv(spec);
+            deletePropertiesExceptEnv(targetResource);
 
             // TODO: if Workspace properties.env doesn't exist, the env from the parent org is rendered
             // This causes problems with patch, since it attempts to remove a variable that isn't present.

@@ -61,6 +61,13 @@ async function renderResourceObject(obj, config, context, options) {
     state.options = options || {};
 
     // Only render non-Gestalt dependent options
+    if (state.options.onlyOffline) {
+        state.options.only = {
+            LambdaSource: true,
+            Config: true
+        }
+    }
+
     if (state.options.onlyPrebundle) {
         state.options.only = {
             LambdaSource: true,

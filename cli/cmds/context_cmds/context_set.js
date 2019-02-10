@@ -1,5 +1,5 @@
 const cmd = require('../lib/cmd-base');
-const { gestaltContext } = require('gestalt-fog-sdk');
+const { gestaltSession } = require('gestalt-fog-sdk');
 const ui = require('../lib/gestalt-ui')
 const selectHierarchy = require('../lib/selectHierarchy');
 
@@ -16,17 +16,17 @@ exports.builder = {
 exports.handler = cmd.handler(async function (argv) {
     if (argv.path) {
         const context = await cmd.resolveContextPath(argv.path);
-        gestaltContext.setContext(context);
+        gestaltSession.setContext(context);
     } else {
         // No arguments, allow choosing interatively
 
         const context = await selectHierarchy.chooseContext({ includeNoSelection: true });
-        gestaltContext.setContext(context);
+        gestaltSession.setContext(context);
     }
 
     // Print the context
-    cmd.debug(gestaltContext.getContext());
-    console.log('Context: ' + ui.getContextString(gestaltContext.getContext()));
+    cmd.debug(gestaltSession.getContext());
+    console.log('Context: ' + ui.getContextString(gestaltSession.getContext()));
 });
 
 
@@ -34,7 +34,7 @@ exports.handler = cmd.handler(async function (argv) {
 
 
 // const cmd = require('../lib/cmd-base');
-// const { gestalt, gestaltContext } = require('gestalt-fog-sdk')
+// const { gestalt, gestaltSession } = require('gestalt-fog-sdk')
 // const ui = require('../lib/gestalt-ui')
 // const selectHierarchy = require('../lib/selectHierarchy');
 
@@ -60,19 +60,19 @@ exports.handler = cmd.handler(async function (argv) {
 // exports.handler = cmd.handler(async function (argv) {
 //     if (argv.path) {
 //         const context = await cmd.resolveContextPath(argv.path);
-//         gestaltContext.setContext(context);
+//         gestaltSession.setContext(context);
 //     } else if (!argv.org && !argv.workspace && !argv.environment) {
 //         // No arguments, allow choosing interatively
 
 //         const context = await selectHierarchy.chooseContext({ includeNoSelection: true });
-//         gestaltContext.setContext(context);
+//         gestaltSession.setContext(context);
 
 //     } else {
 //         // Any or all of --org, --workspace, --environment were specified.  Adjust context accordingly.
 //         // Take into account the current context when one or more parameters are omitted, for example
 //         // specifying --environment without org or workspace would search for environments in the current workspace.
 
-//         const cachedContext = gestaltContext.getContext();
+//         const cachedContext = gestaltSession.getContext();
 
 //         let context = null;
 
@@ -95,12 +95,12 @@ exports.handler = cmd.handler(async function (argv) {
 //         }
 
 //         // Save the context
-//         gestaltContext.setContext(context);
+//         gestaltSession.setContext(context);
 //     }
 
 //     // Print the context
-//     cmd.debug(gestaltContext.getContext());
-//     console.log('Context: ' + ui.getContextString(gestaltContext.getContext()));
+//     cmd.debug(gestaltSession.getContext());
+//     console.log('Context: ' + ui.getContextString(gestaltSession.getContext()));
 // });
 
 // // Helper

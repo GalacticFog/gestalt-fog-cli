@@ -1,5 +1,5 @@
 const GestaltKubeClient = require('../lib/gestalt-kube-client');
-const { gestalt, gestaltContext } = require('gestalt-fog-sdk')
+const { gestalt, gestaltSession } = require('gestalt-fog-sdk')
 const selectContainerInstance = require('../lib/selectContainerInstance');
 const selectContainer = require('../lib/selectContainer');
 const selectHierarchy = require('../lib/selectHierarchy');
@@ -21,7 +21,7 @@ exports.handler = cmd.handler(async function (argv) {
         accessLogs(kube, { id: argv.env }, { id: argv.instance }, argv);
     } else {
         // Use the container's provider to get the cluster name e.g. 'dev' or 'prod' so that the kubeconfig can be downloaded via ?cluster=dev
-        const providerConfig = gestaltContext.loadConfigFile('providers.json');
+        const providerConfig = gestaltSession.loadSessionFile('providers.json');
         await selectHierarchy.resolveEnvironment();
         const env = gestalt.getCurrentEnvironment();
 

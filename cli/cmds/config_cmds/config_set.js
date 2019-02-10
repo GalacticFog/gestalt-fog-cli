@@ -1,6 +1,5 @@
 const cmd = require('../lib/cmd-base');
-const { gestaltContext } = require('gestalt-fog-sdk');
-const util = require('../lib/util');
+const { gestaltSession } = require('gestalt-fog-sdk');
 const yaml = require('js-yaml');
 
 exports.command = 'set [args...]'
@@ -25,9 +24,9 @@ exports.handler = cmd.handler(async function (argv) {
 
     // Write config back
 
-    const config = gestaltContext.getConfig();
+    const config = gestaltSession.getGlobalConfig();
     const newConfig = Object.assign(config, configArgs);
-    gestaltContext.saveConfig(newConfig);
+    gestaltSession.saveGlobalConfigOptions(newConfig);
 
-    console.log(yaml.dump({ 'Configuration Settings': gestaltContext.getConfig() }));
+    console.log(yaml.dump({ 'Configuration Settings': gestaltSession.getSessionConfig() }));
 });

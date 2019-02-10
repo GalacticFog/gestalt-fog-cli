@@ -1,4 +1,4 @@
-const { gestalt } = require('gestalt-fog-sdk');
+const { gestalt, gestaltSession } = require('gestalt-fog-sdk');
 const chalk = require('./chalk');
 
 exports.run = (context) => {
@@ -7,20 +7,12 @@ exports.run = (context) => {
 
 exports.contextString = (context, opts) => {
     if (opts && opts.raw) {
-        let s = ''
-        if (context && context.org) {
-            s += `/${context.org.fqon}`;
-            if (context.workspace) {
-                s += `/${context.workspace.name}`;
-            }
-            if (context.environment) {
-                s += `/${context.environment.name}`;
-            }
-        }
-        return s;    
+        return gestaltSession.getContextPath();
     }
 
-    let s = `${chalk.bold.green(gestalt.getHost())}`
+    const user = gestaltSession.getSessionConfig().username;
+
+    let s =  chalk.bold.blue(user) + ' @ ' + chalk.bold.green(gestalt.getHost());
     if (context && context.org) {
         s += ` / ${chalk.green(context.org.fqon)}`;
         if (context.workspace) {

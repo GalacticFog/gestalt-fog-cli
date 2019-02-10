@@ -1,5 +1,5 @@
 const {
-    getGestaltContext
+    getgestaltSession
 } = require('./generic');
 
 const meta = require('./metaclient');
@@ -30,7 +30,7 @@ exports.createOrg = (org, parentFqon) => {
     if (!org) throw Error('missing org');
     if (!org.name) throw Error('missing org.name');
 
-    const context = parentFqon ? { org: { fqon: parentFqon } } : getGestaltContext();
+    const context = parentFqon ? { org: { fqon: parentFqon } } : getgestaltSession();
     if (!context.org) throw Error("missing context.org");
     if (!context.org.fqon) throw Error("missing context.org.fqon");
     const res = meta.POST(`/${context.org.fqon}`, org);

@@ -1,4 +1,4 @@
-const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
+const { gestalt, gestaltSession } = require('gestalt-fog-sdk');
 const ui = require('../../lib/gestalt-ui')
 const cmd = require('../../lib/cmd-base');
 const selectHierarchy = require('../../lib/selectHierarchy');
@@ -62,9 +62,9 @@ function getHandler(type) {
         if (argv.context_path) {
             context = await cmd.resolveContextPath(argv.context_path);
         } else {
-            context = gestaltContext.getContext();
+            context = gestaltSession.getContext();
 
-            const config = gestaltContext.getConfig();
+            const config = gestaltSession.getSessionConfig();
             if (config['interactive'] == 'true') {
                 if (!context.environment || !context.environment.id) {
                     // No arguments, allow choosing interatively
@@ -75,13 +75,13 @@ function getHandler(type) {
         }
 
         if (context.environment) {
-            doShowEnvironmentResources(type, context, argv);
+            await doShowEnvironmentResources(type, context, argv);
         } else if (context.workspace) {
-            doShowWorkspaceResources(type, context, argv);
+            await doShowWorkspaceResources(type, context, argv);
         } else if (context.org) {
-            doShowOrgResources(type, context, argv);
+            await doShowOrgResources(type, context, argv);
         } else if (argv.context_path == '/') {
-            doShowAllResources(type, argv);
+            await doShowAllResources(type, argv);
         } else {
             throw Error('No context specified');
         }

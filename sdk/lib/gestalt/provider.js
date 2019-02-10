@@ -1,6 +1,6 @@
 const {
     fetchOrgResources,
-    // getGestaltContext,
+    // getgestaltSession,
     fetchWorkspaceResources,
     fetchEnvironmentResources
 } = require('./generic');
@@ -38,7 +38,7 @@ function fetchWorkspaceProviders(providedContext, filterType, options = {}) {
 //     if (!provider) throw Error('missing provider');
 //     if (!provider.name) throw Error('missing provider.name');
 
-//     const context = parentFqon ? { org: { fqon: parentFqon } } : getGestaltContext();
+//     const context = parentFqon ? { org: { fqon: parentFqon } } : getgestaltSession();
 //     if (!context.org) throw Error("missing context.org");
 //     if (!context.org.fqon) throw Error("missing context.org.fqon");
 //     const res = meta.POST(`/${context.org.fqon}/providers`, provider);

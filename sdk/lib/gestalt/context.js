@@ -1,7 +1,7 @@
-const gestaltContext = require('../gestalt-context');
+const gestaltSession = require('../gestalt-session');
 
 exports.getCurrentOrg = () => {
-    return gestaltContext.getContext().org;
+    return gestaltSession.getContext().org;
 }
 
 exports.setCurrentOrg = (s) => {
@@ -15,14 +15,14 @@ exports.setCurrentOrg = (s) => {
         fqon: s.fqon
     }
 
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     Object.assign(context, { org: org }); // merge in context
 
     delete context.workspace;
     delete context.environment;
     delete context.container;
 
-    gestaltContext.setContext(context);
+    gestaltSession.setContext(context);
 }
 
 exports.setCurrentEnvironment = (s) => {
@@ -35,17 +35,17 @@ exports.setCurrentEnvironment = (s) => {
         description: s.description
     }
 
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     Object.assign(context, { environment: env }); // merge in context
 
     delete context.container;
 
-    gestaltContext.setContext(context);
+    gestaltSession.setContext(context);
 }
 
 
 exports.getCurrentWorkspace = () => {
-    return gestaltContext.getContext().workspace;
+    return gestaltSession.getContext().workspace;
 }
 
 exports.setCurrentWorkspace = (s) => {
@@ -58,15 +58,15 @@ exports.setCurrentWorkspace = (s) => {
         description: s.description
     }
 
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     Object.assign(context, { workspace: ws }); // merge in context
 
     delete context.environment;
     delete context.container;
 
-    gestaltContext.setContext(context);
+    gestaltSession.setContext(context);
 }
 
 exports.getCurrentEnvironment = () => {
-    return gestaltContext.getContext().environment;
+    return gestaltSession.getContext().environment;
 }
