@@ -4,37 +4,29 @@ Github Repository: https://github.com/GalacticFog/gestalt-fog-cli
 
 Client utility for Gestalt Platform (similar to `kubectl` for Kubernetes and `dcos` for DC/OS).
 
+## Download
+
+Download from Github:
+
+```sh
+# Download
+version=`curl -o - https://raw.githubusercontent.com/GalacticFog/gestalt-fog-cli/master/LATEST`
+
+# MacOS
+curl -L "https://github.com/GalacticFog/gestalt-fog-cli/releases/download/$version/gestalt-fog-cli-macos-$verzion.zip" -o fog.zip
+
+# Linux
+curl -L "https://github.com/GalacticFog/gestalt-fog-cli/releases/download/$version/gestalt-fog-cli-linux-$verzion.zip" -o fog.zip
+
+unzip -o fog.zip
+
+mv fog /usr/local/bin # Or somewhere in your PATH
 ```
-fog <command>
 
-Commands:
-  fog admin <command>       Admin commands
-  fog apply [context]       Apply resource
-  fog clone <command>       Clone resources of specified type
-  fog completion <command>  Shell completion commands
-  fog config <command>      Config commands
-  fog context <command>     Context commands
-  fog create <command>      Creates resources of specified type
-  fog delete <command>      Delete resources of specified type
-  fog export <command>      Exports resources of specified type
-  fog login                 Log in to Gestalt Platform Instance
-  fog logout                Logout of Gestalt Platform Instance
-  fog meta <command>        Gestalt Meta functions
-  fog migrate <command>     Migrate resources of specified type
-  fog promote <command>     Promote resources of specified type
-  fog restart <command>     Restart resources of specified type
-  fog scale <command>       Scale resources of specified type
-  fog security <command>    Gestalt Security functions
-  fog service <command>     service resources of specified type
-  fog show <command>        Gets resources of specified type
-  fog status                Show Status
-
-Options:
-  --version  Show version number                                       [boolean]
-  --help     Show help                                                 [boolean]
-
-
-
+## Login to a Gestalt Environment
+```
+# Login to an environment:
+fog login
 ```
 
 ## Run from Source
@@ -90,6 +82,25 @@ fog login <url> -u <username>                       # Only prompts for password
 fog login <url> -u <username> -p <password>         # No prompts
 ```
 
+## Working with Sessions
+```sh
+fog use         # List sessions
+
+fog use test    # Switch to a 'test' session (creates a new session if it doesn't exist)
+
+fog login       # Logs into an environment via the 'test' session
+
+fog use local   # Switch to a 'local' session (creates a new session if it doesn't exist)
+
+fog login       # Logs into an environment via the 'local' session
+
+fog use         # List sessions
+
+fog status      # Show more detais about sessions
+
+fog session rm test   # Remove the 'test' session
+```
+
 ## Working with Context
 ```sh
 fog show hierarchy --raw                   # Show all context paths
@@ -102,7 +113,7 @@ fog context set /sandbox/dev-sandbox/dev   # Set context to a specific environme
 
 fog context set                            # Select the context interactively
 
-fog status                                 # Show the current context
+fog status                                 # Show the current Session and context
 
 ```
 
