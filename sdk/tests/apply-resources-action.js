@@ -1,4 +1,4 @@
-const { gestaltContext, contextResolver, actions } = require('..');
+const { gestaltSession, contextResolver, actions } = require('..');
 
 global.fog = { debug: true };
 

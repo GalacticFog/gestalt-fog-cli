@@ -83,7 +83,7 @@ function applyRequiredEnvironmentScope(command, handlers) {
 
             debug(`This command requires environment scope.`)
 
-            const context = gestaltContext.getContext();
+            const context = gestaltSession.getContext();
 
             await util.requireOrgArg(argv, context);
             await util.requireEnvironmentArg(argv, context);

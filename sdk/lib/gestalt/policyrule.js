@@ -1,5 +1,5 @@
 const {
-    getGestaltContext
+    getgestaltSession
 } = require('./generic');
 
 const { fetchPolicy } = require('./policy');

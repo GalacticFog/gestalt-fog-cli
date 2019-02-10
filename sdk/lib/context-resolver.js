@@ -1,5 +1,5 @@
 const gestalt = require('./gestalt');
-const gestaltContext = require('./gestalt-context');
+const gestaltSession = require('./gestalt-session');
 const { debug } = require('./debug');
 const chalk = require('./chalk');
 
@@ -42,7 +42,7 @@ async function resolveProviderByPath(providerPath) {
 
     // const providerPathCache = resourcePathCache['providers'];
     //    const cachedProviders = providerPathCache[contextPath];
-    const cachedProviders = gestaltContext.getResourceIdCache(contextPath);
+    const cachedProviders = gestaltSession.getResourceIdCache(contextPath);
 
     // if (cachedProviders) {
     if (Object.keys(cachedProviders).length > 0) {
@@ -55,7 +55,7 @@ async function resolveProviderByPath(providerPath) {
 
         // Save to cache
         // providerPathCache[contextPath] = providers;
-        gestaltContext.saveResourceIdCache(contextPath, providers);
+        gestaltSession.saveResourceIdCache(contextPath, providers);
 
 
         debug('providers: ' + providers)
@@ -88,7 +88,7 @@ async function resolveProviderInfoByPath(providerPath) {
 
     // const providerPathCache = resourcePathCache['providers'];
     //    const cachedProviders = providerPathCache[contextPath];
-    const cachedProviders = gestaltContext.getResourceIdCache('providersInfo');
+    const cachedProviders = gestaltSession.getResourceIdCache('providersInfo');
 
     // if (cachedProviders) {
     if (cachedProviders[providerPath]) {
@@ -108,7 +108,7 @@ async function resolveProviderInfoByPath(providerPath) {
 
         // Save to cache
         // providerPathCache[contextPath] = providers;
-        gestaltContext.saveResourceIdCache('providersInfo', providersInfo);
+        gestaltSession.saveResourceIdCache('providersInfo', providersInfo);
 
         return providersInfo[providerPath]
     }
@@ -140,12 +140,12 @@ async function resolveProvider(name, providedContext, optionalType) {
 
     console.error(chalk.dim.blue(`Resolving provider '${name}'`));
 
-    const context = providedContext || gestaltContext.getContext();
+    const context = providedContext || gestaltSession.getContext();
 
     // Check if workspace property is required
     if (name) {
 
-        const cache = gestaltContext.getResourceIdCache('provider');
+        const cache = gestaltSession.getResourceIdCache('provider');
 
         // first, look in cache
         if (cache[name]) {
@@ -174,7 +174,7 @@ async function resolveProvider(name, providedContext, optionalType) {
 
         // found it, write to cache
         cache[foundProvider.name] = foundProvider.id;
-        gestaltContext.saveResourceIdCache('provider', cache);
+        gestaltSession.saveResourceIdCache('provider', cache);
 
         return {
             id: foundProvider.id,
@@ -233,14 +233,14 @@ async function resolveResourceByPath(resourceType, resourcePath) {
 }
 
 async function resolveOrg() {
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     if (!context.org) throw Error('missing context.org');
     if (!context.org.fqon) throw Error('missing context.org.fqon');
     return context;
 }
 
 async function resolveWorkspace() {
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     if (!context.org) throw Error('missing context.org');
     if (!context.org.fqon) throw Error('missing context.org.fqon');
     if (!context.workspace) throw Error('missing context.workspace');
@@ -250,7 +250,7 @@ async function resolveWorkspace() {
 }
 
 async function resolveEnvironment() {
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     if (!context.org) throw Error('missing context.org');
     if (!context.org.fqon) throw Error('missing context.org.fqon');
     if (!context.workspace) throw Error('missing context.workspace');

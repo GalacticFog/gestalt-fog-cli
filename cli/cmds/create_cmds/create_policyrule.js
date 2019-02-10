@@ -1,4 +1,4 @@
-const { gestalt, renderResourceTemplate, gestaltContext } = require('gestalt-fog-sdk')
+const { gestalt, renderResourceTemplate, gestaltSession } = require('gestalt-fog-sdk')
 const cmd = require('../lib/cmd-base');
 const ui = require('../lib/gestalt-ui');
 const out = console.log;
@@ -26,7 +26,7 @@ exports.handler = cmd.handler(async function (argv) {
     if (argv.context) {
         context = await cmd.resolveContextPath(argv.context);
     } else {
-        context = gestaltContext.getContext();
+        context = gestaltSession.getContext();
     }
 
     console.log('Using context: ' + ui.getContextString(context));

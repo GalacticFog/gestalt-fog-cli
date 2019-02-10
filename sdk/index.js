@@ -4,11 +4,11 @@ const contextResolver = require('./lib/context-resolver');
 const actions = require('./lib/actions');
 const meta = require('./lib/gestalt/metaclient');
 const security = require('./lib/gestalt/securityclient');
-const gestaltContext = require('./lib/gestalt-context');
+const gestaltSession = require('./lib/gestalt-session');
 
 module.exports = {
     gestalt,
-    gestaltContext,
+    gestaltSession,
     actions,
     contextResolver,
     ...templateResolver,

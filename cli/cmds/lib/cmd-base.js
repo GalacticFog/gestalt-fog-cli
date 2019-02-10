@@ -1,8 +1,8 @@
 'use strict';
-const { debug } = require('./debug');
+const { debug, debugError } = require('./debug');
 const contextResolver = require('./context-resolver');
 const util = require('./util');
-const { gestaltContext } = require('gestalt-fog-sdk');
+const { gestaltSession } = require('gestalt-fog-sdk');
 const chalk = require('./chalk');
 
 module.exports = {
@@ -24,7 +24,7 @@ function handler(main) {
 }
 
 function initialize(argv) {
-  const config = gestaltContext.getConfig();
+  const config = gestaltSession.getGlobalConfig();
 
   // Setup Logging
   global.fog = global.fog || {};
@@ -48,10 +48,10 @@ async function run(fn, argv) {
     await fn(argv);
   } catch (err) {
     // Write error to screen
-    console.error(chalk.red(err));
+    console.error(chalk.red(err.message));
 
     // Debug output
-    debug(err.stack);
+    debugError(err);
 
     //eslint-disable-next-line no-process-exit
     process.exit(-1);

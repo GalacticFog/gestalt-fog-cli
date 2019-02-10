@@ -1,5 +1,5 @@
 'use strict';
-const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
+const { gestalt, gestaltSession } = require('gestalt-fog-sdk');
 const selectOrg = require('./selectOrg');
 const selectWorkspace = require('./selectWorkspace');
 const selectEnvironment = require('./selectEnvironment');
@@ -49,7 +49,7 @@ exports.displayContext = displayContext;
 
 function displayContext() {
     return new Promise((resolve, reject) => {
-        const context = gestaltContext.getContext();
+        const context = gestaltSession.getContext();
         let s = `${chalk.bold('Context:')} ${chalk.green(gestalt.getHost())}`
         // let s = `${chalk.green(gestalt.getHost())}`
         if (context.org) {
@@ -124,7 +124,7 @@ function chooseOrg() {
 }
 
 function chooseWorkspace(resolve) {
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     return selectWorkspace.run({}, null, context).then(result => {
         if (result) {
             gestalt.setCurrentWorkspace(result);
@@ -141,7 +141,7 @@ function chooseWorkspace(resolve) {
 
 
 function chooseEnvironment(resolve) {
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     return selectEnvironment.run({}, null, context).then(result => {
         if (result) {
             gestalt.setCurrentEnvironment(result);
@@ -183,7 +183,7 @@ async function chooseOrgWorkspaceEnvironment(options) {
 
     gestalt.setCurrentOrg(org);
 
-    const workspace = await selectWorkspace.run(options.workspace, null, gestaltContext.getContext());
+    const workspace = await selectWorkspace.run(options.workspace, null, gestaltSession.getContext());
     if (!workspace) {
         // console.log("No selection, exiting.");
         return {
@@ -197,7 +197,7 @@ async function chooseOrgWorkspaceEnvironment(options) {
 
     gestalt.setCurrentWorkspace(workspace);
 
-    const environment = await selectEnvironment.run(options.environment, null, gestaltContext.getContext());
+    const environment = await selectEnvironment.run(options.environment, null, gestaltSession.getContext());
     if (!environment) {
         // console.log("No selection, exiting.");
         return {

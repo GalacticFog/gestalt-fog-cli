@@ -1,5 +1,5 @@
 const GestaltKubeClient = require('../lib/gestalt-kube-client');
-const { gestalt, gestaltContext } = require('gestalt-fog-sdk')
+const { gestalt, gestaltSession } = require('gestalt-fog-sdk')
 const selectContainerInstance = require('../lib/selectContainerInstance');
 const selectContainer = require('../lib/selectContainer');
 const selectHierarchy = require('../lib/selectHierarchy');
@@ -20,7 +20,7 @@ exports.handler = cmd.handler(async function (argv) {
         const kube = new GestaltKubeClient({ cluster: argv.cluster });
         accessConsole(kube, { id: argv.env }, { id: argv.instance });
     } else {
-        const providerConfig = gestaltContext.loadConfigFile('providers.json');
+        const providerConfig = gestaltSession.loadSessionFile('providers.json');
         // No command line args, interactive mode
         await selectHierarchy.resolveEnvironment();
 

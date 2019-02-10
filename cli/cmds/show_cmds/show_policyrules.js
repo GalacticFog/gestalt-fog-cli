@@ -3,7 +3,7 @@ module.exports = showCommandBuilder.buildCommand('policyrules');
 
 // ##### Keeping the below for reference.  Gestalt SDK was refactored to allow retrieving policyrules
 
-// const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
+// const { gestalt, gestaltSession } = require('gestalt-fog-sdk');
 // const ui = require('../lib/gestalt-ui')
 // const cmd = require('../lib/cmd-base');
 // const { debug } = require('../lib/debug');
@@ -17,7 +17,7 @@ module.exports = showCommandBuilder.buildCommand('policyrules');
 
 //     debug('Policy name: ' + policyName)
 
-//     const context = argv.context_path ? await cmd.resolveContextPath(argv.context_path) : gestaltContext.getContext();
+//     const context = argv.context_path ? await cmd.resolveContextPath(argv.context_path) : gestaltSession.getContext();
 
 //     if (context.environment) {
 //         doShowEnvironmentPolicyRules(context, argv, policyName);

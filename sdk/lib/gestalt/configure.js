@@ -1,6 +1,6 @@
-const gestaltContext = require('../gestalt-context');
+const gestaltSession = require('../gestalt-session');
 
 exports.configure = function (config) {
-    const currentConfig = gestaltContext.getConfig();
-    gestaltContext.saveConfig(Object.assign(currentConfig, config));
+    const currentConfig = gestaltSession.getSessionConfig();
+    gestaltSession.saveSessionConfig(Object.assign(currentConfig, config));
 }

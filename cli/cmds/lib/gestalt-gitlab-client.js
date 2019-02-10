@@ -1,4 +1,4 @@
-const { gestaltContext } = require('gestalt-fog-sdk');
+const { gestaltSession } = require('gestalt-fog-sdk');
 const os = require('os');
 const fs = require('fs');
 
@@ -187,7 +187,7 @@ function getProjectVariables(project, callback) {
 };
 
 function loadGitlabConfig() {
-    const f = gestaltContext.getConfigDir() + `/gitlab-config.json`;
+    const f = gestaltSession.getSessionDirectory() + `/gitlab-config.json`;
     if (fs.existsSync(f)) {
         const contents = fs.readFileSync(f, 'utf8');
         return JSON.parse(contents);

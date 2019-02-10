@@ -1,5 +1,10 @@
 const chalk = require('./chalk');
 
+module.exports = {
+  debug,
+  debugError
+};
+
 function debug(message, ...optionalParams) {
   if (global.fog.debug) {
     if (typeof message == 'object') {
@@ -11,6 +16,8 @@ function debug(message, ...optionalParams) {
   }
 }
 
-module.exports = {
-  debug,
-};
+function debugError(error) {
+  if (global.fog.debug) {
+    console.error(chalk.dim.red(error.stack))
+  }
+}

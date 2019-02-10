@@ -1,4 +1,4 @@
-const { gestalt, renderResourceObject, renderResourceTemplate, actions, gestaltContext } = require('gestalt-fog-sdk')
+const { gestalt, renderResourceObject, renderResourceTemplate, actions, gestaltSession } = require('gestalt-fog-sdk')
 const cmd = require('./lib/cmd-base');
 const ui = require('./lib/gestalt-ui');
 const util = require('./lib/util');
@@ -211,7 +211,7 @@ async function obtainContext(argv) {
             }
         }
         // Default to saved context
-        context = context || gestaltContext.getContext();
+        context = context || gestaltSession.getContext();
     }
 
     if (JSON.stringify(context) == '{}') console.error(chalk.yellow(`Warning: No default context found`));
@@ -253,47 +253,4 @@ function obtainConfig(argv) {
         }
     }
     return config;
-}
-
-// TODO: Combine this with apply-resources.js from SDK
-async function processFile(file, params, config, defaultContext) {
-    console.error(`Processing ${file}...`)
-
-    const resourceSpec = await renderResourceTemplate(file, config, defaultContext, { delete: params.delete });
-
-    debug(`Finished processing resource template.`)
-
-    debug(`resourceSpec: ${JSON.stringify(resourceSpec)}`);
-
-    const context = resourceSpec.contextPath ? await cmd.resolveContextPath(resourceSpec.contextPath) : defaultContext;
-
-    delete resourceSpec.contextPath;
-
-    debug(`Using context: ${JSON.stringify(context)}`);
-
-    // Override resource name if specified
-    if (params.name) resourceSpec.name = params.name;
-    if (params.description) resourceSpec.description = params.description;
-
-    // special case for provider
-    if (params.provider) {
-        // Resolve provider by name
-        const provider = await cmd.resolveProvider(params.provider);
-
-        // Build provider spec
-        resourceSpec.properties.provider = {
-            id: provider.id,
-            locations: []
-        };
-    }
-
-    if (params['render-only']) {
-        if (params['render-only'] == 'yaml') {
-            console.log(yaml.dump(resourceSpec));
-        } else {
-            console.log(JSON.stringify(resourceSpec, null, 2));
-        }
-    } else {
-        return gestalt.applyResource(resourceSpec, context, { delete: params.delete, force: params.force });
-    }
 }

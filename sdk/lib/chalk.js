@@ -1,6 +1,6 @@
 const chalkLib = require('chalk');
-const gestaltContext = require('./gestalt-context');
-const config = gestaltContext.getConfig();
+const gestaltSession = require('./gestalt-session');
+const config = gestaltSession.getGlobalConfig();
 
 let chalk = null;
 

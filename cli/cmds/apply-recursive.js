@@ -1,4 +1,4 @@
-const { gestalt, renderResourceObject, renderResourceTemplate, actions, gestaltContext } = require('gestalt-fog-sdk')
+const { gestalt, renderResourceObject, renderResourceTemplate, actions, gestaltSession } = require('gestalt-fog-sdk')
 const cmd = require('./lib/cmd-base');
 const ui = require('./lib/gestalt-ui');
 const util = require('./lib/util');
@@ -24,36 +24,36 @@ exports.builder = {
         type: 'array',
         description: 'config params'
     },
-    'ignore-config': {
-        description: 'Ignore config file if present'
-    },
-    name: {
-        description: 'resource name (overrides name in resource file)'
-    },
-    description: {
-        description: 'resource description (overrides description in resource file)'
-    },
-    provider: {
-        description: 'resource provider (sets .properties.provider value)'
-    },
-    context: {
-        description: "Target context path for resource creation. Overrides the current context if specified"
-    },
-    'ignore-context': {
-        description: 'Ignore context file if present'
-    },
-    'render-only': {
-        description: 'Render only'
-    },
-    'render-bundle': {
-        description: 'Render bundle'
-    },
-    'delete': {
-        description: 'Delete resources'
-    },
-    'force': {
-        description: 'Force delete resources (use with --delete)'
-    },
+    // 'ignore-config': {
+    //     description: 'Ignore config file if present'
+    // },
+    // name: {
+    //     description: 'resource name (overrides name in resource file)'
+    // },
+    // description: {
+    //     description: 'resource description (overrides description in resource file)'
+    // },
+    // provider: {
+    //     description: 'resource provider (sets .properties.provider value)'
+    // },
+    // context: {
+    //     description: "Target context path for resource creation. Overrides the current context if specified"
+    // },
+    // 'ignore-context': {
+    //     description: 'Ignore context file if present'
+    // },
+    // 'render-only': {
+    //     description: 'Render only'
+    // },
+    // 'render-bundle': {
+    //     description: 'Render bundle'
+    // },
+    // 'delete': {
+    //     description: 'Delete resources'
+    // },
+    // 'force': {
+    //     description: 'Force delete resources (use with --delete)'
+    // },
     //TODO: 'add-only': {
     //     description: 'Only add resources, don\'t update existing resources'
     // }
@@ -77,9 +77,13 @@ exports.handler = cmd.handler(async function (argv) {
     debug(JSON.stringify(context, null, 2));
 
     const config = obtainConfig(argv);
-    console.error('Using config: ' + JSON.stringify(config, null, 2));
+    debug('Using config: ' + JSON.stringify(config, null, 2));
 
-    const results = await applyResourcesFromDirectory(argv.directory, {});
+    const options = {
+        skipValidation: argv['skip-validation'] ? true : false
+    }
+
+    const results = await applyResourcesFromDirectory(argv.directory, config, options);
 
     // console.log(results);
 
@@ -92,8 +96,6 @@ exports.handler = cmd.handler(async function (argv) {
         displaySummary(result.succeeded, result.failed);
     }
 });
-
-
 
 function displaySummary(succeeded, failed) {
     const totalSucceeded = succeeded.updated.length + succeeded.created.length + succeeded.unchanged.length;
@@ -158,12 +160,11 @@ async function obtainContext(argv) {
             if (dir && fs.existsSync(`${dir}/context`)) {
                 const contextFile = `${dir}/context`;
                 const contextPath = util.readFileAsText(contextFile);
-                console.error('CONTEXT PATH: ' + contextPath)
                 context = await cmd.resolveContextPath(contextPath);
             }
         }
         // Default to saved context
-        context = context || gestaltContext.getContext();
+        context = context || gestaltSession.getContext();
     }
 
     if (JSON.stringify(context) == '{}') console.error(chalk.yellow(`Warning: No default context found`));

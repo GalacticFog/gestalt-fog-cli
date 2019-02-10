@@ -1,4 +1,4 @@
-const { gestalt, renderResourceObject, renderResourceTemplate, actions, gestaltContext } = require('gestalt-fog-sdk')
+const { gestalt, renderResourceObject, renderResourceTemplate, actions, gestaltSession } = require('gestalt-fog-sdk')
 const { debug } = require('./lib/debug');
 const yaml = require('js-yaml');
 const fs = require('fs');
@@ -11,18 +11,71 @@ module.exports = {
     applyResourcesFromDirectory,
 }
 
-async function applyResourcesFromDirectory(dir, options) {
+async function applyResourcesFromDirectory(dir, config, options) {
+    if (options.skipValidation) {
+        console.log(`Skipping validation`);
+    } else {
+        await doValidation(dir, config);  // throws error if validation fails
+    }
+
+    return await doApplyRecursive(dir, config, options);
+}
+
+async function doValidation(dir, config) {
+    const validationResults = []
+    await doValidateResourcesFromDirectory(dir, config, validationResults);
+    if (validationResults.length > 0) {
+        console.log(`There were ${validationResults.length} found:`);
+        for (let msg of validationResults) {
+            console.log(chalk.red(msg));
+        }
+        throw Error(`There were ${validationResults.length} errors, aborting`);
+    }
+}
+
+async function doApplyRecursive(dir, config, options) {
     const results = {};
-    await doApplyResourcesFromDirectory(dir, options, results);
+    await doApplyResourcesFromDirectory(dir, config, options, results);
     return results;
 }
 
-async function doApplyResourcesFromDirectory(dir, options, results) {
+async function doValidateResourcesFromDirectory(dir, commonConfig, validationResults) {
+    console.log(`=> Validating ${dir}`)
+
+    // Merge in common config
+    const config = Object.assign(obtainConfigFromFilesystem(dir), commonConfig);
+
+    try {
+        const context = await obtainContextFromFilesystem(dir);
+    } catch (err) {
+        const msg = `Missing context file: '${dir}'`;
+        console.log(chalk.red(msg));
+        validationResults.push(msg);
+    }
+
+    // Try to render resources based on config
+    try {
+        await doValidateDirectory(dir, config);
+    } catch (err) {
+        console.log(chalk.red(err));
+        debug(chalk.red(err.stack));
+        validationResults.push(err.error);
+    }
+
+    // Next, apply all sub directories
+    for (const subdir of getSubdirectories(dir)) {
+        const subPath = dir + path.sep + subdir;
+        await doValidateResourcesFromDirectory(subPath, validationResults);
+    }
+}
+
+async function doApplyResourcesFromDirectory(dir, commonConfig, options, results) {
 
     console.log();
     console.log(`=> Processing ${dir}`)
 
-    const config = obtainConfigFromFilesystem(dir);
+    // Merge in common config
+    const config = Object.assign(obtainConfigFromFilesystem(dir), commonConfig);
 
     const context = await obtainContextFromFilesystem(dir);
 
@@ -33,8 +86,17 @@ async function doApplyResourcesFromDirectory(dir, options, results) {
     const subdirs = getSubdirectories(dir);
     for (const subdir of subdirs) {
         const subPath = dir + path.sep + subdir;
-        await doApplyResourcesFromDirectory(subPath, options, results);
+        await doApplyResourcesFromDirectory(subPath, commonConfig, options, results);
     }
+}
+
+async function doValidateDirectory(dir, config) {
+
+    const resources = loadResourcesFromDirectory(dir);
+
+    // Partially resolve resources (LambdaSources and Config settings)
+    const partiallyResolvedResources = await partiallyResolveResources(resources, config, dir);
+    console.log(`Resolved ${partiallyResolvedResources.length} resources`);
 }
 
 async function doApplyDirectory(dir, context, config, options) {
@@ -124,8 +186,8 @@ async function partiallyResolveResources(resources, config, directory) {
     const partiallyResolvedResources = []
     for (let resource of resources) {
         resource = await renderResourceObject(resource, config, {}, {
-            onlyPrebundle: true,
-            bundleDirectory: directory
+            onlyOffline: true,
+            bundleDirectory: directory // TODO: Refactor this - bundle directory doesn't make sense as an option, but directory is needed to render LAmbdaSource directive
         })
         partiallyResolvedResources.push(resource);
     }
@@ -192,7 +254,7 @@ async function obtainContext(argv) {
             }
         }
         // Default to saved context
-        context = context || gestaltContext.getContext();
+        context = context || gestaltSession.getContext();
     }
 
     if (JSON.stringify(context) == '{}') console.error(chalk.yellow(`Warning: No default context found`));

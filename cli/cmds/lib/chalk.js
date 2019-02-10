@@ -1,6 +1,6 @@
 const chalkLib = require('chalk');
-const { gestaltContext } = require('gestalt-fog-sdk');
-const config = gestaltContext.getConfig();
+const { gestaltSession } = require('gestalt-fog-sdk');
+const config = gestaltSession.getGlobalConfig();
 
 let chalk = null;
 

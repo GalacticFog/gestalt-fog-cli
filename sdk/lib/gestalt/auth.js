@@ -1,30 +1,27 @@
 const request = require('request-promise-native');
-const gestaltContext = require('../gestalt-context');
+const gestaltSession = require('../gestalt-session');
 const querystring = require('querystring');
 const { isJsonString } = require('../helpers')
 const { debug } = require('../debug');
 
 exports.login = async function (creds) {
-    gestaltContext.clearAuthToken();
-    gestaltContext.clearContext();
-    gestaltContext.clearCachedFiles();
+    gestaltSession.clearSessionData();
 
-    const res = await authenticate(creds); // Could throw error
+    const auth = await authenticate(creds); // Could throw error
 
     // Clear the current context
-    gestaltContext.clearContext();
+    gestaltSession.clearSessionData();
+    gestaltSession.saveAuthData(auth);
 
-    return res;
+    return { username: auth.username };
 }
 
 // exports.logout = function() {
-//     gestaltContext.clearAuthToken();
-//     gestaltContext.clearContext();
-//     gestaltContext.clearCachedFiles();
+//     gestaltSession.clearSessionData();
 // }
 
 function getSecurityUrl() {
-    const config = gestaltContext.getConfig();
+    const config = gestaltSession.getSessionConfig();
     if (config['security_url']) {
         return config['security_url']
     }
@@ -80,12 +77,11 @@ async function authenticate(creds) {
 
         // Enhance payload with username
         auth.username = username;
+        auth.timestamp = new Date();
+        auth.expiration = new Date(Date.now() + auth.expires_in * 1000);
 
-        const contents = `${JSON.stringify(auth, null, 2)}\n`;
+        return auth;
 
-        gestaltContext.saveAuthToken(contents);
-
-        return { username: username };
     } catch (res) {
         if (res.response && res.response.body) {
             const error = res.response.body;

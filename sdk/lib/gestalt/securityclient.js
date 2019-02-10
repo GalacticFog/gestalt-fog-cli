@@ -6,7 +6,7 @@ const {
     httpDelete } = require('./httpclient');
 
     // Gestalt stuff
-const gestaltContext = require('../gestalt-context');
+const gestaltSession = require('../gestalt-session');
 
 // Exports
 module.exports = {
@@ -20,7 +20,7 @@ module.exports = {
 // Functions
 
 function getSecurityUrl() {
-    const config = gestaltContext.getConfig();
+    const config = gestaltSession.getSessionConfig();
     if (config['security_url']) {
         return config['security_url']
     }

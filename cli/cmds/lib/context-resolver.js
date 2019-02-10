@@ -1,4 +1,4 @@
-const { contextResolver, gestaltContext } = require('gestalt-fog-sdk');
+const { contextResolver, gestaltSession } = require('gestalt-fog-sdk');
 const { resolveContextPath } = contextResolver;
 const selectHierarchy = require('../lib/selectHierarchy');
 
@@ -13,7 +13,7 @@ async function getContextFromPathOrPrompt(path /*TODO: ,scope='any'*/) {
         context = await resolveContextPath(path);
     } else {
         // Load from state
-        context = gestaltContext.getContext();
+        context = gestaltSession.getContext();
 
         if (!context.org || !context.org.fqon) {
             // No arguments, allow choosing interatively

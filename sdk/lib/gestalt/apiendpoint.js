@@ -2,7 +2,7 @@ const meta = require('./metaclient');
 const util = require('../util');
 
 const {
-    getGestaltContext,
+    getgestaltSession,
     createResource
 } = require('./generic');
 

@@ -1,6 +1,6 @@
 const request = require('request-promise-native');
 const { debug } = require('../debug');
-const gestaltContext = require('../gestalt-context');
+const gestaltSession = require('../gestalt-session');
 
 // Exports
 
@@ -51,5 +51,5 @@ async function httpRequest(method, url, body, opts) {
 }
 
 function getCachedAuthToken() {
-    return gestaltContext.getCachedAuthToken();
+    return gestaltSession.getCachedAuthToken();
 }

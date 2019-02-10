@@ -1,5 +1,5 @@
 const cmd = require('../lib/cmd-base');
-const { gestaltContext } = require('gestalt-fog-sdk');
+const { gestaltSession } = require('gestalt-fog-sdk');
 const ui = require('../lib/gestalt-ui');
 
 exports.command = 'show'
@@ -10,7 +10,7 @@ exports.builder = {
     }
 }
 exports.handler = cmd.handler(async function (argv) {
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
     console.log(ui.getContextString(context, argv));
 });
 

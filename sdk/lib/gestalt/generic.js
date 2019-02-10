@@ -1,6 +1,6 @@
 // Gestalt stuff
 const meta = require('./metaclient')
-const gestaltContext = require('../gestalt-context');
+const gestaltSession = require('../gestalt-session');
 const { debug } = require('../debug');
 const chalk = require('../chalk');
 const util = require('../util');
@@ -26,7 +26,7 @@ module.exports = {
     createEnvironmentResource,
     createResource,
     getGestaltConfig,
-    getGestaltContext,
+    getgestaltSession,
 }
 
 /**
@@ -85,7 +85,7 @@ async function fetchOrgResources(type, fqonList, type2, options = {}) {
 }
 
 async function fetchResourcesFromOrgEnvironments(type, fqonList, type2) {
-    if (!fqonList) fqonList = [getGestaltContext().org.fqon];
+    if (!fqonList) fqonList = [getgestaltSession().org.fqon];
 
     let promises = fqonList.map(fqon => {
         const res = _fetchResourcesFromOrgEnvironments(type, fqon);
@@ -122,7 +122,7 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
             return res;
         }).catch(err => {
             console.error(chalk.yellow('Warning: ' + err.message));
-            debug(err.stack)
+            debug(chalk.yellow(err.stack));
             return [];
         });
     });
@@ -506,11 +506,11 @@ function resolveContextUrl(context) {
 
 
 function getGestaltConfig() {
-    return gestaltContext.getConfig();
+    return gestaltSession.getSessionConfig();
 }
 
-function getGestaltContext() {
-    return gestaltContext.getContext();
+function getgestaltSession() {
+    return gestaltSession.getContext();
 }
 
 

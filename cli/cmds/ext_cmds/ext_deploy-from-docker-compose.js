@@ -2,7 +2,7 @@ const dockerComposeParser = require('../lib/gestalt-docker-compose-parser');
 const selectProvider = require('../lib/selectProvider');
 const displayResource = require('../lib/displayResourceUI');
 const selectEnvironment = require('../lib/selectEnvironment');
-const { gestalt, gestaltContext } = require('gestalt-fog-sdk');
+const { gestalt, gestaltSession } = require('gestalt-fog-sdk');
 const selectHierarchy = require('../lib/selectHierarchy');
 const chalk = require('../lib/chalk');
 const cmd = require('../lib/cmd-base');
@@ -35,7 +35,7 @@ exports.handler = cmd.handler(async function (argv) {
         };
     }
 
-    const context = gestaltContext.getContext();
+    const context = gestaltSession.getContext();
 
     console.log("Containers will be created in the following location:");
     console.log();
