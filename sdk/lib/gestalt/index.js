@@ -15,6 +15,7 @@ module.exports = {
     ...require('./generic'),
     ...require('./group'),
     ...require('./httpclient'),
+    ...require('./job'),
     ...require('./lambda'),
     ...require('./org'),
     ...require('./policy'),

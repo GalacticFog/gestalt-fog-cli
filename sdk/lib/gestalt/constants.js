@@ -18,6 +18,7 @@ const resourceTypeToUrlType = {
     'Gestalt::Resource::Configuration::DataFeed': 'datafeeds',
     'Gestalt::Resource::Spec::StreamSpec': 'streamspecs',
     'Gestalt::Resource::Secret' : 'secrets',
+    'Gestalt::Resource::Job' : 'jobs',
 };
 
 /**
