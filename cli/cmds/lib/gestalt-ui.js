@@ -45,3 +45,5 @@ exports.resolveOrg = resolveHierarchy.resolveOrg;
 exports.resolveWorkspace = resolveHierarchy.resolveWorkspace;
 
 exports.resolveEnvironment = resolveHierarchy.resolveEnvironment;
+
+exports.selectJob = require('./selectJob').run;
