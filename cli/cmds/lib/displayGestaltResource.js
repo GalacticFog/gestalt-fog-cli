@@ -10,6 +10,7 @@ const fmap = {
     'Gestalt::Resource::Container': displayContainers,
     'Gestalt::Resource::Environment': displayEnvironments,
     'Gestalt::Resource::Group': displayGroups,
+    'Gestalt::Resource::Job': displayJobs,
     'Gestalt::Resource::Node::Lambda': displayLambdas,
     'Gestalt::Resource::Organization': displayOrgs,
     'Gestalt::Resource::Policy': displayPolicies,
@@ -310,6 +311,28 @@ function displayPolicyRules(resources, opts, context) {
     resources.map(r => {
         r.resource_type = r.resource_type.replace(/Gestalt::Resource::Rule::/, '')
     })
+
+    displayResource(options, opts, resources);
+}
+
+function displayJobs(resources, opts, context) {
+    const options = {
+        message: getContextMessage('Jobs', context),
+        headers: ['Container', 'Description', 'Status', 'Image', 'CPU', 'Memory', 'Owner', /*'FQON', 'ENV',*/ 'Provider'],
+        fields: ['name', 'description', 'properties.status', 'properties.image', 'properties.cpus', 'properties.memory', 'owner.name', /*'org.properties.fqon', 'environment.name',*/ 'properties.provider.name'],
+        sortField: 'name',
+    }
+
+    // Transform for display
+    for (let item of resources) {
+        if (item.description) {
+            if (item.description.length > 20) {
+                item.description = item.description.substring(0, 20) + '...';
+            }
+        }
+        // item.fqon = fqon;
+        // item.running_instances = `${item.properties.tasks_running || 0} / ${item.properties.num_instances}`;
+    }
 
     displayResource(options, opts, resources);
 }
