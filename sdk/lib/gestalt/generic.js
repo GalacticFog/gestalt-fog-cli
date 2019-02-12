@@ -27,6 +27,7 @@ module.exports = {
     createResource,
     getGestaltConfig,
     getgestaltSession,
+    fetchResourceTypes,
 }
 
 /**
@@ -498,6 +499,10 @@ function resolveContextUrl(context) {
         return `/${context.org.fqon}`
     }
     throw Error(`Can't form URL path from context: ${JSON.stringify(context)}`);
+}
+
+async function fetchResourceTypes() {
+    return meta.GET(`/root/resourcetypes`)
 }
 
 
