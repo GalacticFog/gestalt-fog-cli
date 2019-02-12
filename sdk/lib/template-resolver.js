@@ -249,6 +249,7 @@ const directiveHandlers = {
     Policy: resolvePolicy,
     LambdaSource: resolveBase64File,
     Datafeed: resolveDatafeed,
+    ResourceType: resolveResourceTypeId
 }
 
 async function resolveProvider(pathOrName, param = 'id') {
@@ -375,4 +376,29 @@ async function resolveBase64File(file) {
     const buf = Buffer.from(contents, 'utf8');
     const code = buf.toString('base64');
     return code;
+}
+
+async function resolveResourceTypeId(name) {
+    // #{ResourceType Gestalt::Resource::Job } matches with Gestalt::Resource::Job
+    // #{ResourceType job } matches with Gestalt::Resource::Job
+    // #{ResourceType lambda::aws } matches with Gestalt::Configuration::Provider::Lambda::AWS
+    // #{ResourceType gatewaymanager::aws } matches with Gestalt::Configuration::Provider::GatewayManager::AWS
+    // #{ResourceType aws } throws an error
+    const resourceTypes = await gestalt.fetchResourceTypes();
+    const matches = resourceTypes.filter(rt => {
+            const left = rt.name.toLowerCase().split("::")
+            const right = name.toLowerCase().split("::")
+            
+            return left.slice(-1 * right.length).join("::") == right.join("::")
+        }
+    );
+
+    if(matches.length == 0) {
+        throw Error(`Unable to resolve ResourceType with name '${name}'`);
+    }else if(matches.length == 1) {
+        return matches.pop().id;
+    }else {
+        matches.forEach(match => debug(`Ambigous Resource Type: '${match.name}'`))
+        throw Error(`Unable to resolve ResourceType with name '${name}': more than one matched`);
+    }
 }
