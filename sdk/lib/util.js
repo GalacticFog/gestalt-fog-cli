@@ -6,7 +6,8 @@ module.exports = {
   readFileAsText,
   cloneObject,
   getFileObjectType,
-  loadObjectFromString
+  loadObjectFromString,
+  readFromStdin
 };
 
 function getFileObjectType(file) {
@@ -55,6 +56,10 @@ function readFileAsText(file) {
   }
 
   throw Error(`'${file}' not found`);
+}
+
+function readFromStdin() {
+  return fs.readFileSync(0, 'utf8');
 }
 
 function cloneObject(o) {

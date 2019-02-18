@@ -41,7 +41,12 @@ async function renderResourceTemplate(templateFile, config, context, options) {
     state.options = options || {};
 
     debug(`Loading temmplate from '${templateFile}'`);
-    const template = util.readFileAsText(templateFile);
+    let template = "";
+    if(templateFile == "-") {
+        template = util.readFromStdin();
+    }else {
+        template = util.readFileAsText(templateFile);
+    }
 
     const dataType = util.getFileObjectType(templateFile);
 
