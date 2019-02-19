@@ -45,12 +45,12 @@ async function doValidateResourcesFromDirectory(dir, commonConfig, validationRes
     // Merge in common config
     const config = Object.assign(obtainConfigFromFilesystem(dir), commonConfig);
 
-    try {
-        const context = await obtainContextFromFilesystem(dir);
-    } catch (err) {
-        const msg = `Missing context file: '${dir}'`;
-        console.log(chalk.red(msg));
-        validationResults.push(msg);
+    if (directoryRequiresContextFile(dir)) {
+        if (!contextFileExists(dir)) {
+            const msg = `Missing context file: '${dir}'`;
+            console.log(chalk.yellow(`Warning: ${msg}`));
+            validationResults.push(msg);
+        }
     }
 
     // Try to render resources based on config
@@ -65,7 +65,7 @@ async function doValidateResourcesFromDirectory(dir, commonConfig, validationRes
     // Next, apply all sub directories
     for (const subdir of getSubdirectories(dir)) {
         const subPath = dir + path.sep + subdir;
-        await doValidateResourcesFromDirectory(subPath, validationResults);
+        await doValidateResourcesFromDirectory(subPath, commonConfig, validationResults);
     }
 }
 
@@ -77,10 +77,14 @@ async function doApplyResourcesFromDirectory(dir, commonConfig, options, results
     // Merge in common config
     const config = Object.assign(obtainConfigFromFilesystem(dir), commonConfig);
 
-    const context = await obtainContextFromFilesystem(dir);
+    if (contextFileExists(dir)) {
+        const context = await obtainContextFromFilesystem(dir);
 
-    // First, apply this directory
-    results[dir] = await doApplyDirectory(dir, context, config, options);
+        // First, apply this directory
+        results[dir] = await doApplyDirectory(dir, context, config, options);
+    } else {
+        console.log(chalk.yellow(`Warning: Skipping '${dir}' - context file`));
+    }
 
     // Next, apply all sub directories
     const subdirs = getSubdirectories(dir);
@@ -138,12 +142,29 @@ function getSubdirectories(currentPath) {
     return sortDirs(subdirs);
 }
 
-async function obtainContextFromFilesystem(dir) {
-    const contextFile = `${dir}/context`;
+function directoryRequiresContextFile(dir) {
+    const pathElements = dir.split(path.sep);
+    if (pathElements[pathElements.length - 1] == 'src') {
+        return false;
+    }
+    // console.log(chalk.blue(`Requires context: ${dir}`))
+    return true;
+}
 
-    let context = null;
-    // look for a special file
-    if (dir && fs.existsSync(contextFile)) {
+function contextFileExists(dir) {
+    const contextFile = `${dir}${path.sep}context`;
+    debug('checking for ' + contextFile)
+
+    // if (fs.existsSync(contextFile)) {
+    //     console.log(chalk.blue(`context: ${contextFile}`))
+    // }
+
+    return fs.existsSync(contextFile);
+}
+
+async function obtainContextFromFilesystem(dir) {
+    const contextFile = `${dir}${path.sep}context`;
+    if (contextFileExists(dir)) {
         const contextPath = util.readFileAsText(contextFile);
         context = await cmd.resolveContextPath(contextPath);
     } else {
