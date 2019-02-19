@@ -37,6 +37,7 @@ const typesNotAllowingResourceTypeFieldOnCreation = [
     'Gestalt::Resource::Environment',
     'Gestalt::Resource::Configuration::DataFeed',
     'Gestalt::Resource::Spec::StreamSpec',
+    'Gestalt::Resource::Rule::Event',
 ];
 
 /**

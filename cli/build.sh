@@ -5,7 +5,7 @@ rm -rf ./target
 
 VERSION=`cat package.json | jq -r '.version'`
 
-os_list="linux alpine macos"
+os_list="macos linux alpine"
 
 for os in ${os_list}; do
     echo "Building fog for target $os..."

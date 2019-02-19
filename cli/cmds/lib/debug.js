@@ -2,7 +2,8 @@ const chalk = require('./chalk');
 
 module.exports = {
   debug,
-  debugError
+  debugError,
+  trace
 };
 
 function debug(message, ...optionalParams) {
@@ -12,6 +13,17 @@ function debug(message, ...optionalParams) {
       console.error(chalk.dim(str, optionalParams));
     } else {
       console.error(chalk.dim(message, optionalParams));
+    }
+  }
+}
+
+function trace(message, ...optionalParams) {
+  if (global.fog.trace) {
+    if (typeof message == 'object') {
+      const str = JSON.stringify(message, null, 2);
+      console.error(chalk.yellow(str, optionalParams));
+    } else {
+      console.error(chalk.yellow(message, optionalParams));
     }
   }
 }

@@ -1,4 +1,4 @@
-const debug = require('./debug').debug;
+const { debug, trace } = require('./debug');
 const contextResolver = require('../lib/context-resolver');
 const gestalt = require('../lib/gestalt');
 const util = require('../lib/util');
@@ -127,25 +127,25 @@ async function doDarseFieldForDirectives(value, func) {
         // debug(`Parsing ${value} at start=${start}`)
         if (start > -1) {
             const end = value.indexOf(endToken, start + startToken.length);
-            debug(`start: ${start}, end: ${end}`)
+            trace(`start: ${start}, end: ${end}`)
             if (end > start) {
                 // Process the directive between the tokens
                 const directive = value.substring(start + startToken.length, end);
-                debug(`Directive: ${directive}`)
+                trace(`Directive: ${directive}`)
 
                 let replacementValue = 'NOT_RESOLVED';
 
                 if (state.options.delete) {
                     if (directive.startsWith('Config ') || directive.startsWith('Api ')) {
                         replacementValue = await func(directive);
-                        debug(`Resolved: ${replacementValue}`)
+                        trace(`Resolved: ${replacementValue}`)
                     } else {
-                        debug(`Skipping resolution since options specify this resource will be deleted`)
-                        debug(`Not Resolved: ${replacementValue}`)
+                        trace(`Skipping resolution since options specify this resource will be deleted`)
+                        trace(`Not Resolved: ${replacementValue}`)
                     }
                 } else {
                     replacementValue = await func(directive);
-                    debug(`Resolved: ${replacementValue}`)
+                    trace(`Resolved: ${replacementValue}`)
                     if (replacementValue == undefined) {
                         replacementValue = `${startToken}${directive}${endToken}`
                     }
