@@ -114,7 +114,9 @@ async function doExportOrg(orgContext, org, basePath, resourceTypes, format = 'y
     }
 
     // Export providers
-    exportProviders(orgContext, orgBasePath, format, raw);
+    if (resourceTypes.includes('providers')) {
+        exportProviders(orgContext, orgBasePath, format, raw);
+    }
 
     // Export the child workspaces
     const workspaces = await gestalt.fetchOrgWorkspaces([orgContext.org.fqon]);
@@ -139,7 +141,9 @@ async function doExportWorkspace(wsContext, ws, basePath, resourceTypes, format 
     const wsBasePath = basePath + path.sep + toSlug(ws.name);
 
     // Export the child providers
-    exportProviders(wsContext, wsBasePath, format, raw);
+    if (resourceTypes.includes('providers')) {
+        exportProviders(wsContext, wsBasePath, format, raw);
+    }
 
     // Export the child environments
     const environments = await gestalt.fetchWorkspaceEnvironments(wsContext);
@@ -164,7 +168,9 @@ async function doExportEnvironment(envContext, env, basePath, resourceTypes, for
     const envBasePath = basePath + path.sep + toSlug(env.name);
 
     // Export the child providers
-    exportProviders(envContext, envBasePath, format, raw);
+    if (resourceTypes.includes('providers')) {
+        exportProviders(envContext, envBasePath, format, raw);
+    }
 
     // Export the environment's child resources
     await doExportEnviornmentResources(envContext, resourceTypes, envBasePath, format, raw);
@@ -193,29 +199,29 @@ async function doExportUsersAndGroups(orgContext, basePath, format, raw) {
     doExportResources(orgContext, groups, basePath, format, raw);
 }
 
-function createGroupMembershipSpecs(users, groups) {
-    const specs = [];
-    for (let group of groups) {
-        const spec = {
-            resource_type: 'Fog::GroupMembership',
-            name: group.name,
-            groups: []
-        }
+// function createGroupMembershipSpecs(users, groups) {
+//     const specs = [];
+//     for (let group of groups) {
+//         const spec = {
+//             resource_type: 'Fog::GroupMembership',
+//             name: group.name,
+//             groups: []
+//         }
 
-        if (group.properties && group.properties.users) {
-            const members = group.properties.users.map(u => u.name);
-            spec.groups.push({
-                name: group.name,
-                description: group.description,
-                members: members
-            });
-        }
+//         if (group.properties && group.properties.users) {
+//             const members = group.properties.users.map(u => u.name);
+//             spec.groups.push({
+//                 name: group.name,
+//                 description: group.description,
+//                 members: members
+//             });
+//         }
 
-        specs.push(spec);
-    }
+//         specs.push(spec);
+//     }
 
-    return specs;
-}
+//     return specs;
+// }
 
 async function exportProviders(context, basePath, format, raw) {
     const providers = await gestalt.fetchProviders(context, null, {});
