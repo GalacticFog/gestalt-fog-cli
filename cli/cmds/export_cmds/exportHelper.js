@@ -503,9 +503,11 @@ async function dereferenceLambdas(res) {
 
     if (res.resource_type == 'Gestalt::Resource::Rule::Event') {
         if (res.properties && res.properties.lambda && res.properties.lambda.id) {
-            res.properties.lambda.id = await dereferenceLambdaId(res.properties.lambda.id);
-            delete res.properties.lambda.typeId;
-            delete res.properties.lambda.name;
+            // Note this transforms
+            // { lambda: { id: ID } } --->  { lambda: ID }
+            res.properties.lambda = await dereferenceLambdaId(res.properties.lambda.id);
+            // delete res.properties.lambda.typeId;
+            // delete res.properties.lambda.name;
         }
     }
 
