@@ -1,9 +1,9 @@
-const gestalt = require('gestalt-fog-sdk')
+const { gestalt } = require('gestalt-fog-sdk')
 const ui = require('../lib/gestalt-ui')
 const cmd = require('../lib/cmd-base');
 const yaml = require('js-yaml');
 
-exports.command = 'list-entitlements [context_path]'
+exports.command = 'list-entitlement-actions [context_path]'
 exports.desc = 'List entitlement actions at the specified context'
 exports.builder = {}
 

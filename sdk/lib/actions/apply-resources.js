@@ -65,6 +65,7 @@ async function applyResources(context, resources, opts, config) {
                 item.status = err;
                 item.message = err;
                 console.error(chalk.red(err));
+                console.log(chalk.red(err.stack));
                 debug(chalk.red(err.stack));
                 failed.push(item);
             }
@@ -87,6 +88,10 @@ function prioritize(resources) {
         // Users, groups
         'Gestalt::Resource::User',
         'Gestalt::Resource::Group',
+
+        // Entitlements
+        'Fog::Entitlements::User',
+        'Fog::Entitlements::Group',
 
         // Providers next
         'Gestalt::Configuration::Provider',

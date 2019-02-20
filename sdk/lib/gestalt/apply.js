@@ -17,6 +17,11 @@ const {
     applyFogGroupMembership
 } = require('./apply/apply-group-membership');
 
+const {
+    applyFogEntitlements
+} = require('./apply/apply-fog-entitlements');
+
+
 const resolveContextPath = require('./context-resolver').contextResolver.resolveContextPath;
 
 const {
@@ -50,13 +55,14 @@ async function applyResource(spec, context, options) {
         };
     }
 
-    const type = getResourceUrlType(spec);
     const resourceType = spec.resource_type;
 
     if (resourceType.indexOf('Fog::') == 0) {
         // This is a non-Meta resource managed by the Fog CLI
         return applyFogResource(spec, context);
     }
+
+    const type = getResourceUrlType(spec);
 
     if (!type) {
         debug(`  will throw Error: resource_type: ${spec.resource_type} not present`);
@@ -387,5 +393,9 @@ function applyFogResource(spec, context) {
     if (spec.resource_type == 'Fog::GroupMembership') {
         return applyFogGroupMembership(spec, context);
     }
+    if (spec.resource_type.startsWith('Fog::Entitlements::')) {
+        return applyFogEntitlements(spec, context);
+    }
+
     throw Error(`type '${spec.resource_type}' not supported`);
 }
