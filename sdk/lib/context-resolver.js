@@ -15,7 +15,7 @@ module.exports = {
     resolveWorkspace,
     resolveEnvironment,
     lookupEnvironmentResource,
-    resolveContextPath
+    resolveContextPath,
 }
 
 // This is a Map of maps. First level is resource type, second level is resource ID

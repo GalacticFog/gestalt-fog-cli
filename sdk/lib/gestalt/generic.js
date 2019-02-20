@@ -109,6 +109,7 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
                 fqon: fqon
             },
             environment: {
+                name: env.name,
                 id: env.id
             }
         }
@@ -123,6 +124,9 @@ async function _fetchResourcesFromOrgEnvironments(type, fqon) {
             return res;
         }).catch(err => {
             console.error(chalk.yellow('Warning: ' + err.message));
+            console.error(chalk.yellow('  context: ' + JSON.stringify(context)));
+            console.error(chalk.yellow('  type: ' + type));
+
             debug(chalk.yellow(err.stack));
             return [];
         });

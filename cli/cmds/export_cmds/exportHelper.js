@@ -65,13 +65,12 @@ async function doExportHierarchy(context, resourceTypes, basePath, format = 'yam
         // root context
         const orgs = await gestalt.fetchOrgs();
         for (const org of orgs) {
+            const exportPath = dirs.join(path.sep);
+            const orgContext = { org: { fqon: org.properties.fqon } };
             try {
-                const exportPath = dirs.join(path.sep);
-                const orgContext = { org: { fqon: org.properties.fqon } };
                 await doExportOrg(orgContext, org, exportPath, resourceTypes, format, raw);
             } catch (err) {
-                console.error(chalk.red(`Error: ${err.error}`));
-                debug(chalk.red(err.stack));
+                showError(err, orgContext, org);
             }
         }
     }
@@ -89,7 +88,11 @@ async function doExportEnviornmentResources(envContext, resourceTypes, basePath 
     debug('  (found ' + resources.length + ' environment resources)');
 
     for (const r of resources) {
-        await exportSingleEnvironmentResource(envContext, r, basePath, format, raw);
+        try {
+            await exportSingleEnvironmentResource(envContext, r, basePath, format, raw);
+        } catch (err) {
+            showError(err, envContext, r);
+        }
     }
 }
 
@@ -122,7 +125,11 @@ async function doExportOrg(orgContext, org, basePath, resourceTypes, format = 'y
     const workspaces = await gestalt.fetchOrgWorkspaces([orgContext.org.fqon]);
     for (const ws of workspaces) {
         const wsContext = getWorkspaceContext(orgContext, ws);
-        await doExportWorkspace(wsContext, ws, orgBasePath, resourceTypes, format, raw);
+        try {
+            await doExportWorkspace(wsContext, ws, orgBasePath, resourceTypes, format, raw);
+        } catch (err) {
+            showError(err, wsContext, ws);
+        }
     }
 }
 
@@ -149,8 +156,21 @@ async function doExportWorkspace(wsContext, ws, basePath, resourceTypes, format 
     const environments = await gestalt.fetchWorkspaceEnvironments(wsContext);
     for (const env of environments) {
         const envContext = getEnvironmentContext(wsContext, env);
-        await doExportEnvironment(envContext, env, wsBasePath, resourceTypes, format, raw);
+        try {
+            await doExportEnvironment(envContext, env, wsBasePath, resourceTypes, format, raw);
+        } catch (err) {
+            showError(err, envContext, env);
+        }
     }
+}
+
+function showError(err, context, resource) {
+    console.error(chalk.red(`Error: ${err.error}`));
+    console.error(chalk.red(`  context: ` + getContextPath(context)));
+    if (resource) {
+        console.error(chalk.red(`  resource: ${resource.name} (${resource.resource_type})`));
+    }
+    debug(chalk.red(err.stack));
 }
 
 async function doExportEnvironment(envContext, env, basePath, resourceTypes, format = 'yaml', raw = false) {
@@ -230,10 +250,14 @@ async function exportProviders(context, basePath, format, raw) {
 
 async function doExportResources(context, resources, basePath, format, raw) {
     for (let res of resources) {
-        if (!raw) {
-            res = await makeResourcePortable(res, context);
+        try {
+            if (!raw) {
+                res = await makeResourcePortable(res, context);
+            }
+            writeResourceToFilesystem(res, basePath, format, raw);
+        } catch (err) {
+            showError(err, context, res);
         }
-        writeResourceToFilesystem(res, basePath, format, raw);
     }
 }
 
@@ -299,7 +323,7 @@ async function doFetchResources(envContext, resourceTypes) {
             resources = resources.concat(res);
         } catch (err) {
             console.log(chalk.red(`Error: ${err.error}, skipping resource type '${type}'`));
-            debug(chalk.red(err.stack));
+            showError(err, envContext);
         }
     }
 
