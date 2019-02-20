@@ -40,7 +40,7 @@ async function renderResourceTemplate(templateFile, config, context, options) {
     state.templateFile = templateFile;
     state.options = options || {};
 
-    debug(`Loading temmplate from '${templateFile}'`);
+    debug(`Loading template from '${templateFile}'`);
     let template = "";
     if(templateFile == "-") {
         template = util.readFromStdin();
@@ -96,7 +96,6 @@ async function renderResourceObject(obj, config, context, options) {
 const state = {
     config: undefined,
     context: undefined,
-    directivesCache: {},
     templateFile: undefined,
     options: {}
 };
@@ -110,6 +109,8 @@ async function doDarseFieldForDirectives(value, func) {
     if (typeof value !== 'string') {
         return value;
     }
+
+    const directivesCache = {}
 
     const startToken = '#{'
     const endToken = '}'
@@ -137,14 +138,14 @@ async function doDarseFieldForDirectives(value, func) {
 
                 if (state.options.delete) {
                     if (directive.startsWith('Config ') || directive.startsWith('Api ')) {
-                        replacementValue = await func(directive);
+                        replacementValue = await func(directive, directivesCache);
                         trace(`Resolved: ${replacementValue}`)
                     } else {
                         trace(`Skipping resolution since options specify this resource will be deleted`)
                         trace(`Not Resolved: ${replacementValue}`)
                     }
                 } else {
-                    replacementValue = await func(directive);
+                    replacementValue = await func(directive, directivesCache);
                     trace(`Resolved: ${replacementValue}`)
                     if (replacementValue == undefined) {
                         replacementValue = `${startToken}${directive}${endToken}`
@@ -191,7 +192,12 @@ function getDeepestTokenPosition(token, stringValue, lastDeep) {
     return start;
 }
 
-async function resolveTemplateDirective(directiveString) {
+async function resolveTemplateDirective(directiveString, directivesCache_) {
+
+    let directivesCache = {}
+    if(directivesCache_ !== undefined) {
+        directivesCache = directivesCache_
+    }
 
     let tokens = directiveString.split(' ');
     const directive = tokens[0];
@@ -213,7 +219,7 @@ async function resolveTemplateDirective(directiveString) {
         debug(`Not skipping '${directive}'`)
 
         // First, look in the Directive cache
-        const cachedValue = state.directivesCache[directiveString];
+        const cachedValue = directivesCache[directiveString];
         if (cachedValue) {
             debug(`Found cached value for '${directiveString}': '${cachedValue}'`)
             return cachedValue;
@@ -237,7 +243,7 @@ async function resolveTemplateDirective(directiveString) {
             const calculatedValue = await handler.apply(handler, tokens)
 
             // Save back to cache
-            state.directivesCache[directiveString] = calculatedValue;
+            directivesCache[directiveString] = calculatedValue;
             return calculatedValue;
         }
         throw Error(`No handler for directive '${directive}'`)
