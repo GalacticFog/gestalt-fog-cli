@@ -54,6 +54,7 @@ async function checkIfDirectoryExists(basePath) {
 
 async function getResourceTypes(argv) {
     const types = gestalt.getEnvironmentResourceTypes();
+    types.push('entitlements');
     if (!argv.all) {
         return await ui.selectOptions('Resources to export', types);
     }

@@ -1,4 +1,5 @@
 const { gestalt } = require('gestalt-fog-sdk')
+const { getEntitlementsByIdentities } = require('./exportEntitlementsHelper');
 const yaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
@@ -24,6 +25,8 @@ const shortResourceTypes = {
     'Gestalt::Resource::Secret': 'secret',
     'Gestalt::Configuration::AppDeployment': 'appdeployment',
     'Fog::GroupMembership': 'groupmembership',
+    'Fog::Entitlements::User': 'entitlements-user',
+    'Fog::Entitlements::Group': 'entitlements-group',
 };
 
 module.exports = {
@@ -116,10 +119,8 @@ async function doExportOrg(orgContext, org, basePath, resourceTypes, format = 'y
         await doExportUsersAndGroups(orgContext, orgBasePath, format, raw);
     }
 
-    // Export providers
-    if (resourceTypes.includes('providers')) {
-        exportProviders(orgContext, orgBasePath, format, raw);
-    }
+    // Export common child resources (providers, entitlements, etc)
+    await doExportResourcesCommonToOrgWorkspaceEnviornment(resourceTypes, orgContext, orgBasePath, format, raw);
 
     // Export the child workspaces
     const workspaces = await gestalt.fetchOrgWorkspaces([orgContext.org.fqon]);
@@ -147,10 +148,8 @@ async function doExportWorkspace(wsContext, ws, basePath, resourceTypes, format 
 
     const wsBasePath = basePath + path.sep + toSlug(ws.name);
 
-    // Export the child providers
-    if (resourceTypes.includes('providers')) {
-        exportProviders(wsContext, wsBasePath, format, raw);
-    }
+    // Export common child resources (providers, entitlements, etc)
+    await doExportResourcesCommonToOrgWorkspaceEnviornment(resourceTypes, wsContext, wsBasePath, format, raw);
 
     // Export the child environments
     const environments = await gestalt.fetchWorkspaceEnvironments(wsContext);
@@ -187,10 +186,8 @@ async function doExportEnvironment(envContext, env, basePath, resourceTypes, for
 
     const envBasePath = basePath + path.sep + toSlug(env.name);
 
-    // Export the child providers
-    if (resourceTypes.includes('providers')) {
-        exportProviders(envContext, envBasePath, format, raw);
-    }
+    // Export common child resources (providers, entitlements, etc)
+    await doExportResourcesCommonToOrgWorkspaceEnviornment(resourceTypes, envContext, envBasePath, format, raw);
 
     // Export the environment's child resources
     await doExportEnviornmentResources(envContext, resourceTypes, envBasePath, format, raw);
@@ -243,9 +240,23 @@ async function doExportUsersAndGroups(orgContext, basePath, format, raw) {
 //     return specs;
 // }
 
+async function doExportResourcesCommonToOrgWorkspaceEnviornment(resourceTypes, orgContext, orgBasePath, format, raw) {
+    if (resourceTypes.includes('providers')) {
+        await exportProviders(orgContext, orgBasePath, format, raw);
+    }
+    if (resourceTypes.includes('entitlements')) {
+        await exportEntitlements(orgContext, orgBasePath, format, raw);
+    }
+}
+
 async function exportProviders(context, basePath, format, raw) {
     const providers = await gestalt.fetchProviders(context, null, {});
-    doExportResources(context, providers, basePath, format, raw);
+    return doExportResources(context, providers, basePath, format, raw);
+}
+
+async function exportEntitlements(context, basePath, format, raw) {
+    const entitlements = await getEntitlementsByIdentities(context);
+    return doExportResources(context, entitlements, basePath, format, raw);
 }
 
 async function doExportResources(context, resources, basePath, format, raw) {
@@ -318,13 +329,15 @@ function getEnvironmentContext(wsContext, env) {
 async function doFetchResources(envContext, resourceTypes) {
     let resources = [];
     for (const type of resourceTypes) {
-        try {
-            const res = await gestalt.fetchEnvironmentResources(type, envContext);
-            resources = resources.concat(res);
-        } catch (err) {
-            console.log(chalk.red(`Error fetching '${type}' environment resources: ${err.error}`));
-            console.error(chalk.red(`  context: ` + getContextPath(envContext)));
-            debug(chalk.red(err.stack));
+        if (type != 'entitlements' && type != 'providers') { // Skip entitlements and providers (they are handled separately)
+            try {
+                const res = await gestalt.fetchEnvironmentResources(type, envContext);
+                resources = resources.concat(res);
+            } catch (err) {
+                console.log(chalk.red(`Error fetching '${type}' environment resources: ${err.error}`));
+                console.error(chalk.red(`  context: ` + getContextPath(envContext)));
+                debug(chalk.red(err.stack));
+            }
         }
     }
 
