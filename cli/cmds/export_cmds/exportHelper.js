@@ -322,8 +322,9 @@ async function doFetchResources(envContext, resourceTypes) {
             const res = await gestalt.fetchEnvironmentResources(type, envContext);
             resources = resources.concat(res);
         } catch (err) {
-            console.log(chalk.red(`Error: ${err.error}, skipping resource type '${type}'`));
-            showError(err, envContext);
+            console.log(chalk.red(`Error fetching '${type}' environment resources: ${err.error}`));
+            console.error(chalk.red(`  context: ` + getContextPath(envContext)));
+            debug(chalk.red(err.stack));
         }
     }
 
