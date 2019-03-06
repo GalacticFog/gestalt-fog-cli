@@ -90,7 +90,7 @@ function getHandler(type) {
     async function doShowAllResources(type, argv) {
         const fqons = await gestalt.fetchOrgFqons();
         for (let fqon of fqons) {
-            doShowOrgResources(type, { org: { fqon: fqon } }, argv);
+            await doShowOrgResources(type, { org: { fqon: fqon } }, argv);
         }
     }
 
@@ -106,7 +106,7 @@ function getHandler(type) {
                 }
             }
 
-            doShowWorkspaceResources(type, wsContext, argv);
+            await doShowWorkspaceResources(type, wsContext, argv);
         }
     }
 
@@ -121,7 +121,7 @@ function getHandler(type) {
                 }
             }
 
-            doShowEnvironmentResources(type, envContext, argv);
+            await doShowEnvironmentResources(type, envContext, argv);
         }
     }
 
