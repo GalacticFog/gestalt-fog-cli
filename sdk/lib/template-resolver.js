@@ -260,7 +260,8 @@ const directiveHandlers = {
     Policy: resolvePolicy,
     LambdaSource: resolveBase64File,
     Datafeed: resolveDatafeed,
-    ResourceType: resolveResourceTypeId
+    ResourceType: resolveResourceTypeId,
+    Resource: resolveGenericResource
 }
 
 async function resolveProvider(pathOrName, param = 'id') {
@@ -412,4 +413,14 @@ async function resolveResourceTypeId(name) {
         matches.forEach(match => debug(`Ambigous Resource Type: '${match.name}'`))
         throw Error(`Unable to resolve ResourceType with name '${name}': more than one matched`);
     }
+}
+
+async function resolveGenericResource(resourceType, pathOrName, param = 'id') {
+    let resource = null;
+    resource = await contextResolver.resolveResourceByPath(resourceType, pathOrName);
+    if (!resource) {
+        throw Error('Resource ' + resourceType + ' not found for path: ' + pathOrName);
+    }
+    debug(`Found resource '${resource.name}'`);
+    return container[param];
 }
