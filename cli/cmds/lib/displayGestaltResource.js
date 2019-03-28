@@ -21,6 +21,9 @@ const fmap = {
     // Prefix types
     'Gestalt::Configuration::Provider::': displayProviders,
     'Gestalt::Resource::Rule::': displayPolicyRules,
+    
+    // "Pseudo" resource type
+    'Gestalt::Resource::Type': displayResourcetypes,
 }
 
 exports.run = (resources, options = {}, context) => {
@@ -334,5 +337,15 @@ function displayJobs(resources, opts, context) {
         // item.running_instances = `${item.properties.tasks_running || 0} / ${item.properties.num_instances}`;
     }
 
+    displayResource(options, opts, resources);
+}
+
+function displayResourcetypes(resources, opts, context) {
+    const options = {
+        message: getContextMessage('Resource Types', context),
+        headers: ["Name"],
+        fields: ['name'],
+        sortField: 'name',
+    }
     displayResource(options, opts, resources);
 }
