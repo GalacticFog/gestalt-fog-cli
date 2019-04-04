@@ -27,6 +27,8 @@ const shortResourceTypes = {
     'Fog::GroupMembership': 'groupmembership',
     'Fog::Entitlements::User': 'entitlements-user',
     'Fog::Entitlements::Group': 'entitlements-group',
+    'Fog::Entitlements::Provider::User': 'provider-entitlements-user',
+    'Fog::Entitlements::Provider::Group': 'provider-entitlements-group',
 };
 
 module.exports = {
@@ -115,10 +117,6 @@ async function doExportOrg(orgContext, org, basePath, resourceTypes, format = 'y
 
     const orgBasePath = basePath + path.sep + toSlugAllowingDots(orgContext.org.fqon);
 
-    if (orgContext.org.fqon == 'root') {
-        await doExportUsersAndGroups(orgContext, orgBasePath, format, raw);
-    }
-
     // Export common child resources (providers, entitlements, etc)
     await doExportResourcesCommonToOrgWorkspaceEnviornment(resourceTypes, orgContext, orgBasePath, format, raw);
 
@@ -205,16 +203,6 @@ async function exportSingleEnvironmentResource(envContext, res, basePath, format
     writeResourceToFilesystem(res, basePath, format, raw);
 }
 
-async function doExportUsersAndGroups(orgContext, basePath, format, raw) {
-    const users = await gestalt.fetchUsers();
-    const groups = await gestalt.fetchGroups();
-
-    // const groupMemberships = createGroupMembershipSpecs(users, groups);
-    // doExportResources(orgContext, groupMemberships, basePath, format, raw);
-
-    doExportResources(orgContext, users, basePath, format, raw);
-    doExportResources(orgContext, groups, basePath, format, raw);
-}
 
 // function createGroupMembershipSpecs(users, groups) {
 //     const specs = [];
@@ -240,18 +228,73 @@ async function doExportUsersAndGroups(orgContext, basePath, format, raw) {
 //     return specs;
 // }
 
-async function doExportResourcesCommonToOrgWorkspaceEnviornment(resourceTypes, orgContext, orgBasePath, format, raw) {
+async function doExportResourcesCommonToOrgWorkspaceEnviornment(resourceTypes, context, basePath, format, raw) {
+
     if (resourceTypes.includes('providers')) {
-        await exportProviders(orgContext, orgBasePath, format, raw);
+        const providers = await exportProviders(context, basePath, format, raw);
+
+        if (resourceTypes.includes('entitlements')) {
+            await doExportProviderEntitlements(providers, context, basePath, format, raw);
+        }
     }
+
+    // Users and groups
+    if (context.org.fqon == 'root') {
+        const { users, groups } = await doExportUsersAndGroups(context, basePath, format, raw);
+
+        if (resourceTypes.includes('entitlements')) {
+            await doExportUserAndGroupEntitlements({ users, groups }, context, basePath, format, raw);
+        }
+    }
+
     if (resourceTypes.includes('entitlements')) {
-        await exportEntitlements(orgContext, orgBasePath, format, raw);
+        // Perform async for performance
+        await exportEntitlements(context, basePath, format, raw);
+
+        // Export User entitlements
+
+        // Export Provider entitlements
+    }
+}
+
+async function doExportUsersAndGroups(orgContext, basePath, format, raw) {
+    const users = await gestalt.fetchUsers();
+    const groups = await gestalt.fetchGroups();
+
+    // const groupMemberships = createGroupMembershipSpecs(users, groups);
+    // doExportResources(orgContext, groupMemberships, basePath, format, raw);
+
+    doExportResources(orgContext, users, basePath, format, raw);
+    doExportResources(orgContext, groups, basePath, format, raw);
+
+    return {
+        users,
+        groups
     }
 }
 
 async function exportProviders(context, basePath, format, raw) {
     const providers = await gestalt.fetchProviders(context, null, {});
-    return doExportResources(context, providers, basePath, format, raw);
+    await doExportResources(context, providers, basePath, format, raw);
+    return providers;
+}
+
+async function doExportProviderEntitlements(providers, context, basePath, format, raw) {
+    for (let p of providers) {
+        const providerEntitlements = await gestalt.fetchResourceEntitlements(context, p);
+        await doExportEnviornmentResources(context, providerEntitlements, basePath, format, raw);
+    }
+}
+
+async function doExportUserAndGroupEntitlements({ users, groups } = {}, context, basePath, format, raw) {
+    for (let u of users) {
+        const entitlements = await gestalt.fetchResourceEntitlements(context, u);
+        await doExportEnviornmentResources(context, entitlements, basePath, format, raw);
+    }
+    for (let g of groups) {
+        const entitlements = await gestalt.fetchResourceEntitlements(context, g);
+        await doExportEnviornmentResources(context, entitlements, basePath, format, raw);
+    }
 }
 
 async function exportEntitlements(context, basePath, format, raw) {
@@ -733,7 +776,7 @@ function processResource(resource) {
 
 function buildFilename(resource) {
     if (getResourceType(resource) == 'org') {
-        return getResourceType(resource) + '-' + toSlug(resource.properties.fqon);
+        return 'org-' + toSlug(resource.properties.fqon);
     }
     return getResourceType(resource) + '-' + toSlug(resource.name);
 }
